@@ -1,0 +1,3085 @@
+{
+  "_source": "Mushrooms of the Pacific Northwest (2009) -- ch06 Boletes, ch07 Spine-Fungi",
+  "_generated": "2026-09-01",
+  "_batch": "ch06+ch07",
+  "species": [
+    {
+      "commonName": "Boletus barrowsii",
+      "scientificName": "Boletus barrowsii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Boletus edulis group (\"one of the western edulis species (see B. edulis)\")",
+      "habitat": "Mountain conifer forests under ponderosa pine (southwestern U.S.); also under oak and Tilia (linden/basswood) in urban PNW settings",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "pale tan"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "pale tan"
+            },
+            {
+              "text": "suede-like"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "strong when drying"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "ponderosa pine"
+            },
+            {
+              "text": "oak"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"overall whitish to pale tan coloration, suede-like texture of the cap surface\"",
+        "scent": "\"strong odor when drying\"",
+        "trees": "\"most often under ponderosa pine\"; Seattle population \"fairly common in late spring under oaks and species of Tilia\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "suede-like",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "surface texture term, distinct from velvety/tomentose"
+        },
+        {
+          "tag": "strong when drying",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "odour that develops on drying, not a smell-type term the vocab covers"
+        },
+        {
+          "tag": "linden",
+          "character": "trees",
+          "suggestedCategory": "habitat",
+          "note": "Tilia (linden/basswood) named as an urban PNW host tree"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "geographic range",
+          "value": "mountains of the southwestern U.S.; sporadic reports Idaho, southern California",
+          "verdict": "range is out of scope per instructions"
+        },
+        {
+          "characteristic": "taxonomic note",
+          "value": "preliminary DNA suggests Seattle population is close to but possibly distinct from typical B. barrowsii",
+          "verdict": "out of scope; worth a free-text note field if one existed"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus chrysenteron",
+      "scientificName": "Boletus chrysenteron",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Boletus zelleri; B. rubellus; B. subtomentosus; B. truncatus (separable only by spore shape)",
+      "habitat": "Forested areas, wood edges, and urban habitats such as parks",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "grayish brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grayish brown"
+            },
+            {
+              "text": "blackish brown"
+            },
+            {
+              "text": "cracked"
+            },
+            {
+              "text": "pinkish"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "irregular"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "striate"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"grayish brown to blackish brown cap; the surface cracks... pinkish to reddish tints toward the cap edge in age\"",
+        "hymenium": "\"tubes are yellow, the pores yellow with an irregular outline\"",
+        "stipe": "\"often with yellow at the apex... reddish and pallid colors occur elsewhere... conspicuous longitudinal striations are reddish\"",
+        "staining": "\"One or more areas of the fruitbody turn bluish when cut or handled\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "grayish brown",
+          "character": "body/cap",
+          "suggestedCategory": "colour",
+          "note": "COLOUR_MODIFIERS has 'greyish' (British spelling) but not American 'grayish' -- this compound fails classifyTag as written"
+        },
+        {
+          "tag": "cracked",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "common surface-splitting term for bolete caps, distinct from the existing 'split' (margin) sense"
+        },
+        {
+          "tag": "pinkish",
+          "character": "cap",
+          "suggestedCategory": "colour",
+          "note": "COLOURS has 'pink' but not the -ish adjectival form as a standalone modifier target"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (lookalike separation)",
+          "value": "B. truncatus separated from B. chrysenteron only by truncate spores",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus coniferarum",
+      "scientificName": "Boletus coniferarum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "inedible",
+      "lookalikes": "Boletus calopus; B. frustosus; B. rainisii (= B. pulverulentus)",
+      "habitat": "Low- to mid-elevation conifer forest",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "dark olive-gray"
+            },
+            {
+              "text": "gray-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark olive-gray"
+            },
+            {
+              "text": "gray-brown"
+            },
+            {
+              "text": "velvety"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pale yellow"
+            },
+            {
+              "text": "olivaceous"
+            },
+            {
+              "text": "reticulation"
+            },
+            {
+              "text": "basal bulb"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bitter"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            },
+            {
+              "text": "immediately"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"surface is unpolished to somewhat velvety and dark olive-gray to gray-brown\"",
+        "hymenium": "\"tubes are yellow and stain dark blue when cut or injured\"",
+        "stipe": "\"pale yellow or olivaceous to blackish in age... finely reticulate at the apex, thick, and sometimes enlarged at the base\"",
+        "scent": "\"extremely bitter, which renders the mushroom inedible\"",
+        "staining": "\"flesh... stains blue quickly after cutting\"",
+        "edibility": "\"extremely bitter, which renders the mushroom inedible\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "dark olive-gray / gray-brown",
+          "character": "body/cap",
+          "suggestedCategory": "colour",
+          "note": "American 'gray' spelling absent from COLOURS (only 'grey' present); compound colour tags fail classifyTag as written"
+        },
+        {
+          "tag": "olivaceous",
+          "character": "stipe",
+          "suggestedCategory": "colour",
+          "note": "listed only as a COLOUR_MODIFIER, never classifies alone without a trailing base colour"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "King Bolete",
+      "scientificName": "Boletus edulis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": null,
+      "habitat": "Mostly conifer forests; B. regineus segregate under oak and madrone",
+      "formerNames": [],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "uneven"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "gelatinous"
+            },
+            {
+              "text": "soft"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reticulation"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "unchanging"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "oak"
+            },
+            {
+              "text": "madrone"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"firm whitish tubes and pores... become yellow to olive and soft-gelatinous with age\"",
+        "stipe": "\"reticulate at least at the apex, typically fleshy and club-shaped, whitish at the apex and some shade of brown below\"",
+        "staining": "\"flesh is white, unchanging or discoloring to reddish brown in some species\"",
+        "trees": "\"most of our edulis types occur with conifers\"; \"B. regineus is associated with oaks and madrone\"",
+        "edibility": "\"commonly collected for food and known variously as porcini, ceps, steinpilz, and king boletes\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "uneven",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "cap surface becoming uneven in age; closest existing term 'irregular' is shape-oriented, not surface-oriented"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomy/species complex",
+          "value": "B. edulis, B. regineus (= B. \"aereus\"), montane reddish-brown forms treated as a species group with pending molecular splits",
+          "verdict": "taxonomy above division, out of scope; explains why this entry is a species-group account rather than one species -- confidence set to medium accordingly"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus fibrillosus",
+      "scientificName": "Boletus fibrillosus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": "Boletus edulis (\"often is mistaken for B. edulis\")",
+      "habitat": "Old-growth fir and western hemlock forest; also earlier-succession western hemlock/Douglas-fir mixed stands",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "dark brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark brown"
+            },
+            {
+              "text": "wrinkled"
+            },
+            {
+              "text": "velvety"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reticulation"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "white mycelium at base"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fir"
+            },
+            {
+              "text": "western hemlock"
+            },
+            {
+              "text": "douglas fir"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"cap color is some shade of dark brown, often with lighter areas, the cap surface is typically wrinkled and velvety to distinctly fibrillose\"",
+        "hymenium": "\"tubes and pores are light yellow or somewhat darker\"",
+        "stipe": "\"strongly reticulate, pale at the apex, dark brown below, and covered by white mycelium at the base\"",
+        "trees": "\"old-growth forests of fir and western hemlock as well as earlier succession forests of western hemlock and Douglas-fir\"",
+        "edibility": "\"It is edible, but inferior to B. edulis.\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium-high",
+      "_newVocabulary": [
+        {
+          "tag": "wrinkled",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "surface texture not in DESCRIPTORS (closest is 'zonate'/'reticulate' which mean something different)"
+        },
+        {
+          "tag": "white mycelium at base",
+          "character": "stipe",
+          "suggestedCategory": "note",
+          "note": "basal mycelial covering, distinct from 'basal bulb' or 'rhizomorphs'"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "abundance",
+          "value": "occurs locally, seldom as more than one or a few fruitbodies",
+          "verdict": "out of scope, abundance"
+        }
+      ]
+    },
+    {
+      "commonName": "Admirable Bolete",
+      "scientificName": "Boletus mirabilis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": null,
+      "habitat": "Wood or woody debris, almost always of hemlock -- unusual among boletes for fruiting on wood despite being ectomycorrhizal",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "wine-red"
+            },
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rough"
+            },
+            {
+              "text": "tomentose"
+            },
+            {
+              "text": "fibrillose-scaly"
+            },
+            {
+              "text": "wine-red"
+            },
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive-yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "reticulation"
+            },
+            {
+              "text": "ridged"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            },
+            {
+              "text": "slowly"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dead wood"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "hemlock"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"rough tomentose to fibrillose-scaly and looks like a wine-red or reddish brown bath towel\"",
+        "hymenium": "\"tubes are yellow to olive-yellow, much shorter near the stipe, with rather large, rounded to angular pores\"",
+        "stipe": "\"usually long and club-shaped, shaggy reticulate on the upper portion... brown to reddish brown\"",
+        "staining": "\"Occasionally the flesh will develop slight blue discolorations\"",
+        "substrate": "\"unusual for a bolete in fruiting on wood or woody debris, almost always of hemlock\"",
+        "edibility": "\"B. mirabilis is a good edible if you beat the hypomyces to it\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium-high",
+      "_newVocabulary": [
+        {
+          "tag": "wine-red",
+          "character": "body/cap",
+          "suggestedCategory": "colour",
+          "note": "distinct dark-red wine shade, not covered by 'red' or 'scarlet'"
+        },
+        {
+          "tag": "shaggy",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "texture of upper stipe reticulation, not currently distinguished from plain 'reticulation'"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "fungal parasite",
+          "value": "often attacked by the mold Hypomyces chrysospermus, white then bright yellow",
+          "verdict": "out of scope -- a biotic interaction, not a character of the species itself"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus rubellus",
+      "scientificName": "Boletus rubellus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Boletus chrysenteron; B. truncatus; B. coccyginus; B. fraternus",
+      "habitat": "Grassy areas, mossy lawns, trail edges, near oaks, cottonwood, willow, and basswood/linden; often in parks under lindens",
+      "formerNames": [
+        "Xerocomus rubellus"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "red"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "velvety"
+            },
+            {
+              "text": "cracked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive-yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "oak"
+            },
+            {
+              "text": "cottonwood"
+            },
+            {
+              "text": "willow"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"reddish, dry velvety caps that often crack in age\"",
+        "hymenium": "\"tubes and pores that are yellow to olive-yellow\"",
+        "stipe": "\"stipes that are reddish but with some yellow at the apex or elsewhere\"",
+        "staining": "\"flesh and tubes with a slight to stronger bluing reaction when cut or bruised\"",
+        "trees": "\"always near trees such as oaks, cottonwood, willow, and basswood or linden\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "low",
+      "_newVocabulary": [
+        {
+          "tag": "linden",
+          "character": "trees",
+          "suggestedCategory": "habitat",
+          "note": "basswood/linden (Tilia) repeatedly named as a host in this genus"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy",
+          "value": "cap cuticle of erect septate hyphae with tapered, encrusted-walled ends; spores thick-walled, up to 12-13 µm",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "biogeography",
+          "value": "\"good chance that boletes in this group have been introduced into our area\"",
+          "verdict": "out of scope, range/origin note"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus rubripes",
+      "scientificName": "Boletus rubripes",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Boletus chrysenteron; B. coniferarum; B. smithii; B. calopus",
+      "habitat": "Coastal conifer and mixed forest (California); montane conifer forest in the PNW",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "pale buff"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "tomentose"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "pale buff"
+            },
+            {
+              "text": "olive-brown"
+            },
+            {
+              "text": "cracked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "red"
+            },
+            {
+              "text": "ridged"
+            },
+            {
+              "text": "striate"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bitter"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            },
+            {
+              "text": "immediately"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"dry, matted tomentose to fibrillose, pale buff to olive-brown or more brownish cap; the surface sometimes cracks in dry weather\"",
+        "hymenium": "\"yellow tubes and pores that readily stain blue when bruised or cut\"",
+        "stipe": "\"stipe apex is yellow and it is not reticulate... the lower portion may become ridged or striate\"; base \"some shade of red\"",
+        "scent": "\"The flesh is bitter\"",
+        "staining": "\"when cut, it instantly changes to blue\"",
+        "trees": "\"described from coastal conifer and mixed forests in California, but in the PNW, occurs in montane conifer forests\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "vinaceous",
+          "character": "stipe",
+          "suggestedCategory": "colour",
+          "note": "base described as \"red to vinaceous\"; vinaceous (wine-tinted) not in COLOURS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "etymology",
+          "value": "epithet rubripes = \"red foot\", referring to the lower stipe",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Boletus smithii",
+      "scientificName": "Boletus smithii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": null,
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "gray-brown"
+            },
+            {
+              "text": "buff"
+            },
+            {
+              "text": "tan"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "velvety"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "cracked"
+            },
+            {
+              "text": "gray-brown"
+            },
+            {
+              "text": "buff"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "pinkish"
+            },
+            {
+              "text": "reddish"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive-yellow"
+            },
+            {
+              "text": "pinkish"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "smooth"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "mild"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"velvety to fibrillose, dry cap that often becomes cracked in age... gray-brown, buff, and tan colors... infused with pinkish to reddish overtones\"",
+        "hymenium": "\"tubes and pores are yellow to olive-yellow but near the cap margin may be pinkish or reddish, and they stain blue where bruised\"",
+        "stipe": "\"smooth, granulose, or fibrillose to tomentose, but not reticulate; it is reddish at the apex and yellowish to pale below\"",
+        "scent": "\"The taste is mild\"",
+        "staining": "\"typically turns blue when exposed, but sometimes only slightly so\"",
+        "edibility": "\"not widely sought-after as an edible\" -- hedged/negative framing but stops short of calling it inedible or bad, so left unknown rather than forced to inedible"
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "granulose",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "fine-grained surface texture, distinct from pruinose/tomentose already in vocab"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Zeller's Bolete",
+      "scientificName": "Boletus zelleri",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": "Boletus chrysenteron (\"can integrade in color\")",
+      "habitat": "Coastal and low-elevation conifer forest; also urban areas, parks, trails where conifers occur",
+      "formerNames": [
+        "Xerocomus zelleri"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "dark brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "black"
+            },
+            {
+              "text": "dark brown"
+            },
+            {
+              "text": "reddish"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "olive-yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "red"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"black to blackish brown or dark brown cap, often with reddish tones near the edge\"",
+        "hymenium": "\"tubes are olive-yellow and become blue when bruised\"",
+        "stipe": "\"usually some shade of red, sometimes with considerable yellow, especially at the apex\"",
+        "staining": "\"tubes are olive-yellow and become blue when bruised\"",
+        "trees": "\"common species especially in coastal and low elevation conifer forests\"",
+        "edibility": "\"It is edible and a favorite of some people\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium-high",
+      "_newVocabulary": [
+        {
+          "tag": "punctate",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "surface described as \"granular to punctate\", punctate not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "season",
+          "value": "usually most prevalent in fall, but can be found at other times",
+          "verdict": "out of scope per instructions"
+        }
+      ]
+    },
+    {
+      "commonName": "Peppery Bolete",
+      "scientificName": "Chalciporus piperatus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "inedible",
+      "lookalikes": "Chalciporus piperatoides (tubes stain bluish; spore-print olive rather than brown)",
+      "habitat": null,
+      "formerNames": [
+        "Boletus piperatus"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "rust-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "rust-brown"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "cracked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "red"
+            },
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "peppery"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "darkens when bruised"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"viscid when fresh but may become somewhat fibrillose and cracked in older specimens, reddish brown to rust-brown or vinaceous brown\"",
+        "hymenium": "\"the pores are angular, red to reddish brown, and darken when bruised\"",
+        "sporePrint": "contrastive: lookalike \"Chalciporus piperatoides... spore-print is olive rather than brown\" implies C. piperatus itself has a brown print",
+        "scent": "\"The epithet refers to this species's peppery taste\"",
+        "edibility": "\"It is not generally regarded as a good edible.\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "vinaceous brown",
+          "character": "body/cap",
+          "suggestedCategory": "colour",
+          "note": "'vinaceous' (wine-tinted) missing from COLOURS/MODIFIERS -- recurs across several bolete entries"
+        },
+        {
+          "tag": "angular",
+          "character": "hymenium",
+          "suggestedCategory": "descriptor",
+          "note": "common pore-shape term, not in DESCRIPTORS"
+        },
+        {
+          "tag": "darkens when bruised",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "a staining reaction without a specific colour named; doesn't fit the 'bruises X' pattern"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Suillus albivelatus",
+      "scientificName": "Suillus albivelatus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus neoalbidipes (= S. albidipes); S. brunnescens; S. pseudobrevipes; S. glandulosipes",
+      "habitat": "Mixed conifer forest, associated with pines",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "vinaceous brown"
+            },
+            {
+              "text": "yellow-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "vinaceous brown"
+            },
+            {
+              "text": "yellow-brown"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "shiny"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pine"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"rather broad vinaceous brown to yellow-brown, viscid to shiny cap\"",
+        "stipe": "\"young specimens often have white veil remnants on the edge of the cap, and a slight white to vinaceous ring-zone on the stipe... white to yellow\"",
+        "staining": "\"discolors brown at the base\"",
+        "trees": "\"occurs in mixed conifer forests and appears to be associated with pines\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "shiny",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "surface sheen distinct from 'viscid'"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Short-stemmed Slippery Jack",
+      "scientificName": "Suillus brevipes",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "With two-needle pines, late summer and fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "dark vinaceous brown"
+            },
+            {
+              "text": "cinnamon-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "slimy"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "dark vinaceous brown"
+            },
+            {
+              "text": "cinnamon-brown"
+            },
+            {
+              "text": "streaked"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "round"
+            },
+            {
+              "text": "small"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "short"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "glandular dots"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pine"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"slimy to viscid, dark vinaceous brown to cinnamon-brown cap when fresh and becomes streaked and yellowish in age\"",
+        "hymenium": "\"The pores are yellow, round, and usually rather small\"",
+        "stipe": "\"typical short, squat stature... stipe is white to yellowish with inconspicuous glandular dots\"",
+        "trees": "\"occurs primarily with two-needle pines during late summer and fall\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "glandular dots",
+          "character": "stipe",
+          "suggestedCategory": "form",
+          "note": "characteristic Suillus stipe ornamentation, distinct from 'scabers' (Leccinum) or 'reticulation'"
+        },
+        {
+          "tag": "streaked",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "radial streaking pattern, recurs across Suillus entries, not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "veil (sub-feature)",
+          "value": "\"There is no veil or cottony tissue on the edge of the cap\"",
+          "verdict": "a stated absence of a sub-feature (veil) that the schema has no dedicated slot for -- stipe itself is still present and recorded, so na:true was not used; would be worth a veil/ring sub-field given how often Suillus species are keyed on this"
+        }
+      ]
+    },
+    {
+      "commonName": "Douglas-fir Suillus",
+      "scientificName": "Suillus caerulescens",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "With Douglas-fir",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "vinaceous brown"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "vinaceous brown"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "ochraceous"
+            },
+            {
+              "text": "streaked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "large"
+            },
+            {
+              "text": "angular"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "brownish"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            },
+            {
+              "text": "greenish"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "douglas fir"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"reddish brown to vinaceous brown in the center and more yellowish to ochraceous toward the margin, and often is radially streaked\"",
+        "hymenium": "\"pores are yellowish, large, and rather angular\"",
+        "stipe": "\"pallid veil that leaves material on the edge of the cap and a ring-zone or slight ring... stipes are yellowish to brownish, often darkening with age\"",
+        "staining": "\"tendency for the flesh in the base of the stipe to discolor greenish to bluish when it is exposed\"",
+        "trees": "\"occurs with Douglas-fir\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "ochraceous",
+          "character": "cap",
+          "suggestedCategory": "colour",
+          "note": "only 'ochre' is in COLOURS; 'ochraceous' as a standalone/modifier form is not recognised"
+        },
+        {
+          "tag": "bruises green",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "DESCRIPTORS has bruises blue/brown/red/black/yellow but no green option, needed for this and other greenish-staining Suillus"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "veil (sub-feature)",
+          "value": "\"lack of glandular dots on the stipe\"",
+          "verdict": "stated absence of a sub-feature within an otherwise-present stipe; same gap as S. brevipes"
+        }
+      ]
+    },
+    {
+      "commonName": "Hollow-footed Bolete",
+      "scientificName": "Suillus cavipes",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus ochraceoroseus (also larch-associated); S. lakei (similar dry fibrillose-scaly cap)",
+      "habitat": "Associated with larch wherever it occurs in the PNW",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "pale yellowish brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "fibrillose-scaly"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "pale yellowish brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "pale yellow"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "elongated"
+            },
+            {
+              "text": "decurrent"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "larch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"dry, fibrillose-scaly caps... usually has a reddish brown cap although, at times, it can be pale yellowish brown\"",
+        "hymenium": "\"pores are pale yellow, often angular or elongated, and sometimes decurrent\"",
+        "stipe": "\"a veil that may leave material on the edge of the cap and a ring or ring-zone on the stipe... The epithet... refers to the hollow stipe\"",
+        "trees": "\"Like S. ochraceoroseus it is associated with larch, wherever it occurs in the PNW\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "larch",
+          "character": "trees",
+          "suggestedCategory": "habitat",
+          "note": "missing from HABITATS entirely -- a defining host for three species in this chapter (cavipes, ochraceoroseus, grevillei)"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Larch Suillus",
+      "scientificName": "Suillus grevillei",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "With larch, sometimes abundant",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "deep reddish brown"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "gelatinous"
+            },
+            {
+              "text": "deep reddish brown"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "streaked"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "larch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"viscid to glutinous, typically deep reddish brown cap with a distinct yellow margin, although forms with all-yellow caps occur\"",
+        "hymenium": "\"pores are angular and yellow, and may stain brownish when bruised\"",
+        "stipe": "\"veil is rather substantial... a distinct ring on the stipe. The stipe is rich yellow above the ring and streaked reddish brown below\"",
+        "staining": "\"flesh is yellowish and discolors brownish\"",
+        "trees": "\"another larch associate that can sometimes be quite abundant\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Western Painted Suillus",
+      "scientificName": "Suillus lakei",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus caerulescens (often co-occurring under Douglas-fir)",
+      "habitat": "Common fall bolete under Douglas-fir, often with gomphidiuses",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "orange-buff"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "fibrillose-scaly"
+            },
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "orange-buff"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "large"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "elongated"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises red"
+            },
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "douglas fir"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"reddish to red-brown or orange-buff, dry to viscid, fibrillose-scaly cap\"",
+        "hymenium": "\"tubes are rather large and angular, sometimes elongated, some shade of yellow, and typically stain reddish brown when bruised\"",
+        "stipe": "\"a veil that leaves a distinct ring-zone, and a stipe that is yellowish above, colored like the cap below\"",
+        "staining": "\"typically stain reddish brown when bruised\"; \"flesh of the stipe base sometimes turns bluish when exposed\"",
+        "trees": "\"among the most common fall boletes under Douglas-fir\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "veil (sub-feature)",
+          "value": "stipe below the ring is \"without glandular dots\"",
+          "verdict": "same sub-feature-absence gap noted for other Suillus"
+        },
+        {
+          "characteristic": "taxonomic history",
+          "value": "sometimes placed in genus Boletinus",
+          "verdict": "taxonomy above division, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Suillus ochraceoroseus",
+      "scientificName": "Suillus ochraceoroseus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "With larch in higher-elevation and interior conifer forests, late spring and summer",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "rosy red"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "rosy red"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "brownish"
+            },
+            {
+              "text": "large"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "elongated"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "reddish"
+            },
+            {
+              "text": "brownish"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "purplish brown"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "larch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"dry, fibrillose to scaly, often whitish at first and then rosy red\"",
+        "hymenium": "\"pores are yellowish to brownish and often rather large, angular, and elongated\"",
+        "stipe": "\"veil is whitish to grayish or yellowish, somewhat fibrillose-membranous... a ring-zone or ring on the stipe. Often the interior of the stipe is hollow\"",
+        "sporePrint": "\"placed in the genus Fuscoboletinus because of its reddish brown to purplish brown spores\"",
+        "staining": "\"flesh stains blue-green at times when cut or bruised\"",
+        "trees": "\"occurs with larch in higher and interior conifer forests\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "purplish brown",
+          "character": "sporePrint",
+          "suggestedCategory": "colour",
+          "note": "'purplish' modifier missing; only base 'purple' is in COLOURS"
+        },
+        {
+          "tag": "bruises green",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "recurring gap -- no green option among the 'bruises X' descriptors"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Suillus punctatipes",
+      "scientificName": "Suillus punctatipes",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus granulatus (less elongated/compound pores; associated with pine)",
+      "habitat": "Moist conifer forest in fall, often with true fir and western hemlock",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "streaked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "large"
+            },
+            {
+              "text": "elongated"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "short"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "glandular dots"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fir"
+            },
+            {
+              "text": "western hemlock"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"typically very viscid, some shade of brown, and often appears radially streaked on the margin\"",
+        "hymenium": "\"tubes are yellowish to whitish or tan and stain brownish when bruised... pores are large and often elongated to compound\"",
+        "stipe": "\"rather short, yellow at the apex and whitish below... conspicuous brownish glandular dots on the stipe\"",
+        "staining": "\"darkens when handled\"; \"tubes... stain brownish when bruised\"",
+        "trees": "\"sometimes appearing in substantial numbers with true fir and western hemlock\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "compound",
+          "character": "hymenium",
+          "suggestedCategory": "descriptor",
+          "note": "pore shape (fused/compound pores), not covered by existing 'maze-like'"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "veil (sub-feature)",
+          "value": "\"There is no veil.\"",
+          "verdict": "stated sub-feature absence within a present stipe -- same recurring gap"
+        },
+        {
+          "characteristic": "age change",
+          "value": "\"becomes dingy and unattractive\" with age",
+          "verdict": "out of scope, cosmetic aging note"
+        }
+      ]
+    },
+    {
+      "commonName": "Blue-staining Suillus",
+      "scientificName": "Suillus tomentosus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus variegatus (European counterpart)",
+      "habitat": "Primarily under lodgepole and shore pines",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "orange-yellow"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "tomentose"
+            },
+            {
+              "text": "orange-yellow"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "grayish"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "bright red"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "angular"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "glandular dots"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "lodgepole pine"
+            },
+            {
+              "text": "shore pine"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"typically has a covering of grayish, yellowish, reddish brown, or bright red fibrils or fibrillose scales over an orange-yellow to yellowish background\"",
+        "hymenium": "\"tubes are yellow and the pores are angular, brown to yellowish, and stain blue when injured\"",
+        "stipe": "\"conspicuously glandular dotted and similar in color to the cap\"",
+        "staining": "\"The flesh is yellow and usually turns bluish on exposure\"",
+        "trees": "\"occurs primarily under lodge-pole and shore pines\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "veil (sub-feature)",
+          "value": "\"There is no veil.\"",
+          "verdict": "same recurring stated sub-feature absence"
+        }
+      ]
+    },
+    {
+      "commonName": "Suillus umbonatus",
+      "scientificName": "Suillus umbonatus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Suillus flavidus (possibly the same species); S. sibiricus (= S. americanus) -- brighter yellow, shaggy-membranous veil, five-needle pine associate",
+      "habitat": "Lodgepole pine forest (late summer/early fall); shore pine woodland (fall); clustered around moist depression edges",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "umbonate"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "olive-brown"
+            },
+            {
+              "text": "streaked"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "large"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "angular"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "glandular dots"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "gelatinous"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "lodgepole pine"
+            },
+            {
+              "text": "shore pine"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"viscid, distinctly umbonate cap that is yellow to olive-brown and often streaked\"",
+        "hymenium": "\"large, yellowish, angular, often radially aligned pores\"",
+        "stipe": "\"slender yellowish stipe that is glandular dotted above a gelatinous ring or ring-zone\"",
+        "staining": "\"stains brown when handled\"",
+        "trees": "\"rather abundant at times in lodgepole pine forests... and in shore pine woodlands\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "radially aligned",
+          "character": "hymenium",
+          "suggestedCategory": "descriptor",
+          "note": "pore arrangement pattern, recurs across Suillus, no existing vocab term"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Suillus viscidus",
+      "scientificName": "Suillus viscidus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "Larch-associated, late summer and fall",
+      "formerNames": [
+        "Suillus laricinus",
+        "Suillus aeruginascens"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "slimy"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "viscid"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "larch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"viscid to slimy, gray to olive-brown or darker cap\"",
+        "hymenium": "\"tubes and pores are whitish to gray, not yellow as in most suilluses, and stain blue when bruised\"",
+        "stipe": "\"whitish above the slight ring or ring-zone. The lower stipe is viscid\"",
+        "staining": "\"flesh is white to yellowish and stains blue when bruised or cut\"",
+        "trees": "\"a larch-associated species\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "chemical reaction",
+          "value": "\"S. viscidus stains waxed paper or white office paper blue\"",
+          "verdict": "an unusual contact-staining property; out of scope for the current staining character (which covers flesh, not paper), but notable enough to flag as a possible chemical-test-style field"
+        }
+      ]
+    },
+    {
+      "commonName": "Aspen Bolete",
+      "scientificName": "Leccinum insigne",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "dubious",
+      "lookalikes": "Leccinum aurantiacum (name likely misapplied here; probably closer to L. vulpinum) -- large, red to reddish orange-brown or dark reddish brown fibrillose cap, black scabers, bluing stipe base, conifer-associated; also L. ponderosum, L. manzanitae (similarly large and coloured)",
+      "habitat": "With aspen in PNW mountains",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "rust-brown"
+            },
+            {
+              "text": "orange-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "reddish brown"
+            },
+            {
+              "text": "rust-brown"
+            },
+            {
+              "text": "orange-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "olive-buff"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "scabers"
+            },
+            {
+              "text": "dark brown"
+            },
+            {
+              "text": "blackish"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            },
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "aspen"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"reddish brown to rust-brown or orange-brown, somewhat fibrillose cap\"",
+        "hymenium": "\"white to olive-buff or yellowish tubes that stain brownish when bruised\"",
+        "stipe": "\"white stipe with pallid to dark brown or blackish scabers\"",
+        "staining": "\"white flesh that may change to dark gray, and sometimes with blue in the base\"",
+        "trees": "\"Several leccinums are associated with aspen in our mountains... Our photo illustrates Leccinum insigne\"",
+        "edibility": "\"All these are generally considered good, but not great, edibles, although poisonings in the Rocky Mountains and PNW associated with similar-looking leccinums suggest one should adopt a cautious approach to eating them.\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "olive-buff",
+          "character": "hymenium",
+          "suggestedCategory": "colour",
+          "note": "compound colour not resolvable by classifyTag (olive is a colour, buff is a colour, but the compound isn't a recognised modifier+colour pair)"
+        },
+        {
+          "tag": "bruises grey",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "flesh changing to dark gray on exposure -- another missing colour in the 'bruises X' set (already flagged for green)"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Birch Bolete",
+      "scientificName": "Leccinum scabrum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "Common in urban/suburban settings with planted birch; also natural birch populations (e.g. northern Idaho and Washington); often with Paxillus involutus, Lactarius plumbeus, L. glyciosmus, Amanita muscaria",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "grayish brown"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "tomentose"
+            },
+            {
+              "text": "cracked"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "grayish brown"
+            },
+            {
+              "text": "olive-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pores"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "pale tan"
+            },
+            {
+              "text": "olive-buff"
+            },
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "whitish"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "whitish"
+            },
+            {
+              "text": "scabers"
+            },
+            {
+              "text": "blackish"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "mild"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "unchanging"
+            },
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "birch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"caps are tan to grayish brown or darker brown or olive-brown... cap surface varies from dry to viscid, may be somewhat tomentose, and can become cracked in age\"",
+        "hymenium": "\"pores are cream to pale tan or olive-buff, and the tubes are whitish and darken in age\"",
+        "stipe": "\"clavate, long in relation to the diameter of the cap, whitish, and ornamented with small blackish scabers\"",
+        "scent": "\"The taste is mild\"",
+        "staining": "\"flesh of young specimens... usually does not change much, although sometimes it can become somewhat brownish after exposure\"",
+        "trees": "\"likely has been introduced into the PNW with planted birches. However, it also occurs in natural birch populations\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "genus-level edibility caution",
+          "value": "genus intro: \"a number of severe gastrointestinal poisonings in the Rocky Mountains and Cascades indicate that at least some [Leccinum] species should be avoided\", and \"uncertainties surrounding species concepts makes it difficult to know just which species are the problem-causers\"",
+          "verdict": "not applied to L. scabrum specifically since no species-specific edibility claim is made in this entry -- flagged rather than guessed"
+        },
+        {
+          "characteristic": "culinary quality",
+          "value": "\"flesh is often soft and marshmallowy, thus limiting its culinary appeal\"",
+          "verdict": "texture complaint, not a poison/edibility claim in the mapping table's terms -- left out of the edibility field rather than stretched to fit"
+        }
+      ]
+    },
+    {
+      "commonName": "Porphyrellus porphyrosporus",
+      "scientificName": "Porphyrellus porphyrosporus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": null,
+      "habitat": "Coastal and low-elevation conifer forest, widespread but not abundant",
+      "formerNames": [
+        "Tylopilus pseudoscaber",
+        "Porphyrellus pseudoscaber"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "boletoid"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "dark brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "velvety"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "dark brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tubes"
+            },
+            {
+              "text": "pores"
+            },
+            {
+              "text": "dark brown"
+            },
+            {
+              "text": "black"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark brown"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "reddish brown"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises blue"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"black to dark brown velvety cap, often with a paler margin\"",
+        "hymenium": "\"dark brown to black tubes and pores\"",
+        "stipe": "\"dark brown to almost black stipe with a white base\"",
+        "sporePrint": "\"It has deep reddish brown spores\"",
+        "staining": "\"blue to blue-green staining reaction\"",
+        "trees": "\"widespread but not abundant in coastal and low elevation conifer forests\""
+      },
+      "_form": "boletoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "bruises green",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "same recurring gap"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic history",
+          "value": "formerly called Tylopilus pseudoscaber; recent studies show tylopiluses are not its closest relatives",
+          "verdict": "taxonomy above division, out of scope"
+        }
+      ]
+    }
+  ]
+}

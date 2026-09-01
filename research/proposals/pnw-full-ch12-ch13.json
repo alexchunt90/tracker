@@ -1,0 +1,535 @@
+{
+  "_source": "Mushrooms of the Pacific Northwest (2009), ch12 + ch13",
+  "_generated": "2026-09-01",
+  "species": [
+    {
+      "commonName": "Black Morel",
+      "scientificName": "Morchella elata",
+      "kind": "fungi",
+      "division": "Ascomycota",
+      "nutrition": "unknown",
+      "edibility": "dubious",
+      "lookalikes": "Morchella deliciosa (sterile zone at cap base, more oval pits, yellow-brown/olivaceous); Morchella semilibera (cap free only from the middle upward); Verpa bohemica (wrinkled, not ridged/pitted, cap)",
+      "habitat": "Western conifer forests, especially after fire; also hardwoods and disturbed/landscaped ground",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "morchelloid"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "black"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conical"
+            },
+            {
+              "text": "campanulate"
+            },
+            {
+              "text": "ridges"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "black"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": true
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "granular"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": true
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "burn site"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "hardwood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"All these morels are edible... However, a large proportion of the population is susceptible to severe digestive upset when they are eaten raw, and not everyone can tolerate them even when well cooked. So caution is advised until you determine into which group you fall.\"",
+        "hymenium": "form:morchelloid table \u2014 morel fertile surface lines the pits of the head, described here as part of the cap's ridge-and-pit texture, not a separate gill/pore layer",
+        "sporePrint": "form:morchelloid \u2014 no print obtainable from a morel head",
+        "stipe": "\"a whitish hollow stipe with a granular surface\" (species text); \"Morels have hollow stipes\" (chapter intro, genus-level)"
+      },
+      "_form": "morchelloid",
+      "_absence": {
+        "hymenium": "form:morchelloid",
+        "sporePrint": "form:morchelloid"
+      },
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "granular",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "the surface texture of a morel/Verpa stipe; recurs across the genus"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "season",
+          "value": "April\u2013May at low elevation, into summer at higher elevation",
+          "verdict": "log already derives seasonality from find dates \u2014 skip"
+        },
+        {
+          "characteristic": "abundance",
+          "value": "\"fruit in huge numbers\" after fire",
+          "verdict": "no field for abundance; could be a note tag but is more a population-level observation than a species trait"
+        }
+      ],
+      "_source": "Mushrooms of the Pacific Northwest (2009), ch12 (Morels, False Morels, and Elfin Saddles)"
+    },
+    {
+      "commonName": "Yellow Morel",
+      "scientificName": "Morchella esculenta",
+      "kind": "fungi",
+      "division": "Ascomycota",
+      "nutrition": "unknown",
+      "edibility": "edible",
+      "lookalikes": "",
+      "habitat": "Conifers and hardwoods, plantings, orchards, and burned areas; spring to early summer",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "morchelloid"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "ochre"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conical"
+            },
+            {
+              "text": "ridges"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "ochre"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": true
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "hollow"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": true
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "burn site"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "hardwood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"it is edible and highly sought-after by mycophagists\"",
+        "hymenium": "form:morchelloid",
+        "sporePrint": "form:morchelloid",
+        "stipe": "\"Morels have hollow stipes\" \u2014 chapter intro, genus-level fact this species entry assumes (no stipe description given in the species text itself)"
+      },
+      "_form": "morchelloid",
+      "_absence": {
+        "hymenium": "form:morchelloid",
+        "sporePrint": "form:morchelloid"
+      },
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "synonymy",
+          "value": "Morchella crassipes used for a large, thick-stiped form",
+          "verdict": "taxonomy above division \u2014 out of scope, could go in formerNames if the reviewer wants it treated as a synonym rather than a variant"
+        }
+      ],
+      "_source": "Mushrooms of the Pacific Northwest (2009), ch12 (Morels, False Morels, and Elfin Saddles)"
+    },
+    {
+      "commonName": "",
+      "scientificName": "Verpa bohemica",
+      "kind": "fungi",
+      "division": "Ascomycota",
+      "nutrition": "unknown",
+      "edibility": "dubious",
+      "lookalikes": "Morchella semilibera (cap free from stipe for about half its height, but ridged/pitted rather than wrinkled)",
+      "habitat": "Wooded habitats, especially along rivers and streams under cottonwood, early spring",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "false morel"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "campanulate"
+            },
+            {
+              "text": "wrinkles"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": true
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "stuffed"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": true
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "cottonwood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"This false morel is collected and eaten by many people, and some even prefer it to true morels. It seems to cause digestive upset in a greater proportion of people than morels do, so use caution and sample them in small amounts until you ascertain your tolerance.\"",
+        "hymenium": "form:helvelloid (guide's own word: \"false morel\")",
+        "sporePrint": "form:helvelloid",
+        "stipe": "\"whitish stipe\" (species text); \"Verpas have hollow stipes when mature, but initially they are stuffed with white cottony material\" (chapter intro, genus-level)"
+      },
+      "_form": "helvelloid",
+      "_absence": {
+        "hymenium": "form:helvelloid",
+        "sporePrint": "form:helvelloid"
+      },
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "season relative to morels",
+          "value": "occurs a week or two before morels begin to fruit",
+          "verdict": "phenology relative to other species \u2014 interesting but log derives seasonality from dates"
+        }
+      ],
+      "_source": "Mushrooms of the Pacific Northwest (2009), ch12 (Morels, False Morels, and Elfin Saddles)"
+    },
+    {
+      "commonName": "",
+      "scientificName": "Verpa conica",
+      "kind": "fungi",
+      "division": "Ascomycota",
+      "nutrition": "unknown",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Various habitats including montane conifer forests, early spring; widespread but uncommon",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "false morel"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conical"
+            },
+            {
+              "text": "smooth"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": true
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "ivory"
+            },
+            {
+              "text": "cream"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": true
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "form:helvelloid",
+        "sporePrint": "form:helvelloid",
+        "stipe": "\"The stipe is ivory to cream with brownish or ochraceous blushes\" (species text); \"hollow stipes when mature\" (chapter intro, genus-level)"
+      },
+      "_form": "helvelloid",
+      "_absence": {
+        "hymenium": "form:helvelloid",
+        "sporePrint": "form:helvelloid"
+      },
+      "_confidence": "low",
+      "_newVocabulary": [
+        {
+          "tag": "banded",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "\"often has a banded pattern on its surface\" \u2014 a zonation pattern distinct from 'zonate' (which is used for caps)"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic uncertainty",
+          "value": "\"It is possible that we have more than one species in the PNW passing under the name V. conica\"",
+          "verdict": "flag as low confidence rather than a field \u2014 the species concept itself is unsettled per the source"
+        }
+      ],
+      "_source": "Mushrooms of the Pacific Northwest (2009), ch12 (Morels, False Morels, and Elfin Saddles)"
+    },
+    {
+      "commonName": "",
+      "scientificName": "Gyromitra esculenta",
+      "kind": "fungi",
+      "division": "Ascomycota",
+      "nutrition": "unknown",
+      "edibility": "deadly",
+      "lookalikes": "True morels (Morchella spp.) \u2014 \"frequently encountered by morel-hunters\"; Gyromitra infula; Gyromitra ambigua (also poisonous, similar but later-fruiting)",
+      "habitat": "Conifers and hardwoods, on soil or rotten wood, spring to early summer",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "false morel"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "black"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "irregular"
+            },
+            {
+              "text": "lobed"
+            },
+            {
+              "text": "wrinkles"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "black"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": true
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "purple"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": true
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            },
+            {
+              "text": "rotten wood"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "hardwood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"The species name (Latin for 'edible') is misleading since it can be poisonous and has caused serious illness and deaths (see Appendix 1), although none of these incidents occurred in western North America.\"",
+        "hymenium": "form:helvelloid (guide's own word: \"false morel\")",
+        "sporePrint": "form:helvelloid",
+        "lookalikes": "\"frequently encountered by morel-hunters\"; \"Gyromitra infula and G. ambigua, also poisonous, are similar species\""
+      },
+      "_form": "helvelloid",
+      "_absence": {
+        "hymenium": "form:helvelloid",
+        "sporePrint": "form:helvelloid"
+      },
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "toxin/poisoning notes",
+          "value": "cross-reference to Appendix 1 for poisoning details",
+          "verdict": "the appendix was not part of this extraction pass \u2014 worth a follow-up read if the toxicology detail matters"
+        }
+      ],
+      "_source": "Mushrooms of the Pacific Northwest (2009), ch12 (Morels, False Morels, and Elfin Saddles)"
+    }
+  ]
+}

@@ -1,0 +1,2517 @@
+{
+  "_source": "Mushrooms of the Pacific Northwest (2009), ch04 (Brown-Spored Gilled Mushrooms — Cortinarius and relatives)",
+  "_generated": "2026-09-01",
+  "species": [
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius acutus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius obtusus (smaller specimens can be hard to distinguish)",
+      "habitat": "Nutrient-poor conifer forests, often on moist sites in litter",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conical"
+            },
+            {
+              "text": "campanulate"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "hygrophanous"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "yellowish brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "eroded"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "litter"
+            },
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"The edges of the gills are white, slightly ragged\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "stipe": "\"may have a thin coating of white veil fibrils\"; chapter intro (genus): the cobwebby cortina is near-universal in Cortinarius (\"A cortina is lacking in only a few species\"); not separately restated in most entries.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size/shape",
+          "value": "ellipsoid, densely ornamented with fine warts, 7-8 x 4-5 µm",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "range",
+          "value": "throughout the north temperate region",
+          "verdict": "distribution, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius alboviolaceus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius camphoratus (strong sickening odour like rotting potatoes); Cortinarius malachius (grayish-white to grayish-brown cap, finely scaly when dry)",
+      "habitat": "Conifer forests in western North America (hardwood forests in eastern North America/Europe)",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "umbonate"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "silky"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "blue-grey"
+            },
+            {
+              "text": "yellowish white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "grayish brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": true
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor and taste are not distinctive\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "stipe": "chapter intro (genus): the cobwebby cortina is near-universal in Cortinarius (\"A cortina is lacking in only a few species\"); not separately restated in most entries.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\"",
+        "substrate": "genus-level: Cortinarius \"growing on ground near trees\" (chapter key); not restated per species",
+        "trees": "\"in western North America, we have an essentially identical species... in conifer forests\""
+      },
+      "_form": "agaricoid",
+      "_absence": {
+        "scent": "stated"
+      },
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "silky",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "recurring surface-texture word across Cortinarius/Inocybe entries, not currently in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "8.5-10 x 6-6.5 µm, distinctly ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius anomalus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius caninus (browner cap when young, browner/stronger veil remnants on stipe)",
+      "habitat": "Varied forests; can be abundant in summer along small streams in subalpine spruce forests",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "blue-grey"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "blue-grey"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "spruce"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"gills are gray-violet when young\"",
+        "stipe": "\"light blue-gray with buff to pale ochraceous zones on the surface\"; chapter intro (genus): the cobwebby cortina is near-universal in Cortinarius (\"A cortina is lacking in only a few species\"); not separately restated in most entries.",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\"",
+        "trees": "\"especially abundant during summer along small streams in subalpine forests with spruce\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "low",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape / cap cuticle anatomy",
+          "value": "nearly round spores; cuticle with isodiametric cells beneath radial hyphae",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "taxonomic confidence",
+          "value": "\"it is hard to know if our species are the 'real thing'\"",
+          "verdict": "not a field — noted here as the reason confidence is low"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius brunneus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius glandicolor (more slender, less likely to have a distinct ring-zone; more widely distributed in moist and dry conifer forests)",
+      "habitat": "Moist conifer forests, can be exceedingly abundant near the coast with Sitka spruce",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "umber"
+            },
+            {
+              "text": "8 cm"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "subdistant"
+            },
+            {
+              "text": "distant"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "pale brown"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "sitka spruce"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"dome-shaped caps that reach 8 cm (3 in.) in diameter\"",
+        "staining": "\"darkens with age or when bruised\" (stipe)",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\"",
+        "trees": "\"exceedingly abundant in PNW forests with Sitka spruce and other conifers, especially near the coast\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape",
+          "value": "ovoid, coarsely ornamented",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "drying colour change",
+          "value": "\"On drying the entire fruitbody becomes grayish black\"",
+          "verdict": "distinct from bruise-staining; not a clean fit for the staining character (that's injury response, not desiccation) — worth a dedicated post-mortem/drying note if ever added"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius clandestinus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius melanotus (Europe, brownish veil on stipe); Cortinarius cotoneus (hardwood forests, more robust, olive-brown veil/zones); Cortinarius venetus var. montanus (more olive-green to yellow-green, tomentose cap, sulfur-yellow veil when young)",
+      "habitat": "Douglas-fir and western hemlock conifer forests, low elevations into higher mountains",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "olive"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "orange-brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "radish"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "douglas fir"
+            },
+            {
+              "text": "western hemlock"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"usually has a radish odor\"",
+        "trees": "\"described from Douglas-fir and western hemlock forests of western Washington\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape / UV fluorescence",
+          "value": "rounded, finely ornamented spores; fluoresces bright yellow in UV light",
+          "verdict": "microscopy/chemical test, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius croceus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius cinnamomeus (orange gills); Cortinarius cinnamomeoluteus (yellow gills, occurs with willow)",
+      "habitat": "Open areas, roadsides, mossy or bare soil in conifer and hardwood forests; common and widespread, spring through fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "yellow-brown"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "radish"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            },
+            {
+              "text": "moss"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "hardwood"
+            },
+            {
+              "text": "birch"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"typically has a radish odor\"",
+        "substrate": "\"among mosses and lichens, or on bare soil\"",
+        "trees": "\"grows with various conifers, as well as hardwoods including beech, birch, and willow\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "ellipsoid, distinctly ornamented, up to about 9 µm long",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "dye use",
+          "value": "\"species in this group are commonly used for dyeing wool\"",
+          "verdict": "cultivation/dye-use, out of scope per guidance"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius riederi",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Conifer forests across the Northern Hemisphere; common and widespread in the PNW",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "inrolled"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "basal bulb"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"the gills are persistently bluish and the cortina is pale bluish at first\"",
+        "cap": "\"inrolled margin often bears patches or streaks of veil fibrils\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "broad, nearly ellipsoid, 11-14 x 6-8 µm",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "taxonomic note",
+          "value": "\"trying to define distinct varieties has been a fruitless endeavor\"",
+          "verdict": "flagged as reason for medium (not low) confidence — coloration is variable but the species account itself is solid"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius gentilis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Broad ecological range: moist habitats and drier upland conifer sites; can fruit from well-rotted woody debris",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "umbonate"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "hygrophanous"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "distant"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "rooting"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "potato-like"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            },
+            {
+              "text": "rotten wood"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor is often strongly of raw potatoes\"",
+        "stipe": "\"long, slender, often root-like stipe, with bright yellow veil remnants in the lower part\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\" Note: this species was historically reported to contain orellanine, but the text states this \"appears not to be true.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "potato-like",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "raw-potato odour recurs across several Cortinarius entries in this chapter and has no match in the current scent vocabulary"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape",
+          "value": "more or less rounded, distinctly ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius laniger",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius bivelus (similar, grows with birch)",
+      "habitat": "Boreal and montane conifer forests; abundance varies year to year",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "cinnamon"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "umbonate"
+            },
+            {
+              "text": "wrinkled"
+            },
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "radish"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor is strongly of radish\"",
+        "hymenium": "\"the gills are vivid cinnamon-brown to rust-brown\"",
+        "sporePrint": "gills stated \"vivid cinnamon-brown to rust-brown\", consistent with chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "rather broad, 8-11 x 5-6.5 µm, densely ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius magnivelatus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius wiebeae (similar, possibly the same species); Cortinarius verrucisporus (stronger yellow cap colours, yellowish flesh); Cortinarius saxamontanus (more strongly yellow to brownish orange, light yellow cortina, turns wine-red on drying/storage)",
+      "habitat": "Higher-elevation dry conifer forests (fir, pine, spruce) in western mountains; fruitbodies develop partly beneath the soil surface",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fleshy"
+            },
+            {
+              "text": "tough"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellowish"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "forking"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "universal veil"
+            },
+            {
+              "text": "basal bulb"
+            },
+            {
+              "text": "tapering"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "scent": {
+          "na": true
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "fir"
+            },
+            {
+              "text": "pine"
+            },
+            {
+              "text": "spruce"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor is not distinctive\"",
+        "sporePrint": "\"the gills are white to grayish then brown from the spores\" — spore colour stated directly, not the genus-general rust",
+        "stipe": "\"a heavy, membranous, more or less persistent veil that covers the stipe and gills\" — treated as universal veil given its extent",
+        "trees": "\"higher elevation dry conifer forests of fir, pine, and spruce\"",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {
+        "scent": "stated"
+      },
+      "_confidence": "high",
+      "_formTableOverride": "\"they vary in color and other features but have in common a heavy, membranous, more or less persistent veil; all actively release their spores and give a spore deposit, unlike secotioid fungi such as thaxterogasters\" — kept agaricoid despite the partly hypogeous habit because the guide explicitly distinguishes this species from true secotioid/gasteroid relatives.",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "up to 14 µm long, strongly ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius montanus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius scaurus (closely related, divided into varying taxa in Europe); Cortinarius albobrunnoides (pale yellow mycelium at stipe base, brownish cap, pale violet stipe fading whitish)",
+      "habitat": "Older, cool, moist conifer forests of western North America; often as one or a few fruitbodies at a time",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "hazel-brown"
+            },
+            {
+              "text": "olive"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "basal bulb"
+            },
+            {
+              "text": "blue-grey"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": true
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises purple"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor is not distinctive\"",
+        "staining": "\"sometimes discolors purplish when handled\" (stipe)",
+        "stipe": "\"distinct bulbous base that is covered at first by a pale yellow-green veil and basal mycelium\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {
+        "scent": "stated"
+      },
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "bruises purple",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "the staining vocabulary offers blue/brown/red/black/yellow but not purple, which several Cortinarius entries in this chapter need"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape",
+          "value": "elliptical, distinctly ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius obtusus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius acutus (smaller, more sharply pointed umbo)",
+      "habitat": "Widespread; pine forests, alpine areas with dwarf birch, and moist conifer forests; fruits extensively in spring and fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "striate"
+            },
+            {
+              "text": "hygrophanous"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "yellow-brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "yellow-brown"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "hollow"
+            },
+            {
+              "text": "pale yellowish brown"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "phenolic"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            },
+            {
+              "text": "pine"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"fresh specimens can have a faint odor of iodine\" — mapped to the nearest existing vocabulary term, phenolic",
+        "stipe": "\"stipe is hollow... pinched off and frequently curved at the base\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "iodine",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "used 'phenolic' as the nearest existing match; 'iodine' itself is a recognisable, distinct mushroom odour worth its own term"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore ornamentation",
+          "value": "distinctly and coarsely ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius phoeniceus var. occidentalis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius semisanguineus (typically yellow-brown to olive-brown cap; red-capped PNW populations distinguished by UV fluorescence)",
+      "habitat": "Conifer forests; common, often found in large numbers",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "scarlet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "scarlet"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "red"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "yellowish"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"a medium-sized, blood-red cap\"",
+        "hymenium": "\"deep, dark red gills\"",
+        "stipe": "\"a pale yellowish stipe with a coating of yellowish fibrils, and yellow or vinaceous red base\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "UV fluorescence",
+          "value": "lower stipe glows rich orange-yellow under 360nm UV",
+          "verdict": "chemical/physical test, out of scope"
+        },
+        {
+          "characteristic": "dye use",
+          "value": "highly sought-after for dyeing wool for hard-to-get red colours",
+          "verdict": "cultivation/dye-use, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius salor",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Wide range of forest types; found fairly frequently in conifer forests of the region",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "lilac"
+            },
+            {
+              "text": "ochre"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "body": "\"featuring a deep blue-lilac cap, gills, and stipe\" when fresh and young",
+        "cap": "\"in age the cap and the stipe often become ochraceous to yellow and the blue-lilac colors fade\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape / taxonomy",
+          "value": "round spores; possible relationship to C. anomalus supported by molecular data",
+          "verdict": "microscopy/taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius talus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius multiformis (closely related, more common in PNW conifer forests, darker ochraceous yellow to reddish-brown cap)",
+      "habitat": "Not common; moist areas in subalpine conifer forests (hardwood/arctic/alpine with dwarf birch in Europe)",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "ochre"
+            },
+            {
+              "text": "yellowish white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "basal bulb"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "honey-like"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"a faint honey-like odor\"",
+        "hymenium": "\"pale gills\" (shared trait with C. multiformis in the same sentence)",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "honey-like",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "not covered by the existing scent vocabulary"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius traganus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius camphoratus (completely blue-violet, very strong disagreeable odour like rotting potatoes)",
+      "habitat": "Widespread and often abundant in far-western montane and boreal conifer forests; much less frequent in the Rocky Mountains",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "lilac"
+            },
+            {
+              "text": "blue"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "yellow-brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fruity"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"it has a fruity odor, although for some people this is hard to detect\"",
+        "cap": "\"the cap and stipe are pale lilac to blue-lilac, as is the veil\"",
+        "hymenium": "\"the gills are brown-yellow and the flesh is mottled saffron to brown-yellow\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "form variant",
+          "value": "f. ochraceus completely lacks lilac colours",
+          "verdict": "infraspecific variant naming, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius vanduzerensis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius stillatitius (Europe, conifer and sometimes hardwood forests)",
+      "habitat": "Very common in coastal conifer forests from northern California to southern Canada",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "wavy"
+            },
+            {
+              "text": "striate"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "pale brown"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"an extremely glutinous cap and stipe... blackish brown to dark brown at first, then the margin fades to brown or yellow-brown and becomes wrinkled and deeply striate\"",
+        "stipe": "\"the veil is typically lilac beneath the gluten\"; sometimes lilac at apex",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius vibratilis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Common in conifer forests of the region, can be particularly abundant in some areas",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "orange-brown"
+            },
+            {
+              "text": "yellow-brown"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "ochre"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "tapering"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bitter"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"all these share a bitter taste, easily discovered by licking the viscid cap\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore size",
+          "value": "elliptical, small, finely ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "",
+      "scientificName": "Cortinarius violaceus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Cortinarius hercynicus (Europe, conifer forests, slightly narrower spores)",
+      "habitat": "Older forests; widespread but much less common in interior mountains than near the coast",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dry"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "tomentose"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cortina"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "earthy"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"the odor is distinctly of cedar wood\" — mapped to the nearest existing vocabulary term, earthy (see new-vocabulary note)",
+        "staining": "\"often the stipe base darkens when handled\"",
+        "sporePrint": "chapter intro (genus): \"They typically have brown spores, often somewhat rust-colored, but cinnamon-brown or medium brown as well.\" Not restated per species here.",
+        "nutrition": "chapter intro (genus): \"As far as is known, all the species are ectomycorrhizal.\"",
+        "edibility": "chapter intro (genus): \"we have no information on the edibility of most species... we recommend avoiding all cortinariuses.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "cedar",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "a distinctive, oft-cited odour (Cortinarius violaceus) with no equivalent in the current scent vocabulary; used 'earthy' as a rough stand-in"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore shape",
+          "value": "almond-shaped to ellipsoid (C. hercynicus slightly narrower)",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "The Gypsy",
+      "scientificName": "Rozites caperata",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": "",
+      "habitat": "Common in certain years in the PNW, less abundant inland and to the south; very abundant to the north",
+      "formerNames": [
+        "Cortinarius caperatus"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            },
+            {
+              "text": "ochre"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "pale brown"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "wavy"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "universal veil"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "cream"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "soil"
+            }
+          ]
+        },
+        "trees": {
+          "na": false,
+          "tags": [
+            {
+              "text": "conifer"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "stipe": "\"distinctive among brown-spored mushrooms because of the persistent white membranous ring, and the white universal veil that often leaves a thin whitish coating on the cap and a slight membranous rim around the base of the stipe\" — a true membranous ring, unlike the fibrillose cortina of Cortinarius proper",
+        "edibility": "\"Rozites caperata... is considered choice and eaten by many mushroom-hunters\" (chapter intro); \"commonly collected for food\" (species account) — recorded as edible per policy of never proposing 'choice'",
+        "nutrition": "genus placed within Cortinarius by recent studies (chapter intro), which states Cortinarius species are ectomycorrhizal"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic placement",
+          "value": "recent studies suggest Rozites nests within Cortinarius; C. caperatus may be the better name",
+          "verdict": "taxonomy/synonymy, out of scope beyond formerNames"
+        }
+      ],
+      "_note": "Edibility is 'edible' (never 'choice'), but the guide places this species close to a genus ('Rozites'/Cortinarius) it elsewhere says includes deadly poisonous members and recommends avoiding entirely — the entry itself gives no explicit lookalike species, so lookalikes is left blank rather than invented despite the rule that choice-grade edibles need one."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+services:
+  tracker:
+    build: .
+    container_name: tracker
+    restart: unless-stopped
+
+    # Published on loopback only. Caddy (or `tailscale serve`) fronts it, so the
+    # port is never open on a public interface — which matters, because the app
+    # has no authentication of its own.
+    ports:
+      - "127.0.0.1:4175:4175"
+
+    volumes:
+      # Writable state: config.json, data/, photos/, tiles/. Must be a DIRECTORY
+      # mount — saves write a temp file and rename, and rename fails against a
+      # bind-mounted file. The container runs as uid 1000, so:
+      #   sudo chown -R 1000:1000 state
+      - ./state:/state
+
+      # Source mounted read-only so edits do not need an image rebuild.
+      # public/ is picked up on a browser refresh; server.js needs
+      # `docker compose restart tracker`. Drop these two for a sealed image.
+      - ./server.js:/app/server.js:ro
+      - ./public:/app/public:ro
+
+    env_file:
+      - path: .env
+        required: false

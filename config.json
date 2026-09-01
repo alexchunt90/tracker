@@ -1,0 +1,30 @@
+{
+  "version": 0,
+  "app": {
+    "title": "Tracker",
+    "emoji": "🍄",
+    "tagline": "Field notes."
+  },
+  "theme": {
+    "accent": "#A8C66C",
+    "types": {
+      "fungi": "#D99A4E",
+      "flora": "#7FB069",
+      "fauna": "#6AA9D8"
+    }
+  },
+  "nature": {
+    "defaultType": "fungi"
+  },
+  "map": {
+    "tileUrl": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "attribution": "© OpenStreetMap contributors",
+    "maxZoom": 19,
+    "minZoom": 2,
+    "default": { "lat": 47.62, "lon": -122.33, "zoom": 10 }
+  },
+  "inaturalist": {
+    "enabled": true,
+    "perPage": 80
+  }
+}

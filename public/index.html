@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tracker</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%84%3C%2Ftext%3E%3C%2Fsvg%3E" />
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-title">
+    <h1 id="masthead-title">Tracker <span class="masthead-emoji" role="img" aria-label="mushroom">🍄</span></h1>
+    <p id="log-caption">—</p>
+  </div>
+  <div class="masthead-chips">
+    <div class="chip">
+      <span class="chip-label">Finds</span>
+      <span class="chip-value" data-num id="chip-finds">—</span>
+      <span class="chip-source">logged</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Identified</span>
+      <span class="chip-value" data-num id="chip-identified">—</span>
+      <span class="chip-source" id="chip-identified-source">—</span>
+    </div>
+    <div class="chip">
+      <span class="chip-label">Species</span>
+      <span class="chip-value" data-num id="chip-species">—</span>
+      <span class="chip-source">on the life list</span>
+    </div>
+    <div class="chip is-text">
+      <span class="chip-label">Last find</span>
+      <span class="chip-value" id="chip-last">—</span>
+      <span class="chip-source" id="chip-last-source">—</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" class="tab is-active" data-view="log">Log</button>
+  <button role="tab" class="tab" data-view="map">Map</button>
+  <button role="tab" class="tab" data-view="species">Species</button>
+  <span class="tab-status" id="save-status" role="status"></span>
+</nav>
+
+<p class="notice" id="notice" hidden></p>
+
+<!-- ===================================================================== -->
+<main class="frame" id="view-log">
+
+  <section class="console">
+    <h2 class="eyebrow">The log</h2>
+    <div class="readout">
+      <div class="readout-primaries">
+        <div class="readout-primary">
+          <span class="field-label">Finds logged</span>
+          <div class="big-number"><span data-num id="big-finds">—</span></div>
+          <p class="readout-caption" id="finds-caption">—</p>
+        </div>
+        <div class="readout-primary">
+          <span class="field-label">Species met</span>
+          <div class="big-number"><span data-num id="big-species">—</span></div>
+          <p class="readout-caption" id="species-caption">—</p>
+        </div>
+      </div>
+      <dl class="readout-stats">
+        <div><dt>Fungi</dt><dd data-num data-type="fungi" id="stat-fungi">—</dd></div>
+        <div><dt>Flora</dt><dd data-num data-type="flora" id="stat-flora">—</dd></div>
+        <div><dt>Fauna</dt><dd data-num data-type="fauna" id="stat-fauna">—</dd></div>
+        <div><dt>Unidentified</dt><dd data-num id="stat-unidentified">—</dd></div>
+        <div><dt>Uncertain</dt><dd data-num id="stat-uncertain">—</dd></div>
+        <div><dt>Placed</dt><dd data-num id="stat-placed">—</dd></div>
+        <div><dt>Choice edible</dt><dd data-num id="stat-choice">—</dd></div>
+      </dl>
+    </div>
+    <p class="verdict" id="log-verdict"></p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="eyebrow">Season</h2>
+      <p class="block-note" id="season-note">Finds by calendar month, pooled across years — fruiting is seasonal, and the pattern only shows once the years are stacked.</p>
+    </div>
+    <div class="chart-shell"><svg id="chart-season" viewBox="0 0 760 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="legend" id="season-legend"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="eyebrow">Log a find</h2>
+      <p class="block-note">Photos carry their own date and place. Log it now and identify it later — an unidentified find is the point, not a failure.</p>
+    </div>
+
+    <form id="obs-form">
+      <div class="dropzone" id="obs-drop" tabindex="0" role="button" aria-label="Add photos">
+        <span class="dropzone-title">Add photos</span>
+        <span class="dropzone-note">Drop them here, or click to choose. JPEG, PNG, HEIC.</span>
+      </div>
+      <input type="file" id="obs-file" accept="image/*" multiple hidden />
+      <div class="shot-strip" id="obs-shots"></div>
+
+      <div class="entry-row">
+        <label>Type
+          <select id="obs-type"></select>
+          <span class="field-hint">Naming it comes later.</span>
+        </label>
+        <label>When
+          <input type="datetime-local" id="obs-when" />
+          <span class="field-hint" id="obs-when-hint">&nbsp;</span>
+        </label>
+        <label>Latitude<input type="text" class="coord" id="obs-lat" inputmode="decimal" placeholder="—" /></label>
+        <label>Longitude<input type="text" class="coord" id="obs-lon" inputmode="decimal" placeholder="—" /></label>
+        <label class="grow">Place<input type="text" id="obs-place" placeholder="Trailside, mixed conifer" /></label>
+        <label class="wide">Notes<textarea id="obs-notes" placeholder="Anything you will not remember: smell, substrate, what it was growing with…"></textarea></label>
+      </div>
+
+      <div class="form-actions">
+        <span class="save-status spacer" id="obs-hint"></span>
+        <button type="button" class="ghost-button" id="obs-reset">Clear</button>
+        <button type="submit" class="solid-button" id="obs-submit">Log it</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="eyebrow">Finds</h2>
+      <p class="block-note" id="finds-note"></p>
+    </div>
+    <div class="filter-row">
+      <div class="filter-set" id="filter-type"></div>
+      <div class="filter-set" id="filter-status"></div>
+      <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
+    </div>
+    <div class="gallery" id="finds-gallery"></div>
+  </section>
+
+</main>
+
+<!-- ===================================================================== -->
+<main class="frame" id="view-map" hidden>
+
+  <section class="block" id="map-block">
+    <div class="block-head">
+      <h2 class="eyebrow">Where</h2>
+      <p class="block-note" id="map-note">Every find that carries a location. Drag to pan, scroll to zoom.</p>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-set" id="map-filter-type"></div>
+      <div class="filter-set" id="map-filter-extra"></div>
+      <label class="inline-pick">Species
+        <select id="map-species"></select>
+      </label>
+    </div>
+
+    <div class="map-shell"><div id="map-canvas"></div></div>
+
+    <div class="legend" id="map-legend"></div>
+    <div id="map-selection"></div>
+    <p class="verdict" id="map-verdict"></p>
+  </section>
+
+</main>
+
+<!-- ===================================================================== -->
+<main class="frame" id="view-species" hidden>
+
+  <section class="console">
+    <h2 class="eyebrow">The life list</h2>
+    <div class="readout">
+      <div class="readout-primaries">
+        <div class="readout-primary">
+          <span class="field-label">Species on file</span>
+          <div class="big-number"><span data-num id="big-species-total">—</span></div>
+          <p class="readout-caption" id="species-total-caption">—</p>
+        </div>
+        <div class="readout-primary">
+          <span class="field-label">Met in the field</span>
+          <div class="big-number"><span data-num id="big-species-seen">—</span></div>
+          <p class="readout-caption" id="species-seen-caption">—</p>
+        </div>
+      </div>
+      <dl class="readout-stats">
+        <div><dt>Fungi</dt><dd data-num data-type="fungi" id="stat-sp-fungi">—</dd></div>
+        <div><dt>Flora</dt><dd data-num data-type="flora" id="stat-sp-flora">—</dd></div>
+        <div><dt>Fauna</dt><dd data-num data-type="fauna" id="stat-sp-fauna">—</dd></div>
+        <div><dt>Choice</dt><dd data-num id="stat-sp-choice">—</dd></div>
+        <div><dt>Toxic or worse</dt><dd data-num id="stat-sp-danger">—</dd></div>
+      </dl>
+    </div>
+    <p class="verdict" id="species-verdict"></p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="eyebrow">The library</h2>
+      <p class="block-note">A species can be written up before it is ever found — a record with no finds behind it is a note, not a sighting.</p>
+      <button type="button" class="solid-button" id="species-new">New species</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-set" id="filter-sp-type"></div>
+      <div class="filter-search"><input type="search" id="filter-sp-q" placeholder="Search species…" aria-label="Search species" /></div>
+    </div>
+    <div class="table-scroll">
+      <table class="ledger">
+        <thead id="species-head">
+          <tr>
+            <th class="nowrap"></th>
+            <th data-sort="commonName" data-col="commonName">Common name</th>
+            <th data-sort="scientificName" data-col="scientificName">Scientific name</th>
+            <th class="nowrap" data-sort="kind" data-col="kind">Type</th>
+            <th class="nowrap" data-sort="edibleRank" data-col="edibleRank">Edibility</th>
+            <th>Habitat</th>
+            <th class="r nowrap" data-sort="count" data-col="count">Finds</th>
+            <th class="nowrap" data-sort="last" data-col="last">Last seen</th>
+          </tr>
+        </thead>
+        <tbody id="species-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div>
+</div>
+
+<script src="exif.js"></script>
+<script src="model.js"></script>
+<script src="map.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

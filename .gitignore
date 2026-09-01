@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+.env
+
+# Uploaded photographs and the log itself: personal data, not source.
+photos/
+data/observations.json
+data/species.json
+
+# Map tiles cached from OpenStreetMap. Regenerated on demand.
+tiles/
+
+# Reference material, kept out of the repo for size and licensing.
+fungi_ebooks/

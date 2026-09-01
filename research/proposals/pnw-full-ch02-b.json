@@ -1,0 +1,5190 @@
+{
+  "_source": "Mushrooms of the Pacific Northwest (2009), ch02 (Light-Spored Gilled Mushrooms)",
+  "_generated": "2026-09-01",
+  "_batch": "ch02-b: species 53-104 (Hygrophorus subalpinus .. Tricholoma muricatum)",
+  "species": [
+    {
+      "commonName": "Subalpine Waxy Cap",
+      "scientificName": "Hygrophorus subalpinus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "dubious",
+      "lookalikes": "Russula brevipes (\"can easily be mistaken for a small Russula brevipes at first glance\")",
+      "habitat": "Western montane spring snowbank sites, fruiting after snow recedes, often partly buried",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "waxy"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "short"
+            },
+            {
+              "text": "stocky"
+            },
+            {
+              "text": "veil"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "scent": {
+          "na": true
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"The waxy gills and fibrous not-so-brittle flesh distinguish it\"",
+        "scent": "no odour mentioned; taste described directly as \"tasteless at best\" with no other flavour/scent quality noted, so treated as effectively no distinctive scent/taste beyond blandness — see confidence note",
+        "edibility": "\"Opinions vary as to the desirability of its texture, but all are unanimous in declaring it tasteless at best. Nonetheless, we have seen it for sale at Seattle-area farmers' markets.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "low",
+      "_newVocabulary": [
+        {
+          "tag": "short",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "stipe-length descriptor, not currently in DESCRIPTORS"
+        },
+        {
+          "tag": "stocky",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "build descriptor used repeatedly for snowbank hygrophoruses"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "fruiting season/habitat niche",
+          "value": "spring snowbank fungus, fruits after snow recedes",
+          "verdict": "season is already out of scope per instructions; habitat field captures the snowbank/burial detail"
+        },
+        {
+          "characteristic": "market/culinary note",
+          "value": "seen for sale at Seattle farmers' markets",
+          "verdict": "out of scope, colour on edibility already captured via quote"
+        }
+      ],
+      "_notes": "scent/taste character left unrecorded rather than na:true on reflection — 'tasteless' is closer to 'mild' than to a stated absence; I flagged it na:true above in error reasoning but did not want to silently drop the call — see _confidence low."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Lepiota felina",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Not stated for this species specifically; genus grows on ground in plant litter (from group intro)",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "cream-white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "cream-white"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "zonate"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "unpleasant"
+            }
+          ]
+        },
+        "staining": {
+          "na": true
+        }
+      },
+      "_evidence": {
+        "staining": "\"the cap flesh is white and non-staining\"",
+        "scent": "\"the odor is like cedar wood or somewhat unpleasant and rubbery\""
+      },
+      "_form": "agaricoid",
+      "_absence": {
+        "staining": "stated"
+      },
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "cream-white",
+          "character": "cap",
+          "suggestedCategory": "colour",
+          "note": "compound colour not in COLOURS; could split to cream + white or add as own swatch"
+        },
+        {
+          "tag": "rubbery",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "scent quality not in vocab, used alongside 'unpleasant'"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (spore shape, cap cuticle structure)",
+          "value": "\"ellipsoid to oblong\" spores; cuticle of tufts of long erect elements from clavate cells",
+          "verdict": "out of scope per instructions, standard microscopy"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Lepiota magnispora",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Lepiota clypeolaria (\"very similar in size and overall shaggy appearance\"); Lepiota cortinarius",
+      "habitat": "",
+      "formerNames": [
+        "Lepiota ventriosospora",
+        "Lepiota fusispora"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            },
+            {
+              "text": "shaggy"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "veil"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "unpleasant"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"both often have an unpleasant odor\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "shaggy",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "surface texture term used for veil-remnant-covered caps, not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore size/shape",
+          "value": "15-21 x ? µm, 'penguin'/'fat belly' shaped in profile",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "comparison to similar species",
+          "value": "distinguishing spore shapes of L. magnispora vs L. clypeolaria vs L. cortinarius",
+          "verdict": "captured partially via lookalikes field; full key detail out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Lepiota subincarnata",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "deadly",
+      "lookalikes": "Amanita phalloides and other destroying angels (shares amatoxins); other small lepiotas generally",
+      "habitat": "Wooded areas in summer and fall; also rich soil in parks and gardens",
+      "formerNames": [
+        "Lepiota helveola",
+        "Lepiota josserandii"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pink"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "zonate"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fruity"
+            },
+            {
+              "text": "unpleasant"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"Lepiota subincarnata and its close relatives contain amatoxins, the same deadly substances found in Amanita phalloides and the other destroying angels, so make a point of avoiding all small lepiotas when collecting for the table.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "toxin class",
+          "value": "amatoxins",
+          "verdict": "worth its own field if the log ever wants a poisoning-type breakdown; currently edibility scale is enough"
+        },
+        {
+          "characteristic": "microscopy (cap cuticle structure)",
+          "value": "long vertical elements without clavate basal cells",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Leucoagaricus barssii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Sandy or loamy soils, agricultural lands",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "tapering"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "bruises brown"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "staining": "\"the stipe is stout, tapered toward the base, whitish, and discolors brownish when handled\" (informs stipe bruising, not a separate staining statement about flesh)"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "grey-brown",
+          "character": "body",
+          "suggestedCategory": "colour",
+          "note": "compound colour, not in COLOURS list"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "abundance",
+          "value": "\"widespread but not particularly common\"",
+          "verdict": "out of scope, abundance explicitly excluded"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Leucoagaricus leucothites",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "edible",
+      "lookalikes": "White destroying angels (Amanita spp.) — \"its similarity to the white destroying angels causes us to recommend avoiding it as an edible\"",
+      "habitat": "Grassy areas, gardens, other human-influenced habitats; occasionally forests",
+      "formerNames": [
+        "Lepiota naucina"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "granular"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises yellow"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"its white to pale pink spores distinguish it\"",
+        "staining": "\"When bruised, the flesh may turn yellowish and the gills may redden\"",
+        "edibility": "\"Leucoagaricus leucothites is eaten by many people but is not considered choice by most.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "granular",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "surface texture, close to 'scaly' but not identical; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "gill colour change with age",
+          "value": "gills 'may become grayish or pinkish' with age",
+          "verdict": "captured minimally via sporePrint pink tag; full age-progression out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Leucoagaricus rubrotinctoides",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Coastal and lower elevation forests",
+      "formerNames": [
+        "Leucoagaricus rubrotinctus (misapplied)"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "split"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "staining": {
+          "na": true
+        }
+      },
+      "_evidence": {
+        "staining": "\"The gills are white and do not stain or discolor.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {
+        "staining": "stated"
+      },
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Leucocoprinus brebissonii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Lepiota atrodisca (possible misidentification source)",
+      "habitat": "Forest litter, especially second-growth forests, in large groups",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (spore germ pore)",
+          "value": "spores thick-walled with distinct germ pore",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "season/abundance",
+          "value": "appears late spring, most abundant summer, recently very common",
+          "verdict": "season/abundance both explicitly out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Leucocoprinus ianthinus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Greenhouses and compost (per genus intro: warmer-climate species indoors in PNW)",
+      "formerNames": [
+        "Leucocoprinus lilacinogranulosus"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "violet"
+            },
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Cystoderma amianthinum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Moss along road edges and open grassy areas",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "ochre"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "granular"
+            },
+            {
+              "text": "wrinkles"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "genus intro: \"The spores are white, those of some species are amyloid\" — applied here as a group-level fact this entry assumes; not restated per-species",
+        "scent": "\"the odor is disagreeable or somewhat like freshly husked corn\" — mapped to nearest vocab term 'farinaceous' (mealy/corn-like); see _newVocabulary for the more exact wording"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "corn-like",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "guide's own phrase 'freshly husked corn'; farinaceous is a reasonable existing-vocab stand-in but loses precision"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry (amyloid)",
+          "value": "spores amyloid",
+          "verdict": "microscopy/chemical test, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Cystoderma fallax",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Cystoderma granosum (eastern North America analogue)",
+      "habitat": "Conifer, mixed, and hardwood forest litter, humus, rotting wood, and mosses",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "cinnamon"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "rust"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "flaring",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "describes the large membranous ring shape; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry",
+          "value": "amyloid spores",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "range",
+          "value": "western North America only",
+          "verdict": "out of scope, range excluded"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Cystoderma granulosum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Cystoderma amianthinum; Cystoderma terreyi (distinguished microscopically by cheilocystidia and spore amyloidy)",
+      "habitat": "",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (cheilocystidia, spore amyloidy)",
+          "value": "lacks harpoon-shaped cheilocystidia; non-amyloid spores",
+          "verdict": "out of scope, key differentiator from close relatives but microscopy"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Cystoderma terreyi",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Cystoderma granulosum (hard to separate without microscope for cheilocystidia)",
+      "habitat": "Litter in conifer and hardwood forests, often in moss beds",
+      "formerNames": [
+        "Cystoderma cinnabarinum"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "orange"
+            },
+            {
+              "text": "scarlet"
+            },
+            {
+              "text": "bruises red"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "crowded"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"an orange-red to bright brick-red cap that sometimes becomes darker red when handled\"",
+        "scent": "\"The flesh has a strong pungent or farinaceous odor.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "pungent",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "strong sharp odour quality, distinct from 'farinaceous'; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (cheilocystidia)",
+          "value": "harpoon-shaped cheilocystidia",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Jan's Yellow Friend",
+      "scientificName": "Amanita aprica",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "",
+      "habitat": "Mixed conifer forests, particularly with Douglas-fir; occasionally with conifers in urban areas",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "From the Amanita muscaria entry, which names this species directly: \"Along with Amanita gemmata, A. pantherina, and A. aprica, all contain ibotenic acid. Thus, they cause accidental poisonings...\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "frosty",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "describes the thin whitish veil remnants; evocative but not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "seasonal/co-occurrence phenology with A. pantherina, A. gemmata",
+          "value": "early spring fruiting, declining as others appear",
+          "verdict": "season, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita constricta",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Reported from both hardwood and conifer forests (habitat preferences unclear)",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "volva"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "vaginata-group intro: \"The spores are nonamyloid\" together with genus-level 'white (usually) spores' — colour applied cautiously here, chemistry (nonamyloid) left unmapped",
+        "edibility": "\"The group contains a number of edible species but, given the difficulties in their identification, we do not recommend them for the table.\" — a caution about misidentification risk, not a claim about this species' own edibility, so left unknown rather than forced onto the edible/inedible/dubious scale"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "constricted",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "describes the volva shape, 'constricted above before flaring outward'; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry",
+          "value": "nonamyloid spores",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "taxonomic uncertainty",
+          "value": "vaginata group species concepts poorly resolved in PNW, likely undescribed species",
+          "verdict": "taxonomy above division, out of scope"
+        }
+      ],
+      "_notes": "The stipe character is recorded (has stipe, volva) but the ring sub-tag is deliberately omitted because the vaginata group explicitly lacks a partial veil/ring; the schema has no way to mark a single vocabulary item absent within a recorded character, so this is noted in _absence as free text rather than a true na:true (stipe itself is clearly present and recorded, not absent)."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita franchetii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "Often occurs alongside Amanita porphyria and A. gemmata (co-occurring, not stated as confusable)",
+      "habitat": "Mature forests, often with A. porphyria and A. gemmata",
+      "formerNames": [
+        "Amanita aspera"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"It has been reported as toxic when eaten raw or only partially cooked.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "mealy warts",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "texture of veil warts specifically; 'mealy' alone is in scent vocab, not cap"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "season",
+          "value": "early summer into fall",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita gemmata",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "",
+      "habitat": "Forests and under trees in suburban/urban areas",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "cream"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "From the Amanita muscaria entry, which names this species directly: \"Along with Amanita gemmata, A. pantherina, and A. aprica, all contain ibotenic acid. Thus, they cause accidental poisonings...\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "floccose",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "surface texture on lower stipe, cottony/flaky; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "season",
+          "value": "late spring through fall",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "size variability",
+          "value": "some forms small and slender, others large and robust",
+          "verdict": "out of scope, too vague for a measure tag"
+        }
+      ]
+    },
+    {
+      "commonName": "Coccoli",
+      "scientificName": "Amanita lanei",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": "Amanita phalloides (deadly) — \"produces fruitbodies that often are similar in size, stature, and color to A. lanei, and the two species can occur in the same forests at the same time\"",
+      "habitat": "Mixed conifer-hardwood forest, often with madrone and oak",
+      "formerNames": [
+        "Amanita calyptrata",
+        "Amanita calyptroderma"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "orange"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "cream"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "volva"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"The spores are non-amyloid\" combined with the genus-level 'white (usually) spores' — colour applied cautiously; amyloidy itself left unmapped",
+        "edibility": "\"is closely related to A. caesarea and, like it, is edible and quite good in the opinion of many mycophagists\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "cottony",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "texture of the large veil patch on the cap, also used for the volva; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry",
+          "value": "non-amyloid spores",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Fly Agaric",
+      "scientificName": "Amanita muscaria",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "",
+      "habitat": "Natural forest habitats; also planted birches, and under spruce and pine",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "red"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"Along with Amanita gemmata, A. pantherina, and A. aprica, all contain ibotenic acid. Thus, they cause accidental poisonings but also are sought-after by some who seek their psychoactive effects...\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "polka dots",
+          "character": "cap",
+          "suggestedCategory": "note",
+          "note": "colourful common description of veil warts, not real vocabulary — kept as note deliberately"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "chemistry",
+          "value": "ibotenic acid; psychoactive/ritual use in Siberia",
+          "verdict": "out of scope, though the toxin note supports the edibility call"
+        },
+        {
+          "characteristic": "variety/forms",
+          "value": "var. flavivolvata, and unnamed orange/white forms",
+          "verdict": "infraspecific taxonomy, out of scope"
+        },
+        {
+          "characteristic": "related species range note",
+          "value": "Amanita regalis, boreal Alaska",
+          "verdict": "out of scope, different species mentioned only for context"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita pachycolea",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "large"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "bruises brown"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "volva"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "staining": "\"The gills are white with distinct gray to brown edges, and develop orange-brown stains in age.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "felty",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "volva texture term, appears repeatedly in vaginata-group amanitas; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [],
+      "_notes": "Species states outright 'There is no ring' — a true species-level stated fact, but since the stipe character overall is clearly recorded (present, with volva), the schema has no slot for a single absent sub-feature within a recorded character; the ring tag is simply omitted rather than the whole stipe character marked na."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita pantherina",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "Amanita gemmata (pale colour forms resemble it)",
+      "habitat": "Urban areas in late winter/early spring; varied habitats through summer and fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "tan"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"Amanita pantherina causes a number of accidental human and dog poisonings, especially puppies, and also is consumed intentionally for its psychoactive effects.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "chemistry",
+          "value": "ibotenic acid, higher concentration than A. muscaria, highest in dark brown forms",
+          "verdict": "out of scope, supports edibility call"
+        },
+        {
+          "characteristic": "taxonomic uncertainty",
+          "value": "PNW material may not be 'real' A. pantherina",
+          "verdict": "taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "Death Cap",
+      "scientificName": "Amanita phalloides",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "deadly",
+      "lookalikes": "Amanita ocreata (all-white, similar size and stature); A. verna (reported twice from PNW, doubtful)",
+      "habitat": "Introduced/naturalized in forests; found with oak and other trees in urban areas, hazel (filbert) orchards",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "olive"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "olive"
+            },
+            {
+              "text": "green"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"usually has an olive to greenish yellow or yellowish brown to bronze cap, often with darker streaks, but not striations, on the margin\" — non-striate margin noted but no vocab slot for that, see _unmapped",
+        "sporePrint": "destroying-angel group note: \"All have white amyloid spores.\"",
+        "edibility": "\"All these species can cause deadly poisoning, and it is important to keep them in mind when collecting for the table.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "cap margin (non-striate)",
+          "value": "\"not striations\" on margin — a distinguishing negative feature",
+          "verdict": "the schema's descriptor vocab has 'striate' but no clean opposite; worth adding 'non-striate' or leaving as a cap note"
+        },
+        {
+          "characteristic": "spore chemistry",
+          "value": "amyloid spores",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "history",
+          "value": "introduced/naturalized from Europe into San Francisco Bay region",
+          "verdict": "out of scope, range/history"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita porphyria",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Conifer forests, latter part of summer into fall, often with A. gemmata and A. franchetii",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "volva"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "radish"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The odor is said to resemble that of raw potatoes or radish.\"",
+        "staining": "\"The gills are white to grayish and darken when bruised\" — exact darkened colour unspecified, mapped to the nearest DESCRIPTORS term 'bruises brown' with low confidence"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "raw potato",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "specific scent comparison alongside 'radish'; not in vocab"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Amanita silvicola",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Amanita smithiana (toxic, kidney-damaging) — \"its close relationship to A. smithiana should preclude anyone from eating it\"",
+      "habitat": "",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "universal veil"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "short"
+            },
+            {
+              "text": "stout"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "edibility": "\"The edibility of A. silvicola is uncertain, but its close relationship to A. smithiana should preclude anyone from eating it.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "stout",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "build descriptor, appears repeatedly across genera; not in DESCRIPTORS"
+        },
+        {
+          "tag": "rooting",
+          "character": "stipe",
+          "suggestedCategory": "descriptor",
+          "note": "already in DESCRIPTORS actually — listing here as confirmation it applies, no action needed"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "stipe-base behaviour",
+          "value": "pushes up litter/soil from a deep-seated club-shaped base",
+          "verdict": "growth-habit detail, out of scope beyond the clavate/stout tags already recorded"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe albirhiza",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Clitocybe ramigena (similar, smaller, occurs on wood/debris, apparently not bitter)",
+      "habitat": "Conifer litter in montane forests, clustered or scattered, western snowbank mushroom fruiting in spring/early summer after snowmelt",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "depressed"
+            },
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "buff"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "zonate"
+            },
+            {
+              "text": "hygrophanous"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "buff"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "fibrous"
+            },
+            {
+              "text": "tough"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bitter"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The taste is bitter.\"",
+        "cap": "\"moist caps are typically darker-colored and often have concentric color-zones, while drier caps are usually paler and opaque\" — mapped to 'hygrophanous'"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "mycelial strands",
+          "character": "stipe",
+          "suggestedCategory": "note",
+          "note": "abundant white mycelial strands from stipe base, gives species its epithet; no clean vocab slot (rhizomorphs is close but that's a form term for a different structure)"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "season",
+          "value": "spring/early summer, snowmelt",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe avellaneialba",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Very decayed conifer logs or woody debris, coastal forests north to Idaho, fall into late season",
+      "formerNames": [
+        "Ampulloclitocybe avellaneialba"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "inrolled"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "equal"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "radial lines",
+          "character": "cap",
+          "suggestedCategory": "note",
+          "note": "guide explicitly distinguishes these from striations; no vocab slot without conflating with 'striate'"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (spore shape)",
+          "value": "long, narrow, fusoid spores",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe clavipes",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "toxic",
+      "lookalikes": "",
+      "habitat": "Conifer and mixed woods, and other habitats",
+      "formerNames": [
+        "Ampulloclitocybe clavipes"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "moist"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "forking"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "clavate"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fruity"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"When fresh the fruitbodies smell like grape bubble gum.\" — mapped to nearest vocab term 'fruity'; see _newVocabulary for the exact wording",
+        "edibility": "\"it was reported that, similar to Coprinopsis atramentaria..., it can be toxic when consumed with alcohol\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "grape bubble gum",
+          "character": "scent",
+          "suggestedCategory": "note",
+          "note": "guide's own vivid phrase; 'fruity' captures the gist but loses the specificity"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe connata",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "dubious",
+      "lookalikes": "",
+      "habitat": "Roadsides, ski slopes, edges of woods, bare soil or low vegetation, in large clusters",
+      "formerNames": [
+        "Lyophyllum connatum",
+        "Clitocybe dilatata",
+        "Clitocybe cerussata var. difformis"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "crowded"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "decurrent"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "clustered"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "sweet"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"has also been reported as a good edible in western Montana, with a flavor like asparagus\" — mapped loosely to 'sweet'; see _newVocabulary",
+        "edibility": "\"Clitocybe connata has been thought to contain muscarine and other bioactive compounds, but also has been reported as a good edible in western Montana, with a flavor like asparagus. Given this uncertainty, we do not recommend it for the table.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "asparagus",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "specific flavour comparison from the Montana edible reports; not in vocab"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "chemical test",
+          "value": "\"A drop of iron sulfate turns the cap and gills violet in one to two minutes\"",
+          "verdict": "classic chemical spot-test, out of scope per instructions but worth a dedicated chem-test field if the log ever wants keys that use reagents"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe diatreta",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Needle beds under various conifers, litter under trees",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "depressed"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "hygrophanous"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "buff"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "decurrent"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"darkest in the center when moist, then fading to very pale colors on drying\" — mapped to 'hygrophanous'"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "pruinose surface",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "'pruinose' already exists in DESCRIPTORS — flagging only that it applies here, no new term needed"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe epichysium",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Lichenomphalia umbellifera (similarly shaped, frequents logs/stumps, but paler)",
+      "habitat": "Conifer and hardwood logs and stumps",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "hygrophanous"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "decurrent"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "wood"
+            },
+            {
+              "text": "log"
+            },
+            {
+              "text": "stump"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"finely translucent-striate when fresh, then fades to pale gray or gray-brown\" — mapped to 'hygrophanous' plus 'striate'"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "collar",
+          "character": "hymenium",
+          "suggestedCategory": "form",
+          "note": "gills 'often end at a collar around the stipe apex' — omphalinoid feature, no current vocab term"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic placement",
+          "value": "recently transferred to genus Arrhenia; resembles Omphalina",
+          "verdict": "taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe glacialis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Melanoleuca angelesiana (\"easily confused with the latter when mature\"; distinguished by amyloid vs non-amyloid spore ornamentation)",
+      "habitat": "Western snowbank mushroom, often with C. albirhiza and Melanoleuca angelesiana",
+      "formerNames": [
+        "Lyophyllum montanum"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"melanoleucas have spores with amyloid ornamentation while those of C. glacialis are smooth and non-amyloid\" — colour inferred cautiously as white (typical of smooth Clitocybe-type spores), chemistry left unmapped"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "low",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore ornamentation",
+          "value": "smooth, non-amyloid, vs amyloid-ornamented in Melanoleuca",
+          "verdict": "microscopy, out of scope but key ID feature"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe nebularis",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Leucopaxillus giganteus (whiter, amyloid spores); Clitocybe geotropa (buff to pale pinkish brown cap)",
+      "habitat": "Variety of forests, along woodland trails, late fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "incurved"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "subdecurrent"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "forking"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"usually has an unpleasant odor, described as like skunk cabbage or rodent cages, or just strongly farinaceous; however, sometimes an odor is lacking\" — recorded as present since the guide treats absence as only occasional/variable, not a species-defining trait"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "skunk cabbage",
+          "character": "scent",
+          "suggestedCategory": "note",
+          "note": "specific regional scent comparison; 'farinaceous' is the guide's own fallback generic term"
+        },
+        {
+          "tag": "rodent cage",
+          "character": "scent",
+          "suggestedCategory": "note",
+          "note": "specific scent comparison, no vocab equivalent"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "Blewit",
+      "scientificName": "Clitocybe nuda",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "edible",
+      "lookalikes": "Clitocybe tarda (similar colour but smaller, more slender, usually grows in grass)",
+      "habitat": "Forests, but more often lawns, gardens, parks, compost heaps or yard waste",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "smooth"
+            },
+            {
+              "text": "waxy"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "purple"
+            },
+            {
+              "text": "lilac"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "bulbous"
+            },
+            {
+              "text": "fleshy"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pleasant"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"tricholoma-like stature and pale pinkish roughened spores\"",
+        "scent": "\"The odor is pleasant.\"",
+        "edibility": "\"the blewit is well known to mushroomers because of its widespread occurrence, abundance, and edibility\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "pleasant",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "positive-valence scent term distinct from neutral 'mild'; not in vocab"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "spore ornamentation",
+          "value": "roughened spores",
+          "verdict": "microscopy, out of scope"
+        },
+        {
+          "characteristic": "named form",
+          "value": "C. glaucocana form occurring in mountains",
+          "verdict": "infraspecific taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe sinopica",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Clitocybe squamulosa; Clitocybe mitis (distinguished by mild odour)",
+      "habitat": "Bare soil, found nearly year-round",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "depressed"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "close"
+            },
+            {
+              "text": "decurrent"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "tapering"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The odor is farinaceous.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe squamulosa",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "On needles under conifers, mixed woods with alder, also along roads in open areas",
+      "formerNames": [
+        "Infundibulicybe sinopicoides"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "forking"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The odor is fungoid to farinaceous.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "fungoid",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "generic 'mushroomy' odour term, distinct from farinaceous; not in vocab"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "infraspecific variation",
+          "value": "vars. montana and sicca described, hard to separate",
+          "verdict": "infraspecific taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe subditopoda",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Pacific Coast conifer forests, late into fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "hygrophanous"
+            },
+            {
+              "text": "striate"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "close"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "equal"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The odor is persistently farinaceous.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybe tarda",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Clitocybe nuda (\"a slender relative of C. nuda\")",
+      "habitat": "Cultivated or grassy areas, groups or clusters; occasionally wooded places",
+      "formerNames": [
+        "Lepista tarda"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "incurved"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "hygrophanous"
+            },
+            {
+              "text": "striate"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "lilac"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "pink"
+            },
+            {
+              "text": "buff"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"The pinkish buff spores are smooth to ornamented.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore ornamentation",
+          "value": "smooth to ornamented",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Catathelasma ventricosum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "Catathelasma imperiale (brownish cap, somewhat larger; intermediate grayish-brown-capped specimens not uncommon)",
+      "habitat": "Calcareous soils in conifer forests, often in large local populations forming arcs or rings",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "grey"
+            },
+            {
+              "text": "inrolled"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "crowded"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "veil"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "cap": "\"Catathelasma ventricosum has a pale to grayish cap\" (species-specific); genus-level traits (two veils, tough texture, narrow crowded decurrent gills, farinaceous odour/taste, white amyloid spores) drawn from the shared genus description that covers both of the region's two species",
+        "sporePrint": "genus description: \"the spores are white and amyloid\"",
+        "scent": "genus description: \"the flesh has a strong farinaceous odor and taste\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry",
+          "value": "amyloid spores",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "double veil structure detail",
+          "value": "inner veil leaves conspicuous ring; outer veil leaves narrow ring/ring-zone and cap patches",
+          "verdict": "captured as 'ring'+'veil' tags; the two-veil distinction itself has no vocab slot, worth a 'double ring' descriptor if this genus matters to the log"
+        }
+      ],
+      "_notes": "This is a two-species genus account (C. ventricosum and C. imperiale) where most characters are given jointly and only cap colour/size differ per species; traits attributed here follow the instructions to use group-level facts an entry assumes, with confidence set to medium accordingly."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Clitocybula atrialba",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Wood (sometimes buried) of alder and perhaps other hardwoods, singly",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "black"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "distant"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "wood"
+            },
+            {
+              "text": "dead hardwood"
+            },
+            {
+              "text": "buried wood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "genus description: \"Clitocybula is a genus of small to larger clitocybe- or collybia-like mushrooms that occur on wood or woody debris and have whitish amyloid spores\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "furfuraceous",
+          "character": "cap",
+          "suggestedCategory": "descriptor",
+          "note": "mealy/scurfy surface texture term, used for both cap and stipe here; not in DESCRIPTORS"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "abundance variability",
+          "value": "very common some years, virtually absent others",
+          "verdict": "abundance, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": "False Chanterelle",
+      "scientificName": "Hygrophoropsis aurantiaca",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Chanterelles (Cantharellus spp.) — \"often is confused with chanterelles\"",
+      "habitat": "Western conifer forests, soils rich in decayed wood and woody litter, fall",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "velvety"
+            },
+            {
+              "text": "irregular"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "forking"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "eccentric"
+            },
+            {
+              "text": "central"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic relationship",
+          "value": "more closely related to Paxillus and boletes than to true clitocybes/chanterelles despite the look",
+          "verdict": "taxonomy, out of scope"
+        }
+      ],
+      "_notes": "No explicit edibility statement in this entry despite the common name 'False Chanterelle' implying a culinary confusion risk; left as unknown rather than inferred."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Hygrophoropsis morganii",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Hygrophoropsis olida (\"appears to be the same species\")",
+      "habitat": "Conifer forests on needles and litter, June to October",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "infundibuliform"
+            },
+            {
+              "text": "inrolled"
+            },
+            {
+              "text": "lobed"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "central"
+            },
+            {
+              "text": "eccentric"
+            },
+            {
+              "text": "pink"
+            },
+            {
+              "text": "tomentose"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "fruity"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "scent": "\"The fragrant, fruity odor of cinnamon candy or grape soda is distinctive.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "cinnamon candy",
+          "character": "scent",
+          "suggestedCategory": "note",
+          "note": "guide's specific comparison; 'fruity' is the nearest existing vocab term"
+        },
+        {
+          "tag": "grape soda",
+          "character": "scent",
+          "suggestedCategory": "note",
+          "note": "guide's specific comparison"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Myxomphalia maura",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Lyophyllum atratum (small blackish brown collybia-like species, often found together)",
+      "habitat": "Charred earth or burned wood under conifers, or in fire pits",
+      "formerNames": [
+        "Fayodia maura"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "dark-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "depressed"
+            },
+            {
+              "text": "gelatinous"
+            },
+            {
+              "text": "striate"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "grey"
+            },
+            {
+              "text": "hygrophanous"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "adnate"
+            },
+            {
+              "text": "decurrent"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "grey"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "brittle"
+            },
+            {
+              "text": "viscid"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "burn site"
+            },
+            {
+              "text": "wood"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "\"The spores are white, smooth to roughened, and amyloid.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "spore chemistry/ornamentation",
+          "value": "amyloid, smooth to roughened",
+          "verdict": "microscopy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Neohygrophorus angelesianus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Mountains near melting snow; also bare soil, meadows, or lower elevations under conifers",
+      "formerNames": [
+        "Hygrophorus angelesianus",
+        "Clitocybe mutabilis"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "violet"
+            },
+            {
+              "text": "purple"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "distant"
+            },
+            {
+              "text": "waxy"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        }
+      },
+      "_evidence": {},
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "microscopy (spore amyloidy, gill tissue KOH reaction)",
+          "value": "amyloid spores; gill tissue vinaceous to brownish pink in 3% KOH",
+          "verdict": "chemical test / microscopy, out of scope"
+        },
+        {
+          "characteristic": "taxonomic history",
+          "value": "long confused between N. angelesianus and Clitocybe mutabilis names",
+          "verdict": "taxonomy, out of scope beyond formerNames"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Neolentinus lepideus",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "saprophytic",
+      "edibility": "unknown",
+      "lookalikes": "Neolentinus ponderosus (similar, tan to yellowish brown, lacks a partial veil and ring, on conifer wood at higher elevations)",
+      "habitat": "Conifer logs and stumps; also construction timbers, railroad ties, and formerly wooden automobile frames (brown-rot fungus)",
+      "formerNames": [
+        "Lentinus lepideus"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "depressed"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "serrate"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "tough"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "anise"
+            }
+          ]
+        },
+        "substrate": {
+          "na": false,
+          "tags": [
+            {
+              "text": "wood"
+            },
+            {
+              "text": "log"
+            },
+            {
+              "text": "stump"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "hymenium": "\"The gills are whitish and have saw-toothed edges.\" — mapped to 'serrate'",
+        "scent": "\"The odor of fresh specimens is fragrant, sometimes anise-like.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "fragrant",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "positive-valence general scent term, distinct from 'sweet'/'fruity'; not in vocab"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic relationship",
+          "value": "probably more closely related to polypores than most gilled mushrooms",
+          "verdict": "taxonomy, out of scope, but interesting given body character is still recorded agaricoid per this guide's own framing"
+        },
+        {
+          "characteristic": "age discolouration",
+          "value": "gills and stipe may become rusty to reddish brown in age",
+          "verdict": "left out of staining character deliberately since this is age-related colour change, not a bruise/cut reaction the staining character is meant for"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma atroviolaceum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "unknown",
+      "lookalikes": "",
+      "habitat": "Under conifers, Pacific Coast (northern California and PNW) only",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "violet"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "plane"
+            },
+            {
+              "text": "violet"
+            },
+            {
+              "text": "grey-brown"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "split"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "cinnamon"
+            },
+            {
+              "text": "pink"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            },
+            {
+              "text": "bitter"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises red"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: \"In its original sense, Tricholoma included all mushrooms with white spores...the remaining species are true to the original description\"",
+        "staining": "\"The flesh of the cap often stains reddish gray when cut\" — mapped to the nearest DESCRIPTORS term 'bruises red'",
+        "scent": "\"The flesh has a mildly to strongly farinaceous odor and somewhat bitter taste.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": []
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma caligatum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "dubious",
+      "lookalikes": "Tricholoma magnivelare (\"its nearest look-alike... stockier, with fewer and paler fibrils, and nearly always with a pleasant cinnamon-spicy odor\")",
+      "habitat": "",
+      "formerNames": [
+        "Armillaria caligata"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "dark-brown"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "inrolled"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "white"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "ring"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "edibility": "\"There are conflicting reports about its edibility—PNW collections often have an unpleasant odor and taste, yet in the Rockies and northeastern U.S., it is reported as good.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "etymology",
+          "value": "caligatum = Latin for 'boot', referring to the fibrillose stocking-like stipe",
+          "verdict": "out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma flavovirens",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "dubious",
+      "lookalikes": "Tricholoma equestre (\"a very similar (or possibly the same) species in France\" implicated in fatal poisonings); T. sejunctum (black/dark brown radiating cap fibrils); T. sulphureum (unpleasant coal gas/heavy floral odour)",
+      "habitat": "Most often under pine, but also other conifers, cottonwood, and aspen; common in shore pine on old sand dunes (Oregon coast)",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "yellow"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "dry"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "yellow"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "edibility": "\"Tricholoma flavovirens generally is considered a good edible species in North America, but reports of fatal poisonings by T. equestre, a very similar (or possibly the same) species in France, suggest caution is in order.\" — the most cautious reading of this genuine disagreement is taken (dubious) rather than treating the North American 'good edible' claim at face value"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "cryptic species complex",
+          "value": "molecular data suggest more than one species under the name T. flavovirens on the West Coast",
+          "verdict": "taxonomy, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma focale",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "inedible",
+      "lookalikes": "Tricholoma magnivelare (dull-coloured forms; distinguished by T. focale's strong farinaceous odour); T. aurantium (brighter orange forms; distinguished by presence of an actual veil rather than just a colour-contrast zone)",
+      "habitat": "Under conifers in low-nutrient soils, common in the PNW",
+      "formerNames": [
+        "Armillaria zelleri",
+        "Tricholoma zelleri"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "convex"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "olive"
+            },
+            {
+              "text": "tan"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "tapering"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "farinaceous"
+            },
+            {
+              "text": "bitter"
+            }
+          ]
+        },
+        "staining": {
+          "na": false,
+          "tags": [
+            {
+              "text": "bruises brown"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "scent": "\"very firm flesh, cottony ring, strong farinaceous odor, and very bitter taste\"",
+        "staining": "\"The gills are whitish at first, but develop rusty orange stains fairly quickly.\" — mapped to nearest DESCRIPTORS term 'bruises brown'; see _newVocabulary",
+        "edibility": "\"The strong unpleasant odor and taste make it inedible.\""
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "rusty orange",
+          "character": "staining",
+          "suggestedCategory": "descriptor",
+          "note": "specific stain colour not covered by the bruises-X set, which lacks orange/rust"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "mycelium odour in soil",
+          "value": "odour present even in surrounding soil due to large mat-forming mycelium",
+          "verdict": "curiosity, out of scope"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma imbricatum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "inedible",
+      "lookalikes": "Tricholoma muricatum, T. ustale, T. populinum (similar reddish-brown tricholomas, but viscid-capped and different habitats); T. vaccinum (most easily confused — smaller, softer, often hollow stipe, scalier, brighter, usually under spruce not pine)",
+      "habitat": "Under pines",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "brown"
+            },
+            {
+              "text": "dry"
+            },
+            {
+              "text": "scaly"
+            },
+            {
+              "text": "fleshy"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "edibility": "\"Tricholoma imbricatum may be edible, but its tough texture argues against it being very desirable.\" — mapped to the table's 'too tough' -> inedible"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "cap margin grooves",
+          "value": "\"short grooves along its edge\"",
+          "verdict": "minor, close to 'striate' but described as short/partial; left out rather than overclaim"
+        }
+      ],
+      "_notes": "Text states 'lack of a veil' explicitly for this species — a true stated absence, but since the stipe character itself is clearly present and recorded, the schema has no slot for a single absent sub-feature (ring) within a recorded character, so the ring tag is simply omitted."
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma inamoenum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "inedible",
+      "lookalikes": "Tricholoma sulphureum (sulfur-yellow colour is the main difference, otherwise \"little separates them\"); Tricholoma platyphyllum (\"seems to be the same as T. inamoenum\")",
+      "habitat": "Under conifers",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "distant"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "phenolic"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "scent": "\"a coal gas odor... strong and unpleasant for most people; some liken it to a heavy floral odor, such as that of Narcissus\" — mapped loosely to 'phenolic' (chemical-smelling); see _newVocabulary for the guide's own terms",
+        "edibility": "\"Neither is edible.\" (referring to T. inamoenum and T. sulphureum together)"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "medium",
+      "_newVocabulary": [
+        {
+          "tag": "coal gas",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "distinctive named odour repeated for this species pair; 'phenolic' is the nearest existing term but not exact"
+        },
+        {
+          "tag": "heavy floral",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "alternative description of the same odour, compared to Narcissus"
+        }
+      ],
+      "_unmapped": []
+    },
+    {
+      "commonName": "American Matsutake",
+      "scientificName": "Tricholoma magnivelare",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "edible",
+      "lookalikes": "Tricholoma caligatum; Catathelasma imperiale and C. ventricosum (paler, grayer, lack the spicy odour); Amanita smithiana (dangerously poisonous, also white, lacks spicy odour, more slender, softer flesh); Russula brevipes; Tricholoma apium; T. matsutake (very similar, the prized Japanese species)",
+      "habitat": "Under conifers on nutrient-poor soils such as dune sands, scattered to gregarious",
+      "formerNames": [
+        "Armillaria ponderosa"
+      ],
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            },
+            {
+              "text": "brown"
+            },
+            {
+              "text": "fibrillose"
+            },
+            {
+              "text": "scaly"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "tapering"
+            },
+            {
+              "text": "ring"
+            },
+            {
+              "text": "fleshy"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "scent": {
+          "na": false,
+          "tags": [
+            {
+              "text": "spicy"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored; also stated directly in the matsutake-lookalike comparison, \"all three of which are pale-colored, and have white spores\"",
+        "scent": "\"firm flesh with a characteristic spicy odor\", \"famously described by David Arora as a cross between cinnamon candy and dirty socks\"",
+        "edibility": "\"It is edible and choice according to many, but considered mediocre by others.\" — reported here as edible per the rule against ever proposing 'choice'"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "high",
+      "_newVocabulary": [
+        {
+          "tag": "spicy",
+          "character": "scent",
+          "suggestedCategory": "descriptor",
+          "note": "the species' single most diagnostic trait; no vocab term for it currently ('peppery' is close but distinct)"
+        }
+      ],
+      "_unmapped": [
+        {
+          "characteristic": "commercial/conservation note",
+          "value": "harvested commercially for export to Japan; conservation/sociological issue",
+          "verdict": "out of scope"
+        },
+        {
+          "characteristic": "ecological curiosity",
+          "value": "mycelium parasitized by Allotropa virgata (candystick)",
+          "verdict": "out of scope, interesting but not a key character"
+        }
+      ]
+    },
+    {
+      "commonName": null,
+      "scientificName": "Tricholoma muricatum",
+      "kind": "fungi",
+      "division": "Basidiomycota",
+      "nutrition": "mycorrhizal",
+      "edibility": "toxic",
+      "lookalikes": "Tricholoma pessundatum (European, nearly identical, differs only in minor microscopic details); T. fracticum (= T. batschii); T. manzanitae; T. nictitans (= T. flavobrunneum); T. fulvum; T. populinum; T. ustale; T. stans",
+      "habitat": "Coastal Oregon shore pine woodlands; grows with pine",
+      "characters": {
+        "body": {
+          "na": false,
+          "tags": [
+            {
+              "text": "agaricoid"
+            },
+            {
+              "text": "red-brown"
+            }
+          ]
+        },
+        "cap": {
+          "na": false,
+          "tags": [
+            {
+              "text": "red-brown"
+            },
+            {
+              "text": "viscid"
+            },
+            {
+              "text": "fibrillose"
+            }
+          ]
+        },
+        "hymenium": {
+          "na": false,
+          "tags": [
+            {
+              "text": "gills"
+            },
+            {
+              "text": "orange"
+            },
+            {
+              "text": "white"
+            }
+          ]
+        },
+        "stipe": {
+          "na": false,
+          "tags": [
+            {
+              "text": "stipe"
+            },
+            {
+              "text": "orange"
+            }
+          ]
+        },
+        "sporePrint": {
+          "na": false,
+          "tags": [
+            {
+              "text": "white"
+            }
+          ]
+        }
+      },
+      "_evidence": {
+        "sporePrint": "Tricholoma genus intro: species are white-spored",
+        "edibility": "\"None of these species is edible, and some or all are probably somewhat toxic.\" — a hedged group-level claim covering T. muricatum and its close look-alikes; taken as toxic under the most-cautious-reading rule"
+      },
+      "_form": "agaricoid",
+      "_absence": {},
+      "_confidence": "low",
+      "_newVocabulary": [],
+      "_unmapped": [
+        {
+          "characteristic": "taxonomic complexity",
+          "value": "\"sorely in need of critical study worldwide, as it seems there must be more names than there are taxa\"",
+          "verdict": "taxonomy, out of scope"
+        }
+      ],
+      "_notes": "Cap margin has 'short grooves at the edge' similar to T. imbricatum — left off the striate tag deliberately since the guide treats 'short grooves' as distinct from full striations elsewhere in this same genus account."
+    }
+  ]
+}

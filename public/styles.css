@@ -1,0 +1,999 @@
+/* ==========================================================================
+   Tracker — black and near-black grounds, white text, one configurable accent.
+   The same shell as the finances app, so the two read as one set of tools.
+
+   What is new here is that this app has *photographs* in it. Everything added
+   below exists to keep an image from breaking the typographic grid: fixed
+   aspect ratios, sunken wells behind every picture, and no photo ever bleeding
+   to the edge of a panel.
+
+   The accent is set from config.json at load. The values here are the fallback
+   so the page never flashes unstyled if that read is slow or fails.
+   ========================================================================== */
+
+:root {
+  --paper: #0a0a0b;
+  --card: #141417;
+  --card-sunk: #1c1c20;
+  --card-raised: #202026;
+
+  --ink: #f4f4f6;
+  --ink-soft: #a2a2ad;
+  --ink-faint: #6b6b76;
+
+  --rule: #2c2c33;
+  --rule-soft: #232329;
+
+  /* Overwritten from config.theme.accent at boot. */
+  --accent: #A8C66C;
+  --accent-wash: rgba(168, 198, 108, 0.16);
+  --accent-dim: rgba(168, 198, 108, 0.55);
+
+  /* One colour per kingdom, set from config.theme.types at boot. Used for the
+     type badge, the seasonality chart bands, and nothing else — they are
+     labels, not a palette to decorate with. */
+  --fungi: #D99A4E;
+  --flora: #7FB069;
+  --fauna: #6AA9D8;
+
+  --gain: #4ec9a5;
+  --warn: #e8705f;
+  /* Between gain and warn, for the edibility rating that is neither. */
+  --caution: #d8a13a;
+  --gain-wash: rgba(78, 201, 165, 0.16);
+  --warn-wash: rgba(232, 112, 95, 0.16);
+
+  --display: "Bahnschrift", "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --mono: "SFMono-Regular", "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+
+  --gap: 20px;
+  --radius: 3px;
+  --wide: 1240px;
+
+  color-scheme: dark;
+  accent-color: var(--accent);
+}
+
+* { box-sizing: border-box; }
+
+/* An explicit `display` beats the UA stylesheet's [hidden] rule, and .frame
+   sets display:grid — so hiding a view needs this to actually take. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 24px 64px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+[data-num], .ledger, input[type="number"] {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.r { text-align: right; }
+.c { text-align: center; }
+.muted { color: var(--ink-faint); }
+
+/* A scientific name is italic everywhere it appears, by long convention. */
+.sci { font-style: italic; }
+
+/* --- masthead ------------------------------------------------------------ */
+
+.masthead {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 32px 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--gap);
+  border-bottom: 1px solid var(--accent-dim);
+}
+
+.masthead h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(30px, 5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Sits with the wordmark but keeps its own colour rather than inheriting the
+   accent, and drops the display font's uppercase and letter-spacing. */
+.masthead-emoji {
+  font-family: initial;
+  font-size: 0.72em;
+  letter-spacing: normal;
+  text-transform: none;
+  vertical-align: 0.06em;
+  margin-left: 2px;
+}
+
+.masthead-title p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+.masthead-chips { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  min-width: 132px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.chip-label { font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.chip-value { font-family: var(--mono); font-size: 17px; font-weight: 600; color: var(--ink); }
+.chip-source { font-size: 11px; color: var(--ink-faint); }
+/* The "last find" chip carries a name, not a figure — prose, and it wraps. */
+.chip.is-text .chip-value { font-family: var(--body); font-size: 15px; overflow-wrap: anywhere; }
+
+/* --- tabs ---------------------------------------------------------------- */
+
+.tabs {
+  max-width: var(--wide);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0 0;
+}
+
+.tab {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer;
+}
+.tab:hover { color: var(--ink); }
+.tab.is-active {
+  background: var(--card);
+  border-color: var(--rule);
+  border-bottom-color: var(--card);
+  color: var(--accent);
+}
+.tab-status { margin-left: auto; font-size: 12px; color: var(--ink-faint); }
+
+/* --- notice -------------------------------------------------------------- */
+
+.notice, .banner {
+  max-width: var(--wide);
+  margin: 14px auto 0;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.notice { background: var(--warn-wash); border: 1px solid var(--warn); color: var(--warn); }
+.banner { background: var(--accent-wash); border: 1px solid var(--accent-dim); color: var(--ink); grid-column: 1 / -1; }
+.banner strong { color: var(--accent); }
+
+/* --- layout -------------------------------------------------------------- */
+
+.frame {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding-top: var(--gap);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+/* Grid and flex children default to min-content width, so a wide table or a
+   photo strip would push its whole section past the viewport instead of
+   scrolling inside its own container. */
+.frame > * { min-width: 0; }
+
+.console, .block {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 18px 20px 20px;
+}
+
+.block-head { margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
+.block-note { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); flex: 1 1 260px; }
+.block-head .eyebrow { flex: none; }
+
+/* --- readout ------------------------------------------------------------- */
+
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.readout-primaries { display: flex; flex-wrap: nowrap; gap: 32px; flex: 1 1 auto; min-width: 0; }
+.readout-primaries .readout-primary { flex: 1 1 0; min-width: 0; max-width: 420px; }
+.readout-primaries .big-number { font-size: clamp(24px, 3.4vw, 38px); }
+
+@media (max-width: 600px) {
+  .readout-primaries { flex-wrap: wrap; gap: 18px; }
+  .readout-primaries .readout-primary { flex: 1 1 100%; max-width: none; }
+}
+
+.field-label { font-family: var(--display); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+
+.big-number { display: flex; align-items: baseline; gap: 4px; font-family: var(--mono); font-size: clamp(30px, 5vw, 44px); font-weight: 600; color: var(--ink); }
+.big-number .unit { font-size: 0.5em; color: var(--ink-faint); }
+.readout-caption { margin: 2px 0 0; font-size: 13px; color: var(--ink-soft); }
+
+.readout-stats { display: flex; flex-wrap: wrap; gap: 26px; margin: 0; }
+.readout-stats dt { font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+.readout-stats dd { margin: 2px 0 0; font-size: 19px; font-weight: 600; color: var(--ink); }
+/* The kingdom tallies carry their own colour, the same one the chart uses. */
+.readout-stats dd[data-type="fungi"] { color: var(--fungi); }
+.readout-stats dd[data-type="flora"] { color: var(--flora); }
+.readout-stats dd[data-type="fauna"] { color: var(--fauna); }
+
+.verdict { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--rule-soft); font-size: 14px; color: var(--ink-soft); }
+.verdict strong { color: var(--accent); }
+
+/* --- type badge ---------------------------------------------------------- */
+
+.type-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--display); font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: var(--radius);
+  border: 1px solid currentColor;
+}
+.type-badge[data-type="fungi"] { color: var(--fungi); }
+.type-badge[data-type="flora"] { color: var(--flora); }
+.type-badge[data-type="fauna"] { color: var(--fauna); }
+.type-badge .glyph { font-family: initial; letter-spacing: normal; font-size: 11px; }
+
+/* --- tables -------------------------------------------------------------- */
+
+.table-scroll { overflow-x: auto; }
+.chart-shell + .table-scroll { margin-top: 18px; }
+
+.ledger { width: 100%; border-collapse: collapse; font-size: 13.5px; color: var(--ink); }
+.ledger th {
+  text-align: left;
+  font-family: var(--display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+  padding: 0 10px 8px; border-bottom: 1px solid var(--accent-dim); white-space: nowrap;
+}
+.ledger th[data-sort] { cursor: pointer; user-select: none; }
+.ledger th[data-sort]:hover { color: var(--ink); }
+.ledger th[data-sort]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* Reserved so the row does not shift when the arrow appears. */
+.sort-arrow { display: inline-block; width: 1em; margin-left: 3px; opacity: 0; }
+.ledger th[aria-sort] .sort-arrow { opacity: 1; }
+
+.ledger th.r { text-align: right; }
+.ledger th.c { text-align: center; }
+.ledger td { padding: 7px 10px; border-bottom: 1px solid var(--rule-soft); height: 56px; vertical-align: middle; }
+.ledger tbody tr:last-child td { border-bottom: none; }
+.ledger th.nowrap, .ledger td.nowrap { white-space: nowrap; width: 1%; }
+.ledger tr.is-muted td { color: var(--ink-faint); }
+.ledger tbody tr.is-clickable { cursor: pointer; }
+.ledger tbody tr.is-clickable:hover td { background: var(--card-sunk); }
+.ledger .flag { font-size: 11px; font-family: var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
+.ledger .flag.warn { color: var(--warn); }
+.ledger .flag.gain { color: var(--gain); }
+.ledger .flag.soft { color: var(--ink-faint); }
+
+/* A species row leads with a thumbnail, small enough not to set the row
+   height on its own — the 56px floor above already does. */
+.row-thumb {
+  width: 40px; height: 40px; border-radius: var(--radius);
+  object-fit: cover; display: block; background: var(--card-sunk);
+}
+.row-thumb.is-empty { display: grid; place-items: center; font-size: 17px; color: var(--ink-faint); }
+
+/* --- forms --------------------------------------------------------------- */
+
+.entry-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+.entry-row label { display: flex; flex-direction: column; gap: 3px; font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.entry-row label.grow { flex: 1 1 180px; }
+.entry-row label.wide { flex: 1 1 100%; }
+.entry-row input, .entry-row select, .entry-row textarea {
+  font-family: var(--body); font-size: 14px; padding: 6px 8px;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--card-sunk); color: var(--ink); text-transform: none; letter-spacing: 0;
+}
+.entry-row textarea { resize: vertical; min-height: 62px; }
+.entry-row input[type="number"] { font-family: var(--mono); max-width: 120px; }
+/* Coordinates are figures, and they line up better read as such. */
+.entry-row input.coord { font-family: var(--mono); max-width: 130px; }
+.entry-row input:disabled, .entry-row select:disabled { color: var(--ink-faint); background: var(--paper); cursor: not-allowed; }
+.field-hint { font-family: var(--body); font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--ink-faint); }
+/* The hint sits under a field and must not stretch the flex row's baseline. */
+label .field-hint { margin-top: 1px; }
+
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .dropzone:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+
+.solid-button, .ghost-button {
+  font-family: var(--display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 8px 16px; border-radius: var(--radius); cursor: pointer;
+}
+.solid-button { background: var(--accent); color: #0a0a0b; border: 1px solid var(--accent); }
+.solid-button:hover:not(:disabled) { filter: brightness(1.12); }
+.solid-button:disabled { background: var(--rule); border-color: var(--rule); color: var(--ink-faint); cursor: not-allowed; }
+.ghost-button { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.ghost-button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ghost-button:disabled { color: var(--ink-faint); cursor: not-allowed; }
+.ghost-button.is-danger:hover { border-color: var(--warn); color: var(--warn); }
+
+.link-button { background: none; border: none; padding: 0; color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1; }
+.link-button:hover { color: var(--warn); }
+
+.form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 4px; }
+.form-actions .spacer { margin-right: auto; }
+.save-status { font-size: 12px; color: var(--ink-faint); }
+
+/* --- filters ------------------------------------------------------------- */
+
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 14px; }
+.filter-set { display: flex; flex-wrap: wrap; gap: 5px; }
+.pill {
+  font-family: var(--display); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 5px 11px; cursor: pointer; border-radius: var(--radius);
+  background: var(--card-sunk); color: var(--ink-soft); border: 1px solid var(--rule);
+}
+.pill:hover { color: var(--ink); border-color: var(--accent-dim); }
+.pill.is-on { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-wash); }
+.pill .count { font-family: var(--mono); opacity: 0.65; margin-left: 5px; }
+.filter-search { flex: 1 1 200px; display: flex; justify-content: flex-end; }
+.filter-search input {
+  width: 100%; max-width: 260px; padding: 6px 9px; font-size: 14px; font-family: var(--body);
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
+/* --- dropzone ------------------------------------------------------------ */
+
+.dropzone {
+  display: grid; place-items: center; gap: 4px; text-align: center;
+  padding: 26px 18px; margin-bottom: 14px; cursor: pointer;
+  background: var(--card-sunk);
+  border: 1px dashed var(--rule); border-radius: var(--radius);
+  color: var(--ink-soft);
+}
+.dropzone:hover, .dropzone.is-over { border-color: var(--accent-dim); color: var(--ink); background: var(--accent-wash); }
+.dropzone-title { font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.dropzone-note { font-size: 12.5px; }
+
+/* --- photo strip --------------------------------------------------------- */
+
+.shot-strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.shot-strip:empty { display: none; }
+
+.shot {
+  position: relative; width: 128px;
+  background: var(--card-sunk); border: 1px solid var(--rule); border-radius: var(--radius);
+  overflow: hidden;
+}
+/* A fixed ratio is what keeps a row of portrait and landscape phone shots from
+   stepping up and down the page. */
+.shot-frame { aspect-ratio: 1 / 1; display: grid; place-items: center; background: var(--paper); }
+.shot-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* A HEIC that the browser cannot decode still uploads and is still stored —
+   it just cannot be previewed, and says so rather than showing a broken icon. */
+.shot-frame .no-preview { font-size: 24px; opacity: 0.5; }
+.shot-meta { padding: 5px 7px; font-size: 10.5px; line-height: 1.35; color: var(--ink-faint); font-family: var(--mono); }
+.shot-meta .has { color: var(--accent); }
+.shot-drop {
+  position: absolute; top: 4px; right: 4px;
+  width: 22px; height: 22px; display: grid; place-items: center;
+  background: rgba(10, 10, 11, 0.78); color: var(--ink-soft);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  cursor: pointer; font-size: 13px; line-height: 1; padding: 0;
+}
+.shot-drop:hover { color: var(--warn); border-color: var(--warn); }
+.shot.is-busy .shot-frame { opacity: 0.4; }
+.shot-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--accent); transform-origin: left; animation: pulse 1.1s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+/* --- gallery ------------------------------------------------------------- */
+
+.gallery {
+  display: grid;
+  /* auto-fill, not auto-fit: with two finds logged, auto-fit would stretch
+     each card to half the page and the photos would look like posters. */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.find {
+  display: flex; flex-direction: column; text-align: left;
+  background: var(--card-sunk); border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 0; cursor: pointer; color: inherit; font: inherit; overflow: hidden;
+}
+.find:hover { border-color: var(--accent-dim); }
+.find:hover .find-name { color: var(--accent); }
+.find-frame { aspect-ratio: 4 / 3; background: var(--paper); display: grid; place-items: center; }
+.find-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.find-frame .no-preview { font-size: 30px; opacity: 0.35; }
+.find-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
+.find-name { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+.find-name.is-unknown { color: var(--ink-soft); font-weight: 400; font-style: italic; }
+.find-sci { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+.find-meta { margin: 4px 0 0; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+.find-count { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+
+.empty-state {
+  padding: 28px 4px; text-align: center; color: var(--ink-faint); font-size: 14px;
+  border: 1px dashed var(--rule-soft); border-radius: var(--radius);
+}
+
+/* --- charts -------------------------------------------------------------- */
+/*
+ * Chart type is sized in viewBox user units, so a chart scaled down to phone
+ * width would shrink its labels with it. The renderer measures its rendered
+ * width and sets --chart-k to the inverse ratio, holding labels at a roughly
+ * constant physical size. The fallback of 1 leaves a chart alone if it is ever
+ * drawn without one.
+ */
+.chart-shell { background: var(--card-sunk); border-radius: var(--radius); padding: 8px; }
+.chart-shell svg { display: block; width: 100%; height: auto; }
+.axis-line { stroke: var(--rule); stroke-width: 1; }
+.axis-text { font-family: var(--mono); font-size: calc(11px * var(--chart-k, 1)); fill: var(--ink-faint); }
+.chart-grid { stroke: var(--rule-soft); stroke-width: 1; }
+.bar-fungi { fill: var(--fungi); }
+.bar-flora { fill: var(--flora); }
+.bar-fauna { fill: var(--fauna); }
+.chart-empty { font-family: var(--display); font-size: calc(13px * var(--chart-k, 1)); letter-spacing: 0.1em; text-transform: uppercase; fill: var(--ink-faint); }
+.chart-peak-label {
+  font-family: var(--display); font-size: calc(10px * var(--chart-k, 1)); letter-spacing: 0.1em;
+  text-transform: uppercase; fill: var(--accent);
+}
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 18px; margin-top: 14px; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-soft); }
+.legend-swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+.legend-value { font-family: var(--mono); color: var(--ink-faint); }
+.legend-item.is-zero { opacity: 0.45; }
+
+/* --- sheet --------------------------------------------------------------- */
+/*
+ * The one thing the finances app has no equivalent of. A find is a record with
+ * a photograph attached, and a photograph wants the whole screen — so the
+ * detail opens over the page rather than expanding a row and pushing the
+ * gallery around underneath the cursor.
+ */
+.scrim {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(6, 6, 7, 0.82);
+  display: grid; place-items: start center;
+  padding: 24px 16px 48px; overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sheet {
+  width: 100%; max-width: 820px;
+  background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 18px 20px 20px;
+}
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.sheet-title { margin: 4px 0 0; font-family: var(--display); font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: -0.005em; color: var(--ink); }
+.sheet-title.is-unknown { color: var(--ink-soft); }
+.sheet-sub { margin: 2px 0 0; font-size: 14px; color: var(--ink-faint); }
+.sheet-close {
+  flex: none; background: transparent; border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink-soft); width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 1;
+}
+.sheet-close:hover { color: var(--warn); border-color: var(--warn); }
+.sheet-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule-soft); }
+.sheet-section:first-of-type { border-top: none; padding-top: 0; }
+
+/* The photo the sheet leads with. Contained, not cropped: the detail view is
+   where you look at the specimen, and cropping a mushroom's stem base out of
+   frame loses the character you opened it to check. */
+.sheet-hero {
+  background: var(--paper); border: 1px solid var(--rule-soft); border-radius: var(--radius);
+  display: grid; place-items: center; max-height: 58vh; overflow: hidden;
+}
+.sheet-hero img { max-width: 100%; max-height: 58vh; object-fit: contain; display: block; }
+.sheet-hero .no-preview { padding: 60px 0; font-size: 34px; opacity: 0.35; }
+.sheet-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.sheet-thumb { width: 62px; height: 62px; padding: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--paper); cursor: pointer; }
+.sheet-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sheet-thumb.is-on { border-color: var(--accent); }
+
+/* Read-only facts about a record, laid out as a definition grid. */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 20px; margin: 0; }
+.facts dt { font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+.facts dd { margin: 2px 0 0; font-size: 14px; color: var(--ink); overflow-wrap: anywhere; }
+.facts dd.mono { font-family: var(--mono); font-size: 13px; }
+.facts a { color: var(--accent); }
+
+.former-names { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.former-names li {
+  font-size: 12.5px; font-style: italic; color: var(--ink-soft);
+  padding: 2px 8px; background: var(--card-sunk); border: 1px solid var(--rule-soft); border-radius: var(--radius);
+  display: flex; align-items: center; gap: 6px;
+}
+.former-names .link-button { font-size: 13px; }
+
+fieldset.trait-set {
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 12px 14px 14px; margin: 14px 0 0; min-width: 0;
+}
+fieldset.trait-set legend {
+  padding: 0 6px;
+  font-family: var(--display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--fungi);
+}
+
+/* --- edibility ----------------------------------------------------------- */
+/*
+ * The one place in the app that deliberately breaks the restrained palette.
+ * A "deadly" mark that reads like every other label is a bad label — this is
+ * the field where a glance has to land on the right answer.
+ */
+
+.edible-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--display); font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: var(--radius);
+  border: 1px solid currentColor; white-space: nowrap;
+}
+.edible-badge[data-edibility="unknown"] { color: var(--ink-faint); border-style: dashed; }
+.edible-badge[data-edibility="choice"] { color: var(--gain); background: var(--gain-wash); }
+.edible-badge[data-edibility="edible"] { color: var(--gain); }
+.edible-badge[data-edibility="inedible"] { color: var(--ink-soft); }
+/* Dashed, and its own amber: a warning that is not a prohibition. Solid would
+   read as toxic; grey would read as merely unpalatable. It is neither. */
+.edible-badge[data-edibility="dubious"] { color: var(--caution); border-style: dashed; }
+.edible-badge[data-edibility="toxic"] { color: var(--warn); }
+.edible-badge[data-edibility="deadly"] { color: #0a0a0b; background: var(--warn); border-color: var(--warn); }
+
+/* On a gallery card there is no room for a word, so the state is a dot. */
+.find-marks { display: flex; gap: 5px; align-items: center; }
+.find-mark {
+  width: 9px; height: 9px; border-radius: 50%; flex: none;
+  border: 1px solid var(--paper);
+}
+.find-mark.is-choice { background: var(--gain); }
+.find-mark.is-dangerous { background: var(--warn); }
+.find-mark.is-dubious { background: var(--caution); }
+
+/* A standing note under the edibility control. Not a scare banner — a
+   reminder that this file is a personal record, not an authority. */
+.edible-caution {
+  margin: 8px 0 0; padding: 8px 11px;
+  font-size: 12.5px; color: var(--ink-soft);
+  background: var(--card-sunk); border-left: 2px solid var(--warn); border-radius: var(--radius);
+}
+.edible-caution.is-dubious { border-left-color: var(--caution); }
+
+/* --- fungal characters --------------------------------------------------- */
+
+.character-note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.characters {
+  display: grid;
+  /* Two columns where there is room, one on a phone. A tag row needs about
+     300px before the chips start wrapping every other word. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px 18px;
+  margin-top: 12px;
+}
+
+.character { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.character-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.character-label {
+  font-family: var(--display); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+
+.character-na {
+  display: flex; align-items: center; gap: 4px; cursor: pointer; flex: none;
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.character-na input { margin: 0; accent-color: var(--warn); }
+.character-na:hover { color: var(--ink-soft); }
+
+/* --- tags ---------------------------------------------------------------- */
+
+/* The whole field reads as one control: chips and the entry box share a
+   border, so typing continues where the last tag ended. */
+.tag-list {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  padding: 5px 6px; min-height: 36px;
+  background: var(--card-sunk);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.tag-list:focus-within { border-color: var(--accent-dim); }
+.tag-list input[type="text"] {
+  flex: 1 1 90px; min-width: 90px;
+  padding: 2px 2px; margin: 0;
+  font-family: var(--body); font-size: 13.5px;
+  background: transparent; color: var(--ink);
+  border: none; outline: none;
+}
+
+/* A read-only list of chips carries no box of its own. */
+.tag-list.is-static {
+  padding: 0; min-height: 0; background: none; border: none;
+}
+
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 4px 2px 7px;
+  font-size: 12.5px; line-height: 1.35;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  white-space: nowrap; max-width: 100%;
+}
+.tag-list.is-static .tag { padding: 2px 8px; }
+
+.tag-text {
+  background: none; border: none; padding: 0; margin: 0;
+  font: inherit; color: inherit; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis;
+}
+button.tag-text:hover { text-decoration: underline dotted; }
+
+.tag-drop {
+  background: none; border: none; padding: 0 2px; margin: 0;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  color: inherit; opacity: 0.55;
+}
+.tag-drop:hover { opacity: 1; color: var(--warn); }
+
+/* One hue per category. These are labels, not decoration — the point is that
+   a colour word and an attachment term never look like the same kind of
+   claim. */
+.tag[data-category="form"] { color: var(--fungi); }
+.tag[data-category="descriptor"] { color: var(--fauna); }
+.tag[data-category="habitat"] { color: var(--flora); }
+.tag[data-category="measure"] { color: var(--ink-soft); font-family: var(--mono); font-size: 11.5px; }
+.tag[data-category="note"] { color: var(--ink-faint); border-style: dashed; }
+
+/* A colour tag paints the colour it names, so the word and the thing agree.
+   The text stays neutral: some of these are near-black, and a "black" tag
+   written in black would be unreadable. */
+.tag[data-category="colour"] { color: var(--ink-soft); }
+.tag-swatch {
+  width: 10px; height: 10px; flex: none; border-radius: 50%;
+  background: var(--ink-faint);
+  /* A rim, so white and near-black swatches both read against the panel. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+/* An absence is a positive claim, so it is stated rather than left blank. */
+.tag-absent {
+  margin: 0; padding: 7px 9px;
+  font-size: 13px; font-style: italic; color: var(--ink-faint);
+  background: var(--paper);
+  border: 1px dashed var(--rule); border-radius: var(--radius);
+}
+.character.is-na .character-label,
+.character.is-na .character-na { color: var(--warn); }
+
+/* The same distinction, read-only, in a find's species summary. */
+.facts dd.is-absent { color: var(--ink-faint); font-style: italic; }
+
+/* --- identification ------------------------------------------------------ */
+
+.identify-notes {
+  margin: 10px 0 0; padding: 8px 11px;
+  font-size: 13.5px; color: var(--ink-soft);
+  background: var(--card-sunk); border-left: 2px solid var(--rule); border-radius: var(--radius);
+}
+
+.candidates { display: grid; gap: 8px; }
+
+.candidate {
+  display: flex; align-items: flex-start; gap: 12px; text-align: left;
+  width: 100%; padding: 10px 12px;
+  background: var(--card-sunk); color: inherit; font: inherit;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  cursor: pointer;
+}
+.candidate:hover { border-color: var(--accent-dim); }
+.candidate.is-chosen { border-color: var(--accent); background: var(--accent-wash); }
+
+/* Ruled out by a contradiction, but still selectable: the tag may have been
+   the mistake. Dimmed and sorted last rather than hidden. */
+.candidate.is-contradicted { opacity: 0.55; }
+.candidate.is-contradicted:hover { opacity: 0.85; }
+
+/* A toxic or deadly species is never dimmed away, ruled out or not — being
+   wrong about which of two similar mushrooms you are holding is precisely
+   when the warning has to stay legible. It keeps a warning edge instead. */
+.candidate.is-dangerous { opacity: 1; border-left: 3px solid var(--warn); }
+.candidate.is-contradicted.is-dangerous .candidate-body { opacity: 0.75; }
+.candidate.is-contradicted.is-dangerous .edible-badge,
+.candidate.is-contradicted.is-dangerous .candidate-conflict { opacity: 1; }
+
+.candidate-shot {
+  width: 54px; height: 54px; flex: none;
+  background: var(--paper); border-radius: var(--radius); overflow: hidden;
+  display: grid; place-items: center;
+}
+.candidate-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.candidate-shot .no-preview { font-size: 20px; opacity: 0.4; }
+
+.candidate-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.candidate-name-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.candidate-name { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.candidate-sci { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+.candidate-conflict { margin: 2px 0 0; font-size: 12px; color: var(--warn); }
+
+.candidate-score {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+  min-width: 62px; padding-left: 4px;
+}
+.candidate-hits { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--accent); }
+.candidate-hits-label,
+.candidate-ruled {
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.candidate-ruled { color: var(--warn); }
+
+.candidate-writeup { margin-top: 4px; }
+
+/* The decision, held at the foot of the sheet so it is always the last thing
+   read — and so a long candidate list never buries it. */
+.identify-footer {
+  position: sticky; bottom: 0; z-index: 2;
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;
+  margin: 18px -20px -20px; padding: 14px 20px;
+  background: var(--card-raised);
+  border-top: 1px solid var(--rule);
+}
+.identify-choice { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.identify-chosen { font-size: 16px; font-weight: 600; color: var(--ink); }
+.identify-preview { font-size: 12.5px; color: var(--accent); }
+.identify-hint { font-size: 13px; color: var(--ink-faint); }
+.identify-footer label { font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+.identify-footer select {
+  font-family: var(--body); font-size: 14px; letter-spacing: 0; text-transform: none;
+  padding: 6px 8px; background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
+@media (max-width: 600px) {
+  .identify-footer { margin: 18px -20px 0; }
+  .candidate-score { min-width: 0; }
+}
+
+/* --- map ----------------------------------------------------------------- */
+
+.map-shell {
+  background: var(--card-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.map {
+  position: relative;
+  height: clamp(360px, 58vh, 620px);
+  overflow: hidden;
+  cursor: grab;
+  /* The map handles its own panning, so the browser must not also scroll the
+     page under the finger. */
+  touch-action: none;
+  background: var(--card-sunk);
+  -webkit-user-select: none; user-select: none;
+}
+.map.is-dragging { cursor: grabbing; }
+.map:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.map-tiles, .map-pins { position: absolute; inset: 0; }
+.map-pins { pointer-events: none; }
+.map-pins > * { pointer-events: auto; }
+
+.map-tile {
+  position: absolute;
+  width: 256px; height: 256px;
+  display: block;
+  /* OSM's own rendering is a bright paper map, which is blinding inside a
+     near-black page. Darkening it in the browser keeps one tile source usable
+     in this theme without proxying it through an image pipeline. */
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.45) brightness(0.95) contrast(0.92);
+}
+.map-tile.is-missing { visibility: hidden; }
+
+/* With no tiles at all, a faint graticule keeps the pins from floating in
+   featureless black — you can still read relative position and scale. */
+.map.is-bare .map-tiles {
+  background-image:
+    linear-gradient(var(--rule-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.map-pin {
+  position: absolute;
+  width: 16px; height: 16px;
+  margin: -8px 0 0 -8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  background: var(--ink-soft);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.map-pin[data-type="fungi"] { background: var(--fungi); }
+.map-pin[data-type="flora"] { background: var(--flora); }
+.map-pin[data-type="fauna"] { background: var(--fauna); }
+.map-pin:hover { transform: scale(1.25); z-index: 3; }
+.map-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Somebody else's record. Hollow, smaller, and behind yours — present for
+   context, never mistakable for something you found. */
+.map-pin.is-inat {
+  width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px;
+  background: transparent;
+  border-width: 2px;
+  opacity: 0.78;
+}
+.map-pin.is-inat[data-type="fungi"] { border-color: var(--fungi); }
+.map-pin.is-inat[data-type="flora"] { border-color: var(--flora); }
+.map-pin.is-inat[data-type="fauna"] { border-color: var(--fauna); }
+
+/* A choice edible gets a ring; anything toxic gets a hard white core. Both
+   read at a glance without depending on hue alone. */
+.map-pin.is-choice { box-shadow: 0 0 0 2px var(--gain), 0 1px 3px rgba(0, 0, 0, 0.6); }
+.map-pin.is-dangerous { box-shadow: 0 0 0 2px var(--warn), 0 1px 3px rgba(0, 0, 0, 0.6); }
+.map-pin.is-dangerous::after {
+  content: ''; position: absolute; inset: 3px;
+  border-radius: 50%; background: var(--warn);
+}
+
+.map-controls { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 4; }
+.map-button {
+  width: 30px; height: 30px; padding: 0;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 15px; line-height: 1;
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  cursor: pointer;
+}
+.map-button:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+.map-credit {
+  position: absolute; bottom: 0; right: 0; z-index: 4;
+  padding: 2px 7px;
+  font-size: 10.5px; color: var(--ink-faint);
+  background: rgba(10, 10, 11, 0.72);
+  border-top-left-radius: var(--radius);
+}
+.map-note {
+  position: absolute; left: 10px; bottom: 10px; z-index: 4; max-width: 60%;
+  padding: 6px 10px;
+  font-size: 12px; color: var(--ink-soft);
+  background: rgba(10, 10, 11, 0.82);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
+/* What a clicked pin says. Below the map rather than floating over it: it
+   always appears in the same place, and it has room for a photograph. */
+.map-selection {
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-top: 14px; padding: 12px;
+  background: var(--card-sunk); border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.map-selection-shot {
+  width: 96px; height: 96px; flex: none;
+  background: var(--paper); border-radius: var(--radius); overflow: hidden;
+  display: grid; place-items: center;
+}
+.map-selection-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.map-selection-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.map-selection-name { margin: 2px 0 0; font-size: 17px; font-weight: 600; color: var(--ink); }
+.map-selection-name.is-unknown { color: var(--ink-soft); font-style: italic; font-weight: 400; }
+.map-selection-meta { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+.map-selection-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.map-selection a { color: var(--accent); }
+.map-selection .source-tag {
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint); border: 1px dashed var(--rule); border-radius: var(--radius); padding: 1px 6px;
+  align-self: flex-start;
+}
+
+/* An inline dropdown that sits in a filter row with the pills. */
+.inline-pick {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--display); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.inline-pick select {
+  font-family: var(--body); font-size: 13px; letter-spacing: 0; text-transform: none;
+  padding: 5px 8px; max-width: 240px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
+/* Matches on a name looked up from iNaturalist, offered rather than applied. */
+.lookup-results { display: grid; gap: 6px; margin-top: 10px; }
+.lookup-hit {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 7px 9px; cursor: pointer;
+  background: var(--card-sunk); color: inherit; font: inherit;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.lookup-hit:hover { border-color: var(--accent-dim); }
+.lookup-hit img { width: 38px; height: 38px; object-fit: cover; border-radius: var(--radius); flex: none; }
+.lookup-hit .no-preview { width: 38px; height: 38px; display: grid; place-items: center; flex: none; opacity: 0.4; }
+.lookup-hit-name { font-weight: 600; font-size: 14px; }
+.lookup-hit-sci { font-size: 12.5px; color: var(--ink-faint); font-style: italic; }
+.lookup-hit-count { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+
+/* --- wide screens -------------------------------------------------------- */
+
+@media (min-width: 900px) {
+  .frame { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Every block here is either a full-width chart, a form with a dropzone, or
+     a gallery. None of them read well in a half column. */
+  .console, .frame > .block, .banner { grid-column: 1 / -1; }
+}
+
+/* --- narrow screens ------------------------------------------------------ */
+/* Kept at the end: these override base rules defined above, and at equal
+   specificity the later rule wins. */
+
+@media (max-width: 600px) {
+  body { padding: 0 16px 48px; }
+  .readout-stats { gap: 16px 20px; }
+
+  /* Two per row, each filling half the column. A flex row leaves ragged space
+     on the right; an explicit 2-track grid divides the width exactly. */
+  .masthead-chips { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 10px; }
+  .chip { min-width: 0; }
+  .chip-value { overflow-wrap: anywhere; }
+
+  .map { height: clamp(300px, 52vh, 460px); }
+  .map-selection { flex-direction: column; }
+  .map-selection-shot { width: 100%; height: 160px; }
+  .inline-pick { width: 100%; }
+  .inline-pick select { flex: 1 1 auto; max-width: none; }
+
+  /* Two finds per row on a phone, rather than one enormous card. */
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .scrim { padding: 0; }
+  .sheet { border: none; border-radius: 0; min-height: 100%; }
+  .entry-row label.grow { flex: 1 1 100%; }
+}
