@@ -11,6 +11,7 @@
 'use strict';
 
 const VIEWS = ['log', 'species', 'glossary'];
+const MODES = ['finds', 'map'];
 
 const state = {
   config: null,
@@ -24,8 +25,9 @@ const state = {
   // share one filter object. Filtering to chanterelles and then switching to
   // the map should show you those chanterelles, not start again.
   filters: { types: Model.TYPE_IDS.slice(), status: 'all', q: '', edibility: Model.EDIBILITY_IDS.slice(), speciesId: '' },
-  // Which rendering is on screen.
-  mode: 'finds',
+  // Which rendering is on screen. Read from the URL for the same reason the
+  // tab is: a refresh should land where you were looking.
+  mode: modeFromUrl(),
   speciesFilters: { type: 'all', q: '' },
   speciesSort: { col: 'commonName', key: 'commonName', dir: 'asc' },
   glossary: { version: 0, terms: {} },
@@ -297,6 +299,33 @@ function viewFromUrl() {
   return VIEWS.includes(asked) ? asked : 'log';
 }
 
+function modeFromUrl() {
+  const asked = new URLSearchParams(location.search).get('mode');
+  return MODES.includes(asked) ? asked : 'finds';
+}
+
+/**
+ * Both routing facts in one URL, so neither can drop the other on the way
+ * past. The default mode stays out of it — `?view=species&mode=finds` says
+ * nothing you could not have guessed.
+ */
+function routeUrl() {
+  const url = new URL(location.href);
+  url.searchParams.set('view', state.view);
+  if (state.mode === 'finds') url.searchParams.delete('mode');
+  else url.searchParams.set('mode', state.mode);
+  return url;
+}
+
+const routeState = () => ({ view: state.view, mode: state.mode });
+
+/** Gallery or map. The same routing contract the tabs get. */
+function setMode(mode, { push = true } = {}) {
+  state.mode = MODES.includes(mode) ? mode : 'finds';
+  if (push) history.pushState(routeState(), '', routeUrl());
+  render();
+}
+
 function setView(view, { push = true } = {}) {
   state.view = VIEWS.includes(view) ? view : 'log';
   for (const tab of document.querySelectorAll('.tab')) {
@@ -306,11 +335,7 @@ function setView(view, { push = true } = {}) {
   for (const name of VIEWS) $(`view-${name}`).hidden = name !== state.view;
   // A map built or drawn while its tab was hidden measured a zero-width box.
   if (state.view === 'map' && mapView) requestAnimationFrame(() => mapView.redraw());
-  if (push) {
-    const url = new URL(location.href);
-    url.searchParams.set('view', state.view);
-    history.pushState({ view: state.view }, '', url);
-  }
+  if (push) history.pushState(routeState(), '', routeUrl());
   render();
 }
 
@@ -480,11 +505,28 @@ function shotCard(shot, onRemove) {
     const bits = [];
     if (p.takenAt) bits.push(fmtWhen(p.takenAt));
     if (Number.isFinite(p.lat)) bits.push(Model.formatCoord(p.lat, p.lon));
-    if (!bits.length) bits.push('no EXIF');
+    if (!bits.length && !p.attribution) bits.push('no EXIF');
     bits.push(fmtBytes(p.bytes));
     for (const [i, text] of bits.entries()) {
       const line = el('div', i < bits.length - 1 && p.hasExif ? 'has' : null, text);
       meta.append(line);
+    }
+    /*
+     * Somebody else's photograph carries their name. Every borrowed reference
+     * shot here is under a Creative Commons licence, and those licences are
+     * granted on condition of credit \u2014 so the credit is not decoration, it is
+     * the terms. It links back to the observation it came from.
+     */
+    if (p.attribution) {
+      const credit = p.sourceUrl ? el('a', 'shot-credit') : el('div', 'shot-credit');
+      credit.textContent = p.attribution;
+      credit.title = p.attribution + (p.licence ? ` \u2014 ${p.licence}` : '');
+      if (p.sourceUrl) {
+        credit.href = p.sourceUrl;
+        credit.target = '_blank';
+        credit.rel = 'noopener noreferrer';
+      }
+      meta.append(credit);
     }
   }
   card.append(meta);
@@ -552,11 +594,6 @@ function renderMasthead({ rows, summary: s }) {
   const last = s.latest;
   $('chip-last').textContent = last ? last.name : '—';
   $('chip-last-source').textContent = last ? (last.when ? fmtDate(last.when) : 'undated') : 'no finds yet';
-
-  // A span of one year reads as "2025", not "2025-2025".
-  const span = Model.years(rows);
-  const covered = span.length > 1 ? ` ${span[span.length - 1]}–${span[0]}.` : span.length ? ` ${span[0]}.` : '';
-  $('log-caption').textContent = (state.config?.app?.tagline || 'Field notes.') + covered;
 }
 
 // --- the log view -----------------------------------------------------------
@@ -687,7 +724,7 @@ function renderFindsVerdict(shown, rows) {
     const picked = selectedSpecies();
     if (picked && state.inat.results.length) {
       node.append(document.createTextNode(
-        ` ${plural(state.inat.results.length, 'record')} of it from other people, hollow.`));
+        ` ${plural(state.inat.results.length, 'record')} of it from other people, as triangles that fade with age.`));
     } else if (!picked) {
       node.append(document.createTextNode(' Pick a species to see where other people have found it.'));
     }
@@ -1007,6 +1044,9 @@ function inatPins(results, edibility) {
     // Other people's records only load for one species at a time, so they all
     // share that species' tier \u2014 the same colour as your own finds of it.
     edibility: o.type === 'fungi' ? edibility : '',
+    // Old sightings fade. Where a species was six years ago is worth knowing;
+    // it is just not worth as much as where it was last week.
+    opacity: Model.ageOpacity(o.observedOn),
     inat: o,
   }));
 }
@@ -1876,8 +1916,6 @@ function buildObservationSheet(sheet, stored, close) {
   const notesPick = el('textarea');
   notesPick.value = stored.notes || '';
 
-  const typeHint = el('span', 'field-hint', ' ');
-  const confidenceHint = el('span', 'field-hint', ' ');
   // Assigned once the traits section is built, below; sync() runs after that.
   let paintTraits = () => {};
 
@@ -1888,9 +1926,7 @@ function buildObservationSheet(sheet, stored, close) {
       : null;
     typePick.disabled = !!chosen;
     if (chosen) typePick.value = chosen.kind;
-    typeHint.textContent = chosen ? 'Follows the species.' : ' ';
     confidencePick.disabled = !chosen;
-    confidenceHint.textContent = !chosen ? 'Identify it first.' : confidencePick.value === 'low' ? 'Shown as “name?”.' : ' ';
 
     paintEdible(chosen);
     paintTraits(chosen);
@@ -1925,8 +1961,6 @@ function buildObservationSheet(sheet, stored, close) {
     field('Confidence', confidencePick, {}),
     field('When', whenPick, {}),
   );
-  rowA.querySelectorAll('label')[1].append(typeHint);
-  rowA.querySelectorAll('label')[2].append(confidenceHint);
 
   const rowB = el('div', 'entry-row');
   rowB.append(
@@ -3101,7 +3135,11 @@ function wire() {
   for (const tab of document.querySelectorAll('.tab')) {
     tab.addEventListener('click', () => setView(tab.dataset.view));
   }
-  window.addEventListener('popstate', () => setView(viewFromUrl(), { push: false }));
+  window.addEventListener('popstate', () => {
+    // Set the mode first: setView renders, and would otherwise draw the old one.
+    state.mode = modeFromUrl();
+    setView(viewFromUrl(), { push: false });
+  });
 
   obsTray = makeTray({
     zone: $('obs-drop'),
@@ -3124,7 +3162,7 @@ function wire() {
     render();
   });
   for (const [id, mode] of [['mode-finds', 'finds'], ['mode-map', 'map']]) {
-    $(id).addEventListener('click', () => { state.mode = mode; render(); });
+    $(id).addEventListener('click', () => setMode(mode));
   }
   // Logging is one action and not the thing you come here to look at, so the
   // form stays out of the way until asked for.

@@ -174,12 +174,6 @@ const Model = (() => {
 
   // --- seasonality ----------------------------------------------------------
 
-  /** Distinct years the log covers, newest first. */
-  function years(rows) {
-    const set = new Set();
-    for (const r of rows) if (r.when) set.add(r.when.slice(0, 4));
-    return [...set].sort().reverse();
-  }
 
   // --- tags -----------------------------------------------------------------
 
@@ -525,7 +519,6 @@ const Model = (() => {
   function fungiTraits(sp) {
     if (!sp || sp.kind !== 'fungi') return [];
     const out = [];
-    if (sp.division) out.push({ label: 'Division', value: sp.division, tags: [] });
     for (const spec of FUNGI_CHARACTERS) {
       const c = character(sp, spec.id);
       if (c.state === 'unrecorded') continue;
@@ -536,6 +529,13 @@ const Model = (() => {
         absent: c.state === 'absent',
       });
     }
+    /*
+     * Division and nutrition come after the characters, not before them.
+     * The find sheet shows this list beside what you tagged on the find, and
+     * both lists walk FUNGI_CHARACTERS in the same order \u2014 so anything put in
+     * front of them offsets the two columns and the rows stop lining up.
+     */
+    if (sp.division) out.push({ label: 'Division', value: sp.division, tags: [] });
     if (sp.nutrition && sp.nutrition !== 'unknown') out.push({ label: 'Nutrition', value: nutrition(sp.nutrition).label, tags: [] });
     return out;
   }
@@ -831,6 +831,34 @@ const Model = (() => {
     return counts;
   }
 
+  /**
+   * How strongly to draw a record of a given age.
+   *
+   * A sighting from last week tells you where to look this weekend; one from
+   * six years ago still tells you the species lives there. Both are worth
+   * having, so the scale fades but never reaches nothing \u2014 a pin you cannot
+   * see is a pin that is not on the map.
+   *
+   * Full for the past month, then a quarter down per year: 0.75 under a year,
+   * 0.50 in the second, and a floor from two years on.
+   */
+  const AGE_FULL = 1;
+  const AGE_STEP = 0.25;
+  const AGE_FLOOR = 0.25;
+  const AGE_FRESH_DAYS = 31;
+
+  function ageOpacity(when, now = Date.now()) {
+    const t = when ? Date.parse(when) : NaN;
+    // An undated record is not an old one, it just has nothing to say about
+    // its age. One step down says "unvouched" without claiming decades.
+    if (!Number.isFinite(t)) return AGE_FULL - AGE_STEP;
+    const days = (now - t) / 86400000;
+    // A date in the future is a data error, not a fresh find; it reads as now.
+    if (days <= AGE_FRESH_DAYS) return AGE_FULL;
+    const years = Math.floor(days / 365.25);
+    return Math.max(AGE_FLOOR, AGE_FULL - AGE_STEP * (years + 1));
+  }
+
   // --- geography ------------------------------------------------------------
 
   const formatCoord = (lat, lon) => {
@@ -870,14 +898,14 @@ const Model = (() => {
     TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
     TAG_CATEGORIES, COLOURS,
     typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous,
-    findEdibility, edibilityCounts,
+    findEdibility, edibilityCounts, ageOpacity,
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,
     classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, characterSpec,
     bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup,
     byId, view, viewAll, displayName,
     summary, latestOf, lifeList,
-    filter, sortByDate, years,
+    filter, sortByDate,
     fungiTraits, speciesNames, formatCoord, mapLink, bounds,
   };
 })();

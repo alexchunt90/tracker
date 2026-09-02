@@ -321,10 +321,16 @@ should be the last word before eating a wild mushroom.
 answer and it is a good library; it is also a network dependency in an app
 whose point is to work in a forest.
 
-Pins are coloured by kingdom. Yours are solid; iNaturalist's are hollow,
-smaller, and drawn underneath, so somebody else's identification can never be
-mistaken for one of yours. Filter by type, by species, or to choice edibles
-only.
+A pin says two things at once. Its shape is whose record it is — a circle for
+your own find, a triangle for somebody else's — and its colour and fill are how
+edible it is, in the same language as the edibility badges: solid where the
+badge has a background (choice, deadly), hollow where it does not, dashed where
+the badge is dashed (not recorded, dubious). That applies to fungi, the group
+where edibility is worth reading off a map at a glance; flora and fauna keep
+their kingdom colour. iNaturalist's triangles are smaller and drawn underneath,
+so somebody else's identification can never be mistaken for one of yours.
+Filter by type, by identification, by any set of edibility tiers, or by
+species.
 
 Tiles are **proxied through this server and cached to disk**, which is the
 reason for the proxy: the browser never talks to a tile server directly, so no
@@ -341,7 +347,7 @@ Optional, on by default, and switched off with `inaturalist.enabled: false` in
 `config.json`.
 
 - **On the map** — research-grade observations from other people in the box you
-  are looking at, as hollow pins. Narrowed to the kingdom you have filtered to,
+  are looking at, as triangles. Narrowed to the kingdom you have filtered to,
   and to a single taxon when you pick a species that has been matched against
   iNaturalist. "Where does everyone else find chanterelles" is the question it
   answers.

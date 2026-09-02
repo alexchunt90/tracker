@@ -241,6 +241,7 @@ const MapView = (() => {
         // Only set when the caller has an edibility to say; without it the pin
         // falls back to its type colour rather than claiming "not recorded".
         if (pin.edibility) marker.dataset.edibility = pin.edibility;
+        if (pin.opacity != null) marker.style.opacity = String(pin.opacity);
         marker.style.left = `${left}px`;
         marker.style.top = `${top}px`;
         marker.title = pin.label;
