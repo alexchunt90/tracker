@@ -1,0 +1,526 @@
+[
+  {
+    "kind": "fungi",
+    "commonName": "Blewit",
+    "scientificName": "Collybia nuda",
+    "habitat": "Forests, but more often lawns, gardens, parks, compost heaps or yard waste",
+    "edibility": "edible",
+    "lookalikes": "Clitocybe tarda (similar colour but smaller, more slender, usually grows in grass)",
+    "division": "Basidiomycota",
+    "nutrition": "saprophytic",
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "agaricoid",
+            "category": "form"
+          },
+          {
+            "text": "violet",
+            "category": "colour"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "convex",
+            "category": "descriptor"
+          },
+          {
+            "text": "smooth",
+            "category": "descriptor"
+          },
+          {
+            "text": "waxy",
+            "category": "descriptor"
+          },
+          {
+            "text": "violet",
+            "category": "colour"
+          },
+          {
+            "text": "purple",
+            "category": "colour"
+          },
+          {
+            "text": "lilac",
+            "category": "colour"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "gills",
+            "category": "form"
+          },
+          {
+            "text": "adnate",
+            "category": "descriptor"
+          },
+          {
+            "text": "decurrent",
+            "category": "descriptor"
+          },
+          {
+            "text": "close",
+            "category": "descriptor"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "stipe",
+            "category": "form"
+          },
+          {
+            "text": "bulbous",
+            "category": "descriptor"
+          },
+          {
+            "text": "fleshy",
+            "category": "descriptor"
+          },
+          {
+            "text": "violet",
+            "category": "colour"
+          }
+        ]
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "pink",
+            "category": "colour"
+          }
+        ]
+      },
+      "scent": {
+        "na": false,
+        "tags": [
+          {
+            "text": "pleasant",
+            "category": "note"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Lepista nuda",
+      "Tricholoma nudum",
+      "Tricholoma personatum"
+    ],
+    "photos": [],
+    "notes": "",
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "id": "clitocybe-nuda",
+    "version": 1,
+    "synonyms": [
+      "Clitocybe nuda"
+    ]
+  },
+  {
+    "kind": "fungi",
+    "commonName": "Death Cap",
+    "scientificName": "Amanita phalloides",
+    "habitat": "Introduced/naturalized in forests; found with oak and other trees in urban areas, hazel (filbert) orchards",
+    "edibility": "deadly",
+    "lookalikes": "Amanita ocreata (all-white, similar size and stature); A. verna (reported twice from PNW, doubtful)",
+    "division": "Basidiomycota",
+    "nutrition": "mycorrhizal",
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "agaricoid"
+          },
+          {
+            "text": "olive"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "olive"
+          },
+          {
+            "text": "green"
+          },
+          {
+            "text": "yellow"
+          },
+          {
+            "text": "brown"
+          },
+          {
+            "text": "universal veil"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "gills"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "stipe"
+          },
+          {
+            "text": "bulbous"
+          },
+          {
+            "text": "volva"
+          },
+          {
+            "text": "ring"
+          }
+        ]
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "white"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Agaricus phalloides",
+      "Amanita dunensis"
+    ],
+    "photos": [],
+    "notes": "",
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "id": "amanita-phalloides",
+    "version": 1
+  },
+  {
+    "kind": "fungi",
+    "commonName": "Oyster Mushroom",
+    "scientificName": "Pleurotus pulmonarius",
+    "habitat": "Wood of a range of conifers and hardwoods, often in spring",
+    "edibility": "edible",
+    "lookalikes": "Pleurotus ostreatus (European, dark blue-gray caps, not known to grow in the PNW); P. populinus (virtually identical morphologically, distinguished by substrate \u2014 cottonwood/aspen); when fruiting on a log top with a central stipe, resembles Clitocybe, \"many\" of which are poisonous",
+    "division": "Basidiomycota",
+    "nutrition": "saprophytic",
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "agaricoid"
+          },
+          {
+            "text": "fan"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "fan-shaped"
+          },
+          {
+            "text": "convex"
+          },
+          {
+            "text": "lobed"
+          },
+          {
+            "text": "white"
+          },
+          {
+            "text": "brown"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "gills"
+          },
+          {
+            "text": "white"
+          },
+          {
+            "text": "decurrent"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "sessile"
+          },
+          {
+            "text": "lateral"
+          },
+          {
+            "text": "eccentric"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "white"
+          },
+          {
+            "text": "pale lilac"
+          },
+          {
+            "text": "greyish"
+          }
+        ]
+      },
+      "scent": {
+        "na": false,
+        "tags": [
+          {
+            "text": "anise"
+          }
+        ]
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "wood"
+          }
+        ]
+      },
+      "trees": {
+        "na": false,
+        "tags": [
+          {
+            "text": "conifer"
+          },
+          {
+            "text": "hardwood"
+          }
+        ]
+      }
+    },
+    "formerNames": [],
+    "photos": [],
+    "notes": "",
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "id": "pleurotus-pulmonarius",
+    "version": 1
+  },
+  {
+    "kind": "fungi",
+    "commonName": "Pacific Golden Chanterelle",
+    "scientificName": "Cantharellus formosus",
+    "habitat": "Moist forests of the PNW, ectomycorrhizal",
+    "edibility": "choice",
+    "lookalikes": "Hygrophoropsis aurantiaca; Chroogomphus tomentosus; Omphalotus olivascens (poisonous, CA); Gomphus floccosus; Gomphus kauffmanii; Cantharellus subalbidus; Cantharellus cascadensis",
+    "division": "Basidiomycota",
+    "nutrition": "mycorrhizal",
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "cantharelloid"
+          },
+          {
+            "text": "orange"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "dull orange"
+          },
+          {
+            "text": "brownish orange"
+          },
+          {
+            "text": "finely scaly"
+          },
+          {
+            "text": "bruises brown"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "ridges"
+          },
+          {
+            "text": "pale orange"
+          },
+          {
+            "text": "pink"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "tapering"
+          }
+        ]
+      },
+      "staining": {
+        "na": false,
+        "tags": [
+          {
+            "text": "bruises brown"
+          }
+        ]
+      }
+    },
+    "formerNames": [],
+    "photos": [],
+    "notes": "",
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "id": "cantharellus-formosus",
+    "version": 1
+  },
+  {
+    "kind": "fungi",
+    "commonName": "Red-belt Conk",
+    "scientificName": "Fomitopsis pinicola",
+    "habitat": "Conifers, occasionally hardwoods such as black cherry",
+    "edibility": "unknown",
+    "lookalikes": "Heterobasidion annosum (similar when shelf-like, but lacks reddish colours); Ganoderma oregonense",
+    "division": "Basidiomycota",
+    "nutrition": "saprophytic",
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "polypore"
+          },
+          {
+            "text": "orange"
+          },
+          {
+            "text": "black"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "zonate"
+          },
+          {
+            "text": "orange"
+          },
+          {
+            "text": "grey"
+          },
+          {
+            "text": "black"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "pores"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "stipe": {
+        "na": true
+      },
+      "staining": {
+        "na": false,
+        "tags": [
+          {
+            "text": "bruises yellow"
+          }
+        ]
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "dead wood"
+          },
+          {
+            "text": "log"
+          }
+        ]
+      },
+      "trees": {
+        "na": false,
+        "tags": [
+          {
+            "text": "conifer"
+          },
+          {
+            "text": "cherry"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Fomes pinicola"
+    ],
+    "photos": [],
+    "notes": "",
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "id": "fomitopsis-pinicola",
+    "version": 1
+  },
+  {
+    "id": "sp_nettle",
+    "version": 1,
+    "kind": "flora",
+    "commonName": "Stinging Nettle",
+    "scientificName": "Urtica dioica",
+    "habitat": "Rich damp soil, disturbed ground",
+    "edibility": "edible",
+    "lookalikes": "Wood nettle",
+    "photos": []
+  }
+]

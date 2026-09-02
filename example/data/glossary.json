@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "terms": {
+    "adnate": {
+      "definition": "describes gills that are attached to the stipe along all or most of their height",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "agaricoid": {
+      "definition": "Built like a typical gilled mushroom: a cap on a stipe, with gills underneath.",
+      "source": "written for this log"
+    },
+    "anise": {
+      "definition": ""
+    },
+    "black": {
+      "definition": ""
+    },
+    "brown": {
+      "definition": ""
+    },
+    "brownish orange": {
+      "definition": ""
+    },
+    "bruises brown": {
+      "definition": "Turning brown where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises yellow": {
+      "definition": "Turning yellow where cut or handled.",
+      "source": "written for this log"
+    },
+    "bulbous": {
+      "definition": "Swollen and rounded, usually at the stipe base.",
+      "source": "written for this log"
+    },
+    "cantharelloid": {
+      "definition": "Built like a chanterelle: vase- or trumpet-shaped, with blunt forking ridges rather than true gills.",
+      "source": "written for this log"
+    },
+    "cherry": {
+      "definition": ""
+    },
+    "close": {
+      "definition": "in reference to spacing of gills, farther apart than crowded, but closer together than subdistant",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "conifer": {
+      "definition": "a cone-bearing tree, usually evergreen, such as pine, spruce, or Douglas-fir",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "convex": {
+      "definition": "rounded, like an upside-down bowl",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "dead wood": {
+      "definition": ""
+    },
+    "decurrent": {
+      "definition": "describes gills that are attached to, and extend down, the stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "dull orange": {
+      "definition": ""
+    },
+    "eccentric": {
+      "definition": "Attached off-centre.",
+      "source": "written for this log"
+    },
+    "fan": {
+      "definition": "A flat, fan-shaped fruit body, usually attached at one edge.",
+      "source": "written for this log"
+    },
+    "fan-shaped": {
+      "definition": ""
+    },
+    "finely scaly": {
+      "definition": ""
+    },
+    "fleshy": {
+      "definition": "Soft and substantial, like a typical mushroom cap.",
+      "source": "written for this log"
+    },
+    "gills": {
+      "definition": "Thin blade-like plates under the cap, bearing the spores.",
+      "source": "written for this log"
+    },
+    "green": {
+      "definition": ""
+    },
+    "grey": {
+      "definition": ""
+    },
+    "greyish": {
+      "definition": ""
+    },
+    "hardwood": {
+      "definition": "flowering trees with broad leaves such as alder, maple, madrone, and oak; may be deciduous or evergreen",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "lateral": {
+      "definition": "attached at one side, as in the short stipe of many shelf-fungi",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "lilac": {
+      "definition": ""
+    },
+    "lobed": {
+      "definition": ""
+    },
+    "log": {
+      "definition": ""
+    },
+    "olive": {
+      "definition": ""
+    },
+    "orange": {
+      "definition": ""
+    },
+    "pale lilac": {
+      "definition": ""
+    },
+    "pale orange": {
+      "definition": ""
+    },
+    "pink": {
+      "definition": ""
+    },
+    "pleasant": {
+      "definition": ""
+    },
+    "polypore": {
+      "definition": "A bracket fungus with a pored underside, usually on wood and usually without a stipe.",
+      "source": "written for this log"
+    },
+    "pores": {
+      "definition": "The open ends of tubes on the underside, through which spores fall.",
+      "source": "written for this log"
+    },
+    "purple": {
+      "definition": ""
+    },
+    "ridges": {
+      "definition": "Blunt raised folds bearing spores, as in the chanterelles.",
+      "source": "written for this log",
+      "sameAs": "false gills"
+    },
+    "ring": {
+      "definition": "membranous skirt-like remnant of a partial veil borne on a stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "sessile": {
+      "definition": "Attached directly, without a stipe.",
+      "source": "written for this log"
+    },
+    "smooth": {
+      "definition": "Without hairs, scales, ridges or roughness.",
+      "source": "written for this log"
+    },
+    "stipe": {
+      "definition": "stem",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "tapering": {
+      "definition": "Narrowing gradually towards one end.",
+      "source": "written for this log"
+    },
+    "universal veil": {
+      "definition": "Tissue enclosing the whole young fruit body, often leaving a volva and cap patches.",
+      "source": "written for this log"
+    },
+    "violet": {
+      "definition": ""
+    },
+    "volva": {
+      "definition": "remnants of a universal veil found at the base of the stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "waxy": {
+      "definition": "Feeling greasy or wax-like, and often translucent.",
+      "source": "written for this log"
+    },
+    "white": {
+      "definition": ""
+    },
+    "wood": {
+      "definition": ""
+    },
+    "yellow": {
+      "definition": ""
+    },
+    "zonate": {
+      "definition": "with concentric bands of different color or different shades of one basic color; usually in reference to the cap surface Stipe shapes. Illustration by Marsha Mello.",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "false gills": {
+      "definition": "Blunt, forking, vein-like ridges that look like gills but are folds of the cap surface.",
+      "source": "written for this log"
+    }
+  }
+}

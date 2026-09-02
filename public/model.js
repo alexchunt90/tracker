@@ -523,6 +523,9 @@ const Model = (() => {
       const c = character(sp, spec.id);
       if (c.state === 'unrecorded') continue;
       out.push({
+        // The character this came from, so a caller can line the row up
+        // against a tag recorded under the same one.
+        id: spec.id,
         label: spec.label,
         value: c.state === 'absent' ? spec.absent : c.tags.map((t) => t.text).join(', '),
         tags: c.tags,

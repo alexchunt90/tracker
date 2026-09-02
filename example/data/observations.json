@@ -1,0 +1,77 @@
+[
+  {
+    "id": "example-chanterelle",
+    "type": "fungi",
+    "speciesId": "cantharellus-formosus",
+    "confidence": "high",
+    "observedAt": "2024-10-12T11:20",
+    "lat": 47.551,
+    "lon": -123.118,
+    "place": "Mixed conifer above the trailhead",
+    "notes": "A dozen of them in the moss under hemlock.",
+    "photos": [],
+    "characters": {},
+    "version": 1
+  },
+  {
+    "id": "example-conk",
+    "type": "fungi",
+    "speciesId": "fomitopsis-pinicola",
+    "confidence": "high",
+    "observedAt": "2024-10-12T12:05",
+    "lat": 47.5533,
+    "lon": -123.1094,
+    "place": "Down fir across the creek",
+    "notes": "Same walk. Old bracket, banded margin.",
+    "photos": [],
+    "characters": {},
+    "version": 1
+  },
+  {
+    "id": "example-nettle",
+    "type": "flora",
+    "speciesId": "sp_nettle",
+    "confidence": "high",
+    "observedAt": "2024-04-28T09:40",
+    "lat": 47.6062,
+    "lon": -122.9312,
+    "place": "Streambank, disturbed ground",
+    "notes": "Young tops, worth coming back for.",
+    "photos": [],
+    "characters": {},
+    "version": 1
+  },
+  {
+    "id": "example-unknown",
+    "type": "fungi",
+    "speciesId": null,
+    "confidence": "high",
+    "observedAt": "2024-11-03T14:15",
+    "lat": 47.5488,
+    "lon": -123.1201,
+    "place": "Rotting log, deep shade",
+    "notes": "Small, brown, ringless. Tag it and work it out later.",
+    "photos": [],
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "agaricoid",
+            "category": "form"
+          }
+        ]
+      },
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "brown",
+            "category": "colour"
+          }
+        ]
+      }
+    },
+    "version": 1
+  }
+]

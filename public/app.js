@@ -479,9 +479,17 @@ function adoptMetadata(photos) {
   }
 }
 
-function shotCard(shot, onRemove) {
+function shotCard(shot, onRemove, onOpen) {
   const card = el('div', 'shot' + (shot.status === 'working' ? ' is-busy' : ''));
-  const frame = el('div', 'shot-frame');
+  // A button only when there is something to enlarge: an upload still being
+  // read has nothing behind it, and a dead control that looks alive is worse
+  // than a plain frame.
+  const frame = el(onOpen && shot.photo ? 'button' : 'div', 'shot-frame');
+  if (onOpen && shot.photo) {
+    frame.type = 'button';
+    frame.title = shot.photo.attribution || 'View full size';
+    frame.addEventListener('click', onOpen);
+  }
 
   const src = shot.photo ? thumbSrc(shot.photo) : null;
   if (src) {
@@ -1404,34 +1412,7 @@ async function submitObservation(ev) {
 
 // --- the species view -------------------------------------------------------
 
-function renderSpecies({ rows, life }) {
-  const seen = life.filter((sp) => sp.seen);
-  $('big-species-total').textContent = life.length;
-  const unmetCount = life.length - seen.length;
-  $('species-total-caption').textContent = life.length
-    ? (unmetCount ? `${unmetCount} written up but not yet met` : 'all of them met in the field')
-    : 'Nothing on file yet.';
-  $('big-species-seen').textContent = seen.length;
-  $('species-seen-caption').textContent = seen.length ? `behind ${plural(rows.filter((r) => r.identified).length, 'find')}` : 'no identified finds yet';
-
-  for (const type of Model.TYPE_IDS) {
-    $(`stat-sp-${type}`).textContent = life.filter((sp) => sp.kind === type).length;
-  }
-  $('stat-sp-choice').textContent = life.filter(Model.isChoice).length;
-  $('stat-sp-danger').textContent = life.filter(Model.isDangerous).length;
-
-  const unmet = life.length - seen.length;
-  const verdict = clear($('species-verdict'));
-  if (!life.length) {
-    verdict.textContent = 'No species on file. Add one here, or from a find in the log.';
-  } else {
-    const most = [...life].sort((a, b) => b.count - a.count)[0];
-    verdict.append(
-      strongText(most.count ? `${most.commonName || most.scientificName} is the most-found, at ${plural(most.count, 'find')}.` : 'Nothing has been found twice yet.'),
-      document.createTextNode(unmet ? ` ${plural(unmet, 'species')} on file with no find behind ${unmet === 1 ? 'it' : 'them'}.` : ''),
-    );
-  }
-
+function renderSpecies({ life }) {
   renderSpeciesFilters(life);
   renderSpeciesTable(life);
 }
@@ -1671,6 +1652,11 @@ function makeTray({ zone, fileInput, strip, existing, onChange, note } = {}) {
         shots.splice(shots.indexOf(shot), 1);
         draw();
         onChange?.();
+      }, () => {
+        // Every ready photograph in this tray, so the viewer can be paged
+        // through from whichever one was clicked.
+        const ready = shots.filter((x) => x.photo).map((x) => x.photo);
+        openLightbox(ready, ready.indexOf(shot.photo));
       }));
     }
   };
@@ -1774,6 +1760,104 @@ function sheetSection(sheet, eyebrow, note) {
   }
   sheet.append(section);
   return section;
+}
+
+/**
+ * A photograph at the size of the screen.
+ *
+ * Reference shots are for looking at closely — whether the false gills really
+ * are ridges is not a question a 90-pixel thumbnail can answer. These used to
+ * link out to iNaturalist, which answered a different question (who took it)
+ * at the cost of leaving the app mid-identification.
+ *
+ * Built once and reused: opening it twice should not stack two overlays.
+ */
+let lightbox = null;
+
+function openLightbox(photos, startAt = 0) {
+  const list = (photos || []).filter((p) => fullSrc(p) || thumbSrc(p));
+  if (!list.length) return;
+  let at = Math.max(0, Math.min(startAt, list.length - 1));
+
+  if (!lightbox) {
+    const node = el('div', 'lightbox');
+    node.hidden = true;
+    const img = el('img', 'lightbox-img');
+    const caption = el('div', 'lightbox-caption');
+    const credit = el('a', 'lightbox-credit');
+    credit.target = '_blank';
+    credit.rel = 'noopener noreferrer';
+    const counter = el('span', 'lightbox-count');
+    caption.append(credit, counter);
+
+    const close = el('button', 'lightbox-close', '\u00d7');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close');
+    const prev = el('button', 'lightbox-step is-prev', '\u2039');
+    prev.type = 'button';
+    prev.setAttribute('aria-label', 'Previous photograph');
+    const next = el('button', 'lightbox-step is-next', '\u203a');
+    next.type = 'button';
+    next.setAttribute('aria-label', 'Next photograph');
+
+    node.append(img, caption, close, prev, next);
+    document.body.append(node);
+    lightbox = { node, img, credit, counter, close, prev, next, list: [], at: 0 };
+
+    const hide = () => {
+      lightbox.node.hidden = true;
+      document.removeEventListener('keydown', onKey);
+      // Release the image so a large photograph is not held in memory behind
+      // a hidden overlay.
+      lightbox.img.removeAttribute('src');
+    };
+    const step = (by) => {
+      if (lightbox.list.length < 2) return;
+      lightbox.at = (lightbox.at + by + lightbox.list.length) % lightbox.list.length;
+      paint();
+    };
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') { ev.stopPropagation(); hide(); }
+      else if (ev.key === 'ArrowRight') step(1);
+      else if (ev.key === 'ArrowLeft') step(-1);
+    };
+    lightbox.hide = hide;
+    lightbox.step = step;
+    lightbox.onKey = onKey;
+
+    close.addEventListener('click', hide);
+    prev.addEventListener('click', (ev) => { ev.stopPropagation(); step(-1); });
+    next.addEventListener('click', (ev) => { ev.stopPropagation(); step(1); });
+    // Clicking the backdrop closes; clicking the photograph itself does not,
+    // so a mis-aimed click while looking does not throw the view away.
+    node.addEventListener('click', (ev) => { if (ev.target === node) hide(); });
+  }
+
+  function paint() {
+    const photo = lightbox.list[lightbox.at];
+    lightbox.img.src = fullSrc(photo) || thumbSrc(photo);
+    lightbox.img.alt = photo.attribution || '';
+    const text = photo.attribution || photo.name || '';
+    lightbox.credit.textContent = text;
+    if (photo.sourceUrl) {
+      lightbox.credit.href = photo.sourceUrl;
+      lightbox.credit.classList.remove('is-plain');
+    } else {
+      lightbox.credit.removeAttribute('href');
+      lightbox.credit.classList.add('is-plain');
+    }
+    const many = lightbox.list.length > 1;
+    lightbox.counter.textContent = many ? `${lightbox.at + 1} of ${lightbox.list.length}` : '';
+    lightbox.prev.hidden = !many;
+    lightbox.next.hidden = !many;
+  }
+
+  lightbox.list = list;
+  lightbox.at = at;
+  paint();
+  lightbox.node.hidden = false;
+  document.addEventListener('keydown', lightbox.onKey);
+  lightbox.close.focus();
 }
 
 /** A hero image with a thumbnail rail under it, when there is more than one. */
@@ -2173,6 +2257,19 @@ function buildIdentifySheet(sheet, stored, close) {
   candSection.append(candFoot);
   let showRuledOut = false;
 
+  /*
+   * What you picked, in enough detail to second-guess it.
+   *
+   * Choosing from a scrolling list of forty names is not the decision — the
+   * decision is whether this specimen is that species, and that needs the
+   * reference photographs and the recorded characters side by side with the
+   * tags you just wrote. Sitting between the list and the Identify button, it
+   * is the last thing read before committing a name.
+   */
+  const pickSection = sheetSection(sheet, 'Chosen');
+  const pickBody = el('div', 'chosen-panel');
+  pickSection.append(pickBody);
+
   // --- the decision
   const footer = el('div', 'identify-footer');
   const footerText = el('div', 'identify-choice');
@@ -2260,6 +2357,7 @@ function buildIdentifySheet(sheet, stored, close) {
       candFoot.append(toggle);
     }
     candFoot.append(writeUpButton());
+    paintChosen(rows);
     paintFooter();
   }
 
@@ -2319,6 +2417,94 @@ function buildIdentifySheet(sheet, stored, close) {
     return card;
   }
 
+  /**
+   * The chosen species, laid out to be argued with.
+   *
+   * `match` is the same ranking row the list used, so the tags it agreed with
+   * are marked as agreeing rather than merely listed again — the question
+   * being answered is "does this fit", not "what is this".
+   */
+  function paintChosen(rows) {
+    clear(pickBody);
+    pickSection.hidden = !chosen;
+    if (!chosen) return;
+    const sp = chosen;
+    const match = (rows || []).find((m) => m.species.id === sp.id);
+
+    // Reference photographs: what a good one looks like, which is the whole
+    // reason they were worth importing.
+    const shots = el('div', 'chosen-shots');
+    const photos = (sp.photos || []).slice(0, 3);
+    if (photos.length) {
+      for (const [i, photo] of photos.entries()) {
+        const src = thumbSrc(photo) || fullSrc(photo);
+        if (!src) continue;
+        const frame = el('button', 'chosen-shot');
+        frame.type = 'button';
+        const img = el('img');
+        img.src = src;
+        img.alt = '';
+        img.loading = 'lazy';
+        frame.append(img);
+        // The credit still lives on hover; the click is for looking closely.
+        if (photo.attribution) frame.title = photo.attribution;
+        frame.addEventListener('click', () => openLightbox(photos, i));
+        shots.append(frame);
+      }
+    } else {
+      shots.append(el('div', 'chosen-noshot', 'No reference photographs on file.'));
+    }
+
+    const facts = el('div', 'chosen-facts');
+    const head = el('div', 'chosen-head');
+    head.append(el('h4', 'chosen-name', sp.commonName || sp.scientificName || 'Unnamed'));
+    if (sp.edibility && sp.edibility !== 'unknown') head.append(edibleBadge(sp.edibility));
+    facts.append(head);
+    const sci = sciLine(sp.commonName || sp.scientificName, sp.scientificName, 'chosen-sci sci');
+    if (sci) facts.append(sci);
+
+    // The one line that can stop a hand: what this gets confused with.
+    if (sp.lookalikes) {
+      facts.append(el('p', 'chosen-lookalikes', `Confused with: ${sp.lookalikes}`));
+    }
+    if (sp.habitat) facts.append(el('p', 'chosen-habitat', sp.habitat));
+
+    if (match && match.conflicts.length) {
+      for (const clash of match.conflicts) {
+        facts.append(el('p', 'candidate-conflict',
+          `You tagged \u201c${clash.tag.text}\u201d under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
+      }
+    }
+    pickBody.append(shots, facts);
+
+    // The recorded characters, with the ones your tags agreed on marked. The
+    // rest are what to go and look at again before committing.
+    const agreed = new Set((match?.matched || []).map((h) => `${h.character.id}:${Model.termGroup(h.tag.text)}`));
+    const traits = Model.fungiTraits(sp);
+    if (traits.length) {
+      const list = el('dl', 'facts chosen-traits');
+      for (const trait of traits) {
+        const wrap = el('div');
+        wrap.append(el('dt', null, trait.label));
+        const dd = el('dd', trait.absent ? 'is-absent' : null);
+        if (trait.tags.length) {
+          const chips = el('div', 'tag-list is-static');
+          for (const tag of trait.tags) {
+            const chip = tagChip(tag);
+            if (agreed.has(`${trait.id}:${Model.termGroup(tag.text)}`)) chip.classList.add('is-agreed');
+            chips.append(chip);
+          }
+          dd.append(chips);
+        } else {
+          dd.append(document.createTextNode(trait.value));
+        }
+        wrap.append(dd);
+        list.append(wrap);
+      }
+      pickBody.append(list);
+    }
+  }
+
   /** Nothing in the library fits — write the species up from these very tags. */
   function writeUpButton() {
     const wrap = el('span', 'candidate-writeup');
@@ -2343,8 +2529,10 @@ function buildIdentifySheet(sheet, stored, close) {
     assign.disabled = !chosen;
     if (chosen) {
       assign.textContent = `Identify as ${chosen.commonName || chosen.scientificName}`;
+      // No "Chosen" label here: the section right above the footer is titled
+      // that, and the button below names the species again. The footer's job
+      // is to keep the name in view while the candidate list is scrolled.
       footerText.append(
-        el('span', 'field-label', 'Chosen'),
         el('span', 'identify-chosen', chosen.commonName || chosen.scientificName || 'Unnamed'),
       );
       const preview = Model.displayName({ confidence }, chosen);

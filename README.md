@@ -387,14 +387,48 @@ tiles/               cached basemap
 
 ## Storage
 
-Both collections are plain JSON arrays, written through a temp file and a
-rename so an interrupted save leaves the previous file intact rather than a
-truncated one.
+Both collections are plain JSON arrays. Where they live is `lib/store.js`'s
+business: files under `STATE_DIR`, or an S3-compatible bucket when `S3_BUCKET`
+names one. Same interface either way, so the rest of the server never asks
+which it got.
+
+On the filesystem a save goes through a temp file and a rename, so an
+interrupted write leaves the previous file intact rather than a truncated one.
 
 Every record carries a `version`. The browser echoes back the one it loaded,
 and a mismatch is rejected with a 409 — another tab or another device wrote
 first, and silently discarding their edit is the one outcome worth refusing.
-The browser reloads from disk and says so.
+The browser reloads and says so.
+
+That check catches a stale *client*. It does not catch two servers: both read
+v5, both write v6, and one edit vanishes with nobody at fault. So a read also
+returns a token for the exact stored version and a write presents it back — a
+conditional PUT against the ETag on S3, a hash check under a lock on the
+filesystem. An instance that loses the race re-reads and re-applies its change
+to what is there now, eight times before giving up. Which means a race shows up
+in development rather than only in production.
+
+The S3 requests are signed with SigV4 using `node:crypto` rather than the AWS
+SDK — a page of well-specified arithmetic against fifty packages, in a project
+whose README opens by saying it has none. `node test/sigv4.test.js` checks the
+signing against reference signatures taken from botocore. It exists because a
+wrong signature and a wrong policy both come back as 403, and telling them
+apart afterwards is expensive.
+
+Photographs go in the bucket too, under `<prefix>/photos/`, and the local
+`photos/` directory becomes a cache. The bucket is the truth; the cache is what
+keeps the app working in a forest. A cached copy can never be stale, because
+the bytes behind a minted id never change — it is either the photograph or it
+is absent.
+
+`scripts/upload-to-s3.js` makes the one-way trip that hands the bucket the
+existing log. `--dry-run` first. It skips photographs already there, so an
+interrupted run resumes by being run again.
+
+A store with no config in it seeds itself from `example/` — a made-up handful
+of finds in a made-up wood, with the dates shifted so the newest landed a few
+days ago. An example that opens reading "last find: two years ago" teaches a
+new setup nothing about what the app is for.
 
 Photographs are immutable: an id is minted per upload and never reused, which
 is what lets them be served with a long cache. Files nothing points at any more

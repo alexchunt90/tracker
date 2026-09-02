@@ -18,6 +18,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -56,6 +57,33 @@ loadEnv(ENV_PATH);
 // running from a checkout. Point STATE_DIR at a mounted volume to containerise
 // — and note it must be a *directory*: saves write a temp file and rename over
 // the target, which fails against a bind-mounted file.
+// --- .env -------------------------------------------------------------------
+// Node 18 has no --env-file. A missing .env is fine; the real environment wins.
+function loadEnv(file) {
+  let raw;
+  try {
+    raw = fs.readFileSync(file, 'utf8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return;
+    throw err;
+  }
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    if (!key || key in process.env) continue;
+    let value = trimmed.slice(eq + 1).trim();
+    const quote = value[0];
+    if ((quote === '"' || quote === "'") && value.endsWith(quote) && value.length > 1) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}
+loadEnv(path.join(ROOT, '.env'));
+
 const STATE_DIR = process.env.STATE_DIR ? path.resolve(process.env.STATE_DIR) : ROOT;
 const CONFIG_PATH = path.join(STATE_DIR, 'config.json');
 const DATA_DIR = path.join(STATE_DIR, 'data');
@@ -115,33 +143,54 @@ const UPSTREAM_TIMEOUT_MS = 9000;
 
 // --- storage ----------------------------------------------------------------
 
-/**
- * Write via a sibling temp file and rename. On one filesystem the rename is
- * atomic, so an interrupted save leaves the previous file intact rather than a
- * truncated one. A half-written log is not recoverable by hand.
+/*
+ * Files under STATE_DIR, or a bucket when S3_BUCKET names one. The bucket is
+ * what lets the phone in the field and the laptop at home be the same log.
  */
-async function writeJsonAtomic(file, value) {
-  await fsp.mkdir(path.dirname(file), { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await fsp.writeFile(tmp, JSON.stringify(value, null, 2) + '\n', 'utf8');
-  await fsp.rename(tmp, file);
-}
+const store = createStore(process.env, STATE_DIR, PHOTO_DIR);
 
-async function readJson(file, fallback) {
-  try {
-    return JSON.parse(await fsp.readFile(file, 'utf8'));
-  } catch (err) {
-    if (err.code === 'ENOENT' && fallback !== undefined) return fallback;
-    throw err;
+const readValue = async (key, fallback) => {
+  const { value } = await store.read(key);
+  return value === undefined ? fallback : value;
+};
+
+/**
+ * Read, change, write — retrying when another instance writes in between.
+ *
+ * `change` runs again on a fresh read each time, so a retry re-applies the
+ * change to what is there now rather than to the copy it started from. That
+ * distinction is the whole point: two instances saving different finds at the
+ * same moment is nobody's mistake and should just work, while a stale tab
+ * trying to overwrite an edit it never saw has to be reported. The first is a
+ * retry, the second is `{ reject }`.
+ *
+ * `change` must build a fresh value rather than mutating what it was handed,
+ * or a retry compounds the previous attempt's edits on top of the new read.
+ */
+async function mutate(key, fallback, change, attempts = 8) {
+  for (let attempt = 1; ; attempt++) {
+    const { value, token } = await store.read(key);
+    const outcome = await change(value === undefined ? fallback : value);
+    if (outcome.reject) return outcome;
+    try {
+      await store.write(key, outcome.value, token);
+      return outcome;
+    } catch (err) {
+      // Out of attempts, or a real failure. A caller that keeps losing the race
+      // is better off being told than looping forever.
+      if (!(err instanceof StoreConflict) || attempt >= attempts) throw err;
+      // Jittered, so writers who collided once do not line up and collide again.
+      await new Promise((r) => setTimeout(r, attempt * 10 + Math.random() * 20));
+    }
   }
 }
 
-const readConfig = () => readJson(CONFIG_PATH);
-const readObservations = () => readJson(OBSERVATIONS_PATH, []);
-const readSpecies = () => readJson(SPECIES_PATH, []);
+const readConfig = () => readValue('config', undefined);
+const readObservations = () => readValue('observations', []);
+const readSpecies = () => readValue('species', []);
 // What the tag vocabulary means, and any category set by hand. One object
 // rather than a collection: it is a single document that is edited in place.
-const readGlossary = () => readJson(GLOSSARY_PATH, { version: 0, terms: {} });
+const readGlossary = () => readValue('glossary', { version: 0, terms: {} });
 
 // --- photos -----------------------------------------------------------------
 
@@ -178,23 +227,66 @@ function referencedPhotos(observations, species) {
  * Failures here are logged and swallowed. A leftover file wastes disk; a
  * delete that throws mid-save would fail a request that already succeeded.
  */
+/**
+ * A local copy of a photograph held in the bucket.
+ *
+ * The bucket is the truth, but this app's whole premise is that it works in a
+ * forest with no signal. Bytes behind a minted id never change, so a cached
+ * copy can never be stale — it is either the photograph or absent.
+ */
+async function cachePhoto(name, body) {
+  try {
+    await fsp.mkdir(PHOTO_DIR, { recursive: true });
+    const tmp = path.join(PHOTO_DIR, `${name}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`);
+    await fsp.writeFile(tmp, body);
+    await fsp.rename(tmp, path.join(PHOTO_DIR, name));
+  } catch (err) {
+    // A cache that cannot be written is a slow app, not a broken one.
+    console.error('photo cache write failed:', err.message);
+  }
+}
+
+async function loadPhoto(name) {
+  const local = await fsp.readFile(path.join(PHOTO_DIR, name)).catch((err) => {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  });
+  if (local) return local;
+  if (store.kind === 'file') return null;
+  const remote = await store.readPhoto(name);
+  if (remote) await cachePhoto(name, remote);
+  return remote;
+}
+
 async function pruneOrphanPhotos() {
   try {
     const [observations, species] = await Promise.all([readObservations(), readSpecies()]);
     const keep = referencedPhotos(observations, species);
-    const files = await fsp.readdir(PHOTO_DIR).catch((err) => {
-      if (err.code === 'ENOENT') return [];
-      throw err;
-    });
     const now = Date.now();
-    for (const file of files) {
-      if (!PHOTO_NAME.test(file) || keep.has(file)) continue;
-      const full = path.join(PHOTO_DIR, file);
-      const stat = await fsp.stat(full).catch(() => null);
+
+    for (const { name, modified } of await store.listPhotos()) {
+      if (!PHOTO_NAME.test(name) || keep.has(name)) continue;
       // Young and unreferenced means "sitting in a form that has not been
       // submitted yet", not "abandoned".
-      if (!stat || now - stat.mtimeMs < ORPHAN_GRACE_MS) continue;
-      await fsp.unlink(full).catch(() => {});
+      if (now - modified < ORPHAN_GRACE_MS) continue;
+      await store.deletePhoto(name);
+    }
+
+    /*
+     * The local cache is swept on the same rule but without the grace period:
+     * a cached copy of something no record points at is dead weight, and
+     * deleting it loses nothing — the bucket still holds the photograph, and
+     * on a versioned bucket it holds the deleted ones too.
+     */
+    if (store.kind !== 'file') {
+      const cached = await fsp.readdir(PHOTO_DIR).catch((err) => {
+        if (err.code === 'ENOENT') return [];
+        throw err;
+      });
+      for (const name of cached) {
+        if (!PHOTO_NAME.test(name) || keep.has(name)) continue;
+        await fsp.unlink(path.join(PHOTO_DIR, name)).catch(() => {});
+      }
     }
   } catch (err) {
     console.error('photo prune failed:', err.message);
@@ -366,8 +458,8 @@ function slimTaxon(t) {
  * mismatch means another tab or another device wrote first. Rejecting is the
  * only safe answer — the alternative is silently discarding their edit.
  */
-async function upsert({ file, list, id, incoming, sortKey }) {
-  if (incoming.id !== id) return { status: 400, body: { error: 'id mismatch' } };
+function upsert({ list, id, incoming, sortKey }) {
+  if (incoming.id !== id) return { reject: true, status: 400, body: { error: 'id mismatch' } };
 
   const at = list.findIndex((x) => x.id === id);
   const stored = at === -1 ? null : list[at];
@@ -376,21 +468,23 @@ async function upsert({ file, list, id, incoming, sortKey }) {
   const sent = Number(incoming.version) || 0;
   if (stored && sent !== held) {
     return {
+      reject: true,
       status: 409,
       body: {
-        error: `record ${id} was changed elsewhere (you have v${sent}, the file is v${held})`,
+        error: `record ${id} was changed elsewhere (you have v${sent}, the stored copy is v${held})`,
         version: held,
         record: stored,
       },
     };
   }
 
+  // A fresh array, not a mutation of what was read: a retry re-applies this
+  // change to a newer read, and mutating in place would compound the two.
   const record = { ...incoming, version: held + 1 };
-  if (at === -1) list.push(record); else list[at] = record;
-  if (sortKey) list.sort((a, b) => String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? '')));
+  const next = at === -1 ? [...list, record] : list.map((x, i) => (i === at ? record : x));
+  if (sortKey) next.sort((a, b) => String(a[sortKey] ?? '').localeCompare(String(b[sortKey] ?? '')));
 
-  await writeJsonAtomic(file, list);
-  return { status: 200, body: { saved: true, id, version: record.version, record } };
+  return { value: next, status: 200, body: { saved: true, id, version: record.version, record } };
 }
 
 // --- server -----------------------------------------------------------------
@@ -410,19 +504,23 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/config' && req.method === 'PUT') {
       const incoming = JSON.parse(await readBody(req) || '{}');
-      const current = await readConfig();
-      const held = Number(current.version) || 0;
-      const sent = Number(incoming.version) || 0;
-      if (sent !== held) {
-        return json(res, 409, {
-          error: `config was changed elsewhere (you have v${sent}, the file is v${held})`,
-          version: held,
-          config: current,
-        });
-      }
-      const merged = { ...current, ...incoming, version: held + 1 };
-      await writeJsonAtomic(CONFIG_PATH, merged);
-      return json(res, 200, { saved: true, version: merged.version });
+      const out = await mutate('config', {}, (current) => {
+        const held = Number(current.version) || 0;
+        const sent = Number(incoming.version) || 0;
+        if (sent !== held) {
+          return {
+            reject: true, status: 409,
+            body: {
+              error: `config was changed elsewhere (you have v${sent}, the stored copy is v${held})`,
+              version: held,
+              config: current,
+            },
+          };
+        }
+        const merged = { ...current, ...incoming, version: held + 1 };
+        return { value: merged, status: 200, body: { saved: true, version: merged.version } };
+      });
+      return json(res, out.status, out.body);
     }
 
     // --- photos -------------------------------------------------------------
@@ -439,10 +537,13 @@ const server = http.createServer(async (req, res) => {
       if (!body.length) return json(res, 400, { error: 'empty upload' });
 
       const file = mintPhotoName(ext);
-      await fsp.mkdir(PHOTO_DIR, { recursive: true });
-      // Photo names are freshly minted, so there is no existing file to clobber
-      // and no temp-and-rename dance needed.
-      await fsp.writeFile(path.join(PHOTO_DIR, file), body);
+      // Photo names are freshly minted, so there is nothing to clobber and no
+      // version token to check: the one case where last-writer-wins cannot
+      // lose anything, because there is no previous writer.
+      await store.writePhoto(file, body, type);
+      // Keep a local copy even when the bucket is the source of truth, so the
+      // photograph just taken draws without a round trip.
+      if (store.kind !== 'file') await cachePhoto(file, body);
       return json(res, 201, { file, url: `photos/${file}`, bytes: body.length, mime: type });
     }
 
@@ -451,19 +552,24 @@ const server = http.createServer(async (req, res) => {
       if (!incoming.terms || typeof incoming.terms !== 'object') {
         return json(res, 400, { error: 'terms must be an object' });
       }
-      const current = await readGlossary();
-      const held = Number(current.version) || 0;
-      const sent = Number(incoming.version) || 0;
-      if (sent !== held) {
-        return json(res, 409, {
-          error: `glossary was changed elsewhere (you have v${sent}, the file is v${held})`,
-          version: held,
-          glossary: current,
-        });
-      }
-      const merged = { ...current, terms: incoming.terms, version: held + 1 };
-      await writeJsonAtomic(GLOSSARY_PATH, merged);
-      return json(res, 200, { saved: true, version: merged.version, glossary: merged });
+      const out = await mutate('glossary', { version: 0, terms: {} }, (current) => {
+        const held = Number(current.version) || 0;
+        const sent = Number(incoming.version) || 0;
+        if (sent !== held) {
+          return {
+            reject: true, status: 409,
+            body: {
+              error: `glossary was changed elsewhere (you have v${sent}, the stored copy is v${held})`,
+              version: held,
+              glossary: current,
+            },
+          };
+        }
+        const merged = { ...current, terms: incoming.terms, version: held + 1 };
+        return { value: merged, status: 200,
+                 body: { saved: true, version: merged.version, glossary: merged } };
+      });
+      return json(res, out.status, out.body);
     }
 
     // --- iNaturalist ---------------------------------------------------------
@@ -553,46 +659,53 @@ const server = http.createServer(async (req, res) => {
     const observationMatch = pathname.match(/^\/api\/observations\/([\w-]+)$/);
     if (observationMatch && (req.method === 'PUT' || req.method === 'DELETE')) {
       const id = observationMatch[1];
-      const list = await readObservations();
 
       if (req.method === 'DELETE') {
-        const next = list.filter((x) => x.id !== id);
-        if (next.length === list.length) return json(res, 404, { error: 'Not found' });
-        await writeJsonAtomic(OBSERVATIONS_PATH, next);
-        pruneOrphanPhotos();
-        return json(res, 200, { deleted: true, id });
+        const out = await mutate('observations', [], (list) => {
+          const next = list.filter((x) => x.id !== id);
+          if (next.length === list.length) {
+            return { reject: true, status: 404, body: { error: 'Not found' } };
+          }
+          return { value: next, status: 200, body: { deleted: true, id } };
+        });
+        if (out.status === 200) pruneOrphanPhotos();
+        return json(res, out.status, out.body);
       }
 
       const incoming = JSON.parse(await readBody(req) || '{}');
-      const result = await upsert({ file: OBSERVATIONS_PATH, list, id, incoming });
-      if (result.status === 200) pruneOrphanPhotos();
-      return json(res, result.status, result.body);
+      const out = await mutate('observations', [],
+        (list) => upsert({ list, id, incoming }));
+      if (out.status === 200) pruneOrphanPhotos();
+      return json(res, out.status, out.body);
     }
 
     const speciesMatch = pathname.match(/^\/api\/species\/([\w-]+)$/);
     if (speciesMatch && (req.method === 'PUT' || req.method === 'DELETE')) {
       const id = speciesMatch[1];
-      const list = await readSpecies();
 
       if (req.method === 'DELETE') {
-        const next = list.filter((x) => x.id !== id);
-        if (next.length === list.length) return json(res, 404, { error: 'Not found' });
-
         // Observations keep pointing at a deleted species by id; the model
         // reads a dangling pointer as unidentified. Clearing them here would
-        // be a second write that can fail on its own, leaving the two files
-        // disagreeing — and it would silently destroy the identification
-        // rather than letting it be re-linked.
+        // be a second write that can fail on its own, leaving the two
+        // documents disagreeing — and it would silently destroy the
+        // identification rather than letting it be re-linked.
         const observations = await readObservations();
         const orphaned = observations.filter((o) => o.speciesId === id).length;
 
-        await writeJsonAtomic(SPECIES_PATH, next);
-        pruneOrphanPhotos();
-        return json(res, 200, { deleted: true, id, orphaned });
+        const out = await mutate('species', [], (list) => {
+          const next = list.filter((x) => x.id !== id);
+          if (next.length === list.length) {
+            return { reject: true, status: 404, body: { error: 'Not found' } };
+          }
+          return { value: next, status: 200, body: { deleted: true, id, orphaned } };
+        });
+        if (out.status === 200) pruneOrphanPhotos();
+        return json(res, out.status, out.body);
       }
 
       const incoming = JSON.parse(await readBody(req) || '{}');
-      const result = await upsert({ file: SPECIES_PATH, list, id, incoming, sortKey: 'commonName' });
+      const result = await mutate('species', [],
+        (list) => upsert({ list, id, incoming, sortKey: 'commonName' }));
       if (result.status === 200) pruneOrphanPhotos();
       return json(res, result.status, result.body);
     }
@@ -619,7 +732,8 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/photos/')) {
       const name = pathname.slice('/photos/'.length);
       if (!PHOTO_NAME.test(name)) return json(res, 404, { error: 'Not found' });
-      const data = await fsp.readFile(path.join(PHOTO_DIR, name));
+      const data = await loadPhoto(name);
+      if (!data) return json(res, 404, { error: 'Not found' });
       res.writeHead(200, {
         'Content-Type': PHOTO_MIME[path.extname(name)] || 'application/octet-stream',
         'Content-Length': data.length,
@@ -692,9 +806,61 @@ function tooLarge(message) {
   return err;
 }
 
-if (!fs.existsSync(CONFIG_PATH)) {
-  console.error(`config.json not found at ${CONFIG_PATH}`);
-  process.exit(1);
+/**
+ * A store with no config in it gets the example data, so a fresh checkout — or
+ * a brand new bucket — opens on something to look at rather than an empty
+ * page. It is a made-up handful of finds in a made-up wood, not anybody's log.
+ *
+ * Only the four documents are seeded. The example species carry no
+ * photographs: shipping image files in the repo to illustrate an empty state
+ * is a poor trade, and the app reads an empty photos array perfectly well.
+ */
+async function seedIfEmpty() {
+  const { value } = await store.read('config');
+  if (value !== undefined) return false;
+
+  const examples = path.join(ROOT, 'example');
+  for (const [key, rel] of Object.entries(STORE_KEYS)) {
+    let raw;
+    try {
+      raw = await fsp.readFile(path.join(examples, rel), 'utf8');
+    } catch (err) {
+      if (err.code === 'ENOENT') continue;
+      throw err;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      await store.write(key, key === 'observations' ? rebase(parsed) : parsed, null);
+    } catch (err) {
+      // Another instance seeded it a moment ago. Theirs is as good as ours.
+      if (!(err instanceof StoreConflict)) throw err;
+    }
+  }
+  return true;
+}
+
+/**
+ * The example finds carry fixed dates. Shift them so the newest one landed a
+ * few days ago, keeping the gaps between them intact.
+ *
+ * An example that opens reading "last find: two years ago" teaches a new
+ * setup nothing about what the app is for, and the map and the season readout
+ * both key off recency. The spacing is what carries the meaning — two finds on
+ * one walk, a nettle in spring — so every date moves by the same amount.
+ */
+function rebase(observations) {
+  const stamps = observations.map((o) => Date.parse(o.observedAt)).filter(Number.isFinite);
+  if (!stamps.length) return observations;
+  const shift = Date.now() - 5 * 86400000 - Math.max(...stamps);
+  return observations.map((o) => {
+    const at = Date.parse(o.observedAt);
+    if (!Number.isFinite(at)) return o;
+    // Local wall time with no zone, which is how the rest of the log stores it.
+    const moved = new Date(at + shift);
+    const pad = (n) => String(n).padStart(2, '0');
+    return { ...o, observedAt: `${moved.getFullYear()}-${pad(moved.getMonth() + 1)}-${pad(moved.getDate())}`
+      + `T${pad(moved.getHours())}:${pad(moved.getMinutes())}` };
+  });
 }
 
 /** Every non-internal IPv4 address, so the reachable URLs can be printed. */
@@ -705,12 +871,26 @@ function lanAddresses() {
     .map((n) => n.address);
 }
 
-server.listen(PORT, HOST, () => {
-  console.log(`Tracker → http://127.0.0.1:${PORT}`);
-  if (HOST !== '127.0.0.1') {
-    for (const address of lanAddresses()) console.log(`        → http://${address}:${PORT}`);
-    console.log('Reachable from other devices on this network. No login — set HOST=127.0.0.1 to restrict.');
+(async () => {
+  let seeded;
+  try {
+    seeded = await seedIfEmpty();
+  } catch (err) {
+    console.error(`Could not reach the store at ${store.describe()}`);
+    console.error(`  ${err.message}`);
+    process.exit(1);
   }
-  console.log(`Log:    ${path.relative(process.cwd(), OBSERVATIONS_PATH)}`);
-  console.log(`Photos: ${path.relative(process.cwd(), PHOTO_DIR)}`);
-});
+
+  server.listen(PORT, HOST, () => {
+    console.log(`Tracker → http://127.0.0.1:${PORT}`);
+    if (HOST !== '127.0.0.1') {
+      for (const address of lanAddresses()) console.log(`        → http://${address}:${PORT}`);
+      console.log('Reachable from other devices on this network. No login — set HOST=127.0.0.1 to restrict.');
+    }
+    console.log(`State:  ${store.describe()}${store.kind === 's3' ? '' : ' (local files)'}`);
+    const shownPhotoDir = PHOTO_DIR.startsWith(process.cwd())
+      ? path.relative(process.cwd(), PHOTO_DIR) : PHOTO_DIR;
+    console.log(`Photos: ${shownPhotoDir}${store.kind === 's3' ? ' (cache; the bucket holds them)' : ''}`);
+    if (seeded) console.log('        seeded from example/ — this is made-up data, not yours.');
+  });
+})();
