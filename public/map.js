@@ -103,7 +103,7 @@ const MapView = (() => {
     return svg;
   }
 
-  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange }) {
+  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover }) {
     const view = { lat: 0, lon: 0, zoom: 2 };
     let pins = [];
     // Tiles that 404 or time out. Remembered so a dead basemap is not re-asked
@@ -222,6 +222,9 @@ const MapView = (() => {
 
     function drawPins() {
       const { x: ox, y: oy, w, h } = origin();
+      // Panning rebuilds every marker, so a hover left open would point at an
+      // element that is no longer in the document.
+      onHover?.(null);
       pinLayer.innerHTML = '';
 
       // Draw the user's own pins last so they sit above the crowd-sourced ones
@@ -244,13 +247,20 @@ const MapView = (() => {
         if (pin.opacity != null) marker.style.opacity = String(pin.opacity);
         marker.style.left = `${left}px`;
         marker.style.top = `${top}px`;
-        marker.title = pin.label;
+        // No `title`: the caller shows a richer hover of its own, and the
+        // browser's native tooltip fires on a similar delay and lands on top
+        // of it. The label survives as the accessible name.
         marker.setAttribute('aria-label', pin.label);
         marker.append(pinShape(pin.kind));
         marker.addEventListener('click', (ev) => {
           ev.stopPropagation();
+          onHover?.(null);
           onSelect?.(pin);
         });
+        if (onHover) {
+          marker.addEventListener('mouseenter', () => onHover(pin, marker));
+          marker.addEventListener('mouseleave', () => onHover(null));
+        }
         pinLayer.append(marker);
       }
     }
@@ -298,19 +308,14 @@ const MapView = (() => {
     // --- interaction --------------------------------------------------------
 
     let drag = null;
-    node.addEventListener('pointerdown', (ev) => {
-      if (ev.target.closest('.map-controls, .map-pin')) return;
-      drag = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, moved: false };
-      node.setPointerCapture(ev.pointerId);
-      node.classList.add('is-dragging');
-    });
-    node.addEventListener('pointermove', (ev) => {
-      if (!drag || ev.pointerId !== drag.id) return;
-      const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+    let pinch = null;
+    // Every finger currently down, so a second one can turn a pan into a pinch
+    // and lifting it can turn it back.
+    const down = new Map();
+
+    /** Shift the view by a screen-space delta. */
+    function panBy(dx, dy) {
       if (!dx && !dy) return;
-      drag.moved = true;
-      drag.x = ev.clientX;
-      drag.y = ev.clientY;
       const { x, y, w, h } = origin();
       // Panning is a redraw at a shifted origin, not a transform: at these tile
       // counts it is cheap, and it keeps one code path for where things are.
@@ -318,18 +323,113 @@ const MapView = (() => {
       view.lat = clamp(centre.lat, -MAX_LAT, MAX_LAT);
       view.lon = centre.lon;
       draw();
-    });
-    const endDrag = (ev) => {
-      if (!drag || ev.pointerId !== drag.id) return;
-      const moved = drag.moved;
+    }
+
+    const spread = () => {
+      const [a, b] = [...down.values()];
+      return {
+        dist: Math.hypot(a.x - b.x, a.y - b.y),
+        // In the map's own coordinates, because that is what zoomBy anchors on.
+        mid: (() => {
+          const box = node.getBoundingClientRect();
+          return { x: (a.x + b.x) / 2 - box.left, y: (a.y + b.y) / 2 - box.top };
+        })(),
+      };
+    };
+
+    /*
+     * Two fingers: zoom about the point between them, and pan with it.
+     *
+     * Zoom here is whole levels — the tiles are — so the gesture is measured
+     * rather than applied continuously: doubling the distance between the
+     * fingers is one level, and `Math.round` means the level turns over when
+     * they are halfway there in log space. Counting from the distance the
+     * gesture *started* at, rather than stepping on each threshold crossing,
+     * is what makes pinching out and back in again land where it began.
+     */
+    function startPinch() {
+      if (down.size !== 2) return;
       drag = null;
       node.classList.remove('is-dragging');
-      // Only tell the caller once the hand comes off, or a pan would fire a
-      // network request per frame.
-      if (moved) onViewChange?.(bounds());
+      const { dist, mid } = spread();
+      pinch = { dist, mid, applied: 0, zoomed: false };
+    }
+
+    function movePinch() {
+      if (!pinch || down.size !== 2) return;
+      const { dist, mid } = spread();
+      panBy(mid.x - pinch.mid.x, mid.y - pinch.mid.y);
+      pinch.mid = mid;
+      if (pinch.dist > 0 && dist > 0) {
+        const want = Math.round(Math.log2(dist / pinch.dist));
+        if (want !== pinch.applied) {
+          zoomBy(want - pinch.applied, mid);
+          pinch.applied = want;
+          pinch.zoomed = true;
+        }
+      }
+    }
+
+    node.addEventListener('pointerdown', (ev) => {
+      if (ev.target.closest('.map-controls')) return;
+      /*
+       * Every finger is captured, not just the first.
+       *
+       * Without it, a touch that ends somewhere other than the map — sliding
+       * off the edge, a gesture the browser takes over — never delivers its
+       * pointerup here, and the entry sits in `down` forever. One stale finger
+       * makes the map think two are still on it, and pinch and pan both wedge
+       * until the page is reloaded.
+       */
+      try { node.setPointerCapture(ev.pointerId); } catch { /* already gone */ }
+      down.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (down.size === 2) { startPinch(); return; }
+      if (down.size > 2 || ev.target.closest('.map-pin')) return;
+      drag = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, moved: false };
+      node.classList.add('is-dragging');
+    });
+
+    node.addEventListener('pointermove', (ev) => {
+      if (down.has(ev.pointerId)) down.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (pinch) { movePinch(); return; }
+      if (!drag || ev.pointerId !== drag.id) return;
+      const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+      if (!dx && !dy) return;
+      drag.moved = true;
+      drag.x = ev.clientX;
+      drag.y = ev.clientY;
+      panBy(dx, dy);
+    });
+
+    const endDrag = (ev) => {
+      const wasPinching = !!pinch;
+      if (down.delete(ev.pointerId) && pinch && down.size < 2) {
+        pinch = null;
+        // One finger still down: carry on panning from where it is rather than
+        // making the hand come off and start again.
+        const [id] = [...down.keys()];
+        if (id !== undefined) {
+          const p = down.get(id);
+          drag = { id, x: p.x, y: p.y, moved: false };
+          node.classList.add('is-dragging');
+        }
+      }
+      if (drag && ev.pointerId === drag.id) {
+        const moved = drag.moved;
+        drag = null;
+        node.classList.remove('is-dragging');
+        if (moved) onViewChange?.(bounds());
+        return;
+      }
+      // A pinch that ends with both fingers lifting still changed the view.
+      if (wasPinching && !pinch && !down.size) onViewChange?.(bounds());
     };
     node.addEventListener('pointerup', endDrag);
     node.addEventListener('pointercancel', endDrag);
+    // The capture ending is the last word on a pointer, whatever else was or
+    // was not delivered. Belt and braces, because a wedged map is unusable and
+    // the cost of an extra cleanup is nothing.
+    node.addEventListener('lostpointercapture', endDrag);
 
     /**
      * Wheel zoom, paid for by the distance scrolled and capped by the clock.

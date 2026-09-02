@@ -593,11 +593,15 @@ function render() {
   else renderSpecies(d);
 }
 
-function renderMasthead({ rows, summary: s }) {
+function renderMasthead({ rows, summary: s, life }) {
   $('chip-finds').textContent = s.total;
   $('chip-identified').textContent = s.total ? `${Math.round(s.identifiedShare * 100)}%` : '—';
   $('chip-identified-source').textContent = s.total ? `${s.identified} of ${s.total}` : 'nothing logged yet';
-  $('chip-species').textContent = s.speciesSeen;
+  // The size of the library, not the number met. The met count is already the
+  // subject of the Identified chip beside it, and the library is the number
+  // that answers "is this thing in here" — which is what the chip is for.
+  $('chip-species').textContent = life.length;
+  $('chip-species-source').textContent = `${s.speciesSeen} met in the field`;
 
   const last = s.latest;
   $('chip-last').textContent = last ? last.name : '—';
@@ -810,22 +814,28 @@ function typeDropdown(counts, onChange) {
  * uncertain" would only ever mean "identified". Radios, not checkboxes, and
  * picking one closes the menu \u2014 there is nothing else to say.
  */
-function statusDropdown(sum, onChange) {
-  const options = [
-    { id: 'all', label: 'Any ID', count: sum.total },
-    { id: 'identified', label: 'Identified', count: sum.identified },
-    { id: 'unidentified', label: 'Unidentified', count: sum.unidentified },
-    { id: 'uncertain', label: 'Uncertain', count: sum.uncertain },
-  ];
-  const held = options.find((o) => o.id === state.filters.status) || options[0];
+/**
+ * One choice from a short list, as a dropdown.
+ *
+ * The pill rows this replaced read as a set of toggles when only one could
+ * ever be lit. Radios say "pick one" without a caption explaining it, and a
+ * closed dropdown costs one line instead of five — which is what lets the
+ * Species and Glossary filter bars sit on a single row beside their search.
+ *
+ * `options` is [{ id, label, count, mark }]; `mark` is an optional element
+ * shown before the label, so a type keeps its badge and a category its colour.
+ */
+function choiceDropdown({ name, options, current, onPick, label }) {
+  const held = options.find((o) => o.id === current) || options[0];
 
   const wrap = el('div', 'dropdown');
   const button = el('button', 'dropdown-button');
   button.type = 'button';
   button.setAttribute('aria-haspopup', 'true');
   button.setAttribute('aria-expanded', 'false');
+  if (label) button.setAttribute('aria-label', `${label}: ${held.label}`);
   button.append(el('span', 'dropdown-label', held.label));
-  button.append(el('span', 'count', String(held.count)));
+  if (held.count != null) button.append(el('span', 'count', String(held.count)));
   button.append(el('span', 'dropdown-caret', '\u25be'));
   wrap.append(button);
 
@@ -835,20 +845,40 @@ function statusDropdown(sum, onChange) {
     const row = el('label', 'dropdown-option' + (o.id === held.id ? ' is-on' : ''));
     const dot = el('input');
     dot.type = 'radio';
-    dot.name = 'filter-status';
+    dot.name = name;
     dot.checked = o.id === held.id;
     dot.addEventListener('change', () => {
-      state.filters.status = o.id;
       close();
-      onChange();
+      onPick(o.id);
     });
-    row.append(dot, el('span', 'dropdown-option-label', o.label), el('span', 'count', String(o.count)));
+    row.append(dot);
+    if (o.mark) row.append(o.mark);
+    // A badge already carries its own text; printing the label after it reads
+    // as "Fungi Fungi". The button still uses `label`, which is plain words.
+    if (!o.mark || !o.markIsLabel) row.append(el('span', 'dropdown-option-label', o.label));
+    if (o.count != null) row.append(el('span', 'count', String(o.count)));
     menu.append(row);
   }
   wrap.append(menu);
 
   const close = wireDropdown(wrap, button, menu);
   return wrap;
+}
+
+/** How settled the identification is. One of four, so one choice. */
+function statusDropdown(sum, onChange) {
+  return choiceDropdown({
+    name: 'filter-status',
+    label: 'Identification',
+    current: state.filters.status,
+    onPick: (id) => { state.filters.status = id; onChange(); },
+    options: [
+      { id: 'all', label: 'Any ID', count: sum.total },
+      { id: 'identified', label: 'Identified', count: sum.identified },
+      { id: 'unidentified', label: 'Unidentified', count: sum.unidentified },
+      { id: 'uncertain', label: 'Uncertain', count: sum.uncertain },
+    ],
+  });
 }
 
 /**
@@ -946,15 +976,6 @@ function wireDropdown(wrap, button, menu) {
   return close;
 }
 
-function pill(label, on, count, onClick) {
-  const button = el('button', 'pill' + (on ? ' is-on' : ''));
-  button.type = 'button';
-  button.setAttribute('aria-pressed', on ? 'true' : 'false');
-  button.append(document.createTextNode(label));
-  if (count != null) button.append(el('span', 'count', String(count)));
-  button.addEventListener('click', onClick);
-  return button;
-}
 
 // --- gallery ----------------------------------------------------------------
 
@@ -1025,6 +1046,75 @@ function findCard(row) {
 
 // --- the map ----------------------------------------------------------------
 
+/*
+ * What a pin is, on hover.
+ *
+ * A map of forty pins answers "where" and nothing else — telling them apart
+ * meant clicking each one open and closing it again. The photograph is what
+ * actually identifies a find at a glance; the date is what separates two
+ * visits to the same patch.
+ *
+ * Shorter delay than the glossary tooltip: a pin is a small target you aim at
+ * deliberately, so a full second reads as lag rather than restraint.
+ */
+const PIN_TIP_DELAY = 250;
+let pinTipTimer = null;
+let pinTipNode = null;
+
+function hidePinTip() {
+  clearTimeout(pinTipTimer);
+  if (pinTipNode) pinTipNode.hidden = true;
+}
+
+function showPinTip(pin, marker) {
+  if (!pinTipNode) {
+    pinTipNode = el('div', 'pin-tip');
+    pinTipNode.hidden = true;
+    document.body.append(pinTipNode);
+  }
+  const tip = clear(pinTipNode);
+
+  const own = pin.kind === 'mine';
+  const row = pin.row;
+  const inat = pin.inat;
+
+  // The photograph, which is what tells two brown mushrooms apart.
+  const photo = own ? coverOf(row) : null;
+  const src = own ? (thumbSrc(photo) || fullSrc(photo)) : (inat?.photo || null);
+  if (src) {
+    const frame = el('div', 'pin-tip-shot');
+    const img = el('img');
+    img.src = src;
+    img.alt = '';
+    frame.append(img);
+    tip.append(frame);
+  }
+
+  const body = el('div', 'pin-tip-body');
+  const name = own ? row.name : (inat?.commonName || inat?.scientificName || 'iNaturalist record');
+  const heading = el('div', 'pin-tip-name' + (own && !row.identified ? ' is-unknown' : ''), name);
+  body.append(heading);
+
+  const sci = own ? row.scientificName : (inat?.commonName ? inat.scientificName : '');
+  if (sci && sci !== name) body.append(el('div', 'pin-tip-sci sci', sci));
+
+  const when = own ? row.when : inat?.observedOn;
+  const line = el('div', 'pin-tip-meta');
+  line.append(el('span', null, when ? fmtDate(when) : 'undated'));
+  if (own && (row.photos || []).length > 1) {
+    line.append(el('span', 'pin-tip-count', `${row.photos.length} photos`));
+  }
+  if (!own) line.append(el('span', 'pin-tip-count', 'iNaturalist'));
+  body.append(line);
+
+  if (own && Model.isDangerous(row.species)) {
+    body.append(el('div', 'pin-tip-warn', Model.edibility(row.species.edibility).label));
+  }
+  tip.append(body);
+
+  placeTip(tip, marker.getBoundingClientRect(), { gap: 10, centre: true });
+}
+
 /** Pins are the map's own shape: position, how to draw it, what to say. */
 function ownPins(rows) {
   return rows.filter((r) => r.hasPlace).map((r) => ({
@@ -1085,6 +1175,12 @@ function renderMap(shown, rows) {
         }
       },
       onViewChange: (box) => { state.inat.box = box; loadInat(); },
+      onHover: (pin, marker) => {
+        clearTimeout(pinTipTimer);
+        if (!pin) return hidePinTip();
+        // A beat, so sweeping the cursor across a cluster does not strobe.
+        pinTipTimer = setTimeout(() => showPinTip(pin, marker), PIN_TIP_DELAY);
+      },
     });
     const start = config.default || { lat: 0, lon: 0, zoom: 2 };
     const found = MapView.fitBounds(placed, $('map-canvas').clientWidth || 800, $('map-canvas').clientHeight || 420, { maxZoom: config.maxZoom ?? 19 });
@@ -1419,12 +1515,27 @@ function renderSpecies({ life }) {
 
 function renderSpeciesFilters(life) {
   const set = clear($('filter-sp-type'));
-  set.append(pill('All', state.speciesFilters.type === 'all', life.length, () => { state.speciesFilters.type = 'all'; render(); }));
-  for (const t of Model.TYPES) {
-    const n = life.filter((sp) => sp.kind === t.id).length;
-    set.append(pill(t.label, state.speciesFilters.type === t.id, n, () => { state.speciesFilters.type = t.id; render(); }));
-  }
-  set.append(pill('Choice', state.speciesFilters.type === 'choice', life.filter(Model.isChoice).length, () => { state.speciesFilters.type = 'choice'; render(); }));
+  set.append(choiceDropdown({
+    name: 'filter-sp-type',
+    label: 'Kind',
+    current: state.speciesFilters.type,
+    onPick: (id) => { state.speciesFilters.type = id; render(); },
+    options: [
+      { id: 'all', label: 'All kinds', count: life.length },
+      // The badge comes along, so the colour that means "fungi" everywhere
+      // else means it here too.
+      ...Model.TYPES.map((t) => ({
+        id: t.id,
+        label: t.label,
+        count: life.filter((sp) => sp.kind === t.id).length,
+        mark: typeBadge(t.id),
+        markIsLabel: true,
+      })),
+      // Not a kind, but the one cut across kinds worth having to hand.
+      { id: 'choice', label: 'Choice edible', count: life.filter(Model.isChoice).length,
+        mark: edibleBadge('choice'), markIsLabel: true },
+    ],
+  }));
 }
 
 function renderSpeciesTable(life) {
@@ -2628,24 +2739,39 @@ function renderGlossary({ rows }) {
   const all = glossaryRows(rows);
   const f = state.glossaryFilters;
 
-  const catSet = clear($('glossary-filter-cat'));
-  catSet.append(pill('All', f.category === 'all', all.length, () => { f.category = 'all'; render(); }));
-  for (const c of Model.TAG_CATEGORIES) {
-    const n = all.filter((t) => t.category === c.id).length;
-    catSet.append(pill(c.label, f.category === c.id, n, () => { f.category = c.id; render(); }));
-  }
-
-  const stateSet = clear($('glossary-filter-state'));
   const undefinedCount = all.filter((t) => !t.definition).length;
   const unknownCount = all.filter((t) => t.category === 'note').length;
-  for (const o of [
-    { id: 'all', label: 'Any', n: all.length },
-    { id: 'undefined', label: 'Undefined', n: undefinedCount },
-    { id: 'unknown', label: 'Unclassified', n: unknownCount },
-    { id: 'used', label: 'In use', n: all.filter((t) => t.uses).length },
-  ]) {
-    stateSet.append(pill(o.label, f.state === o.id, o.n, () => { f.state = o.id; render(); }));
-  }
+
+  clear($('glossary-filter-cat')).append(choiceDropdown({
+    name: 'glossary-cat',
+    label: 'Category',
+    current: f.category,
+    onPick: (id) => { f.category = id; render(); },
+    options: [
+      { id: 'all', label: 'All categories', count: all.length },
+      // Each category carries the colour its tags are drawn in, so the list
+      // reads the way the tags do.
+      ...Model.TAG_CATEGORIES.map((c) => ({
+        id: c.id,
+        label: c.label,
+        count: all.filter((t) => t.category === c.id).length,
+        mark: categorySwatch(c.id),
+      })),
+    ],
+  }));
+
+  clear($('glossary-filter-state')).append(choiceDropdown({
+    name: 'glossary-state',
+    label: 'State',
+    current: f.state,
+    onPick: (id) => { f.state = id; render(); },
+    options: [
+      { id: 'all', label: 'Any state', count: all.length },
+      { id: 'undefined', label: 'Undefined', count: undefinedCount },
+      { id: 'unknown', label: 'Unclassified', count: unknownCount },
+      { id: 'used', label: 'In use', count: all.filter((t) => t.uses).length },
+    ],
+  }));
 
   const q = f.q.trim().toLowerCase();
   const shown = all.filter((t) => {
@@ -3145,18 +3271,23 @@ function showTagTip(chip, tag) {
   }
   tip.append(el('p', 'tag-tip-cat', Model.tagCategory(tag.category).label));
 
-  // Measured after it has content, then placed under the chip and nudged back
-  // inside the viewport rather than allowed to hang off the edge.
+  placeTip(tip, chip.getBoundingClientRect());
+}
+
+/**
+ * Under the thing hovered, nudged back inside the viewport, flipped above when
+ * there is no room below. Measured after the content is in, because the height
+ * depends on how much there was to say.
+ */
+function placeTip(tip, box, { gap = 6, centre = false } = {}) {
   tip.hidden = false;
-  const box = chip.getBoundingClientRect();
   const size = tip.getBoundingClientRect();
   const margin = 8;
-  let left = box.left;
+  let left = centre ? box.left + box.width / 2 - size.width / 2 : box.left;
   if (left + size.width > window.innerWidth - margin) left = window.innerWidth - size.width - margin;
   if (left < margin) left = margin;
-  // Below by default; above when there is no room below.
-  let top = box.bottom + 6;
-  if (top + size.height > window.innerHeight - margin) top = box.top - size.height - 6;
+  let top = box.bottom + gap;
+  if (top + size.height > window.innerHeight - margin) top = box.top - size.height - gap;
   tip.style.left = `${Math.round(left)}px`;
   tip.style.top = `${Math.round(Math.max(margin, top))}px`;
 }
@@ -3172,7 +3303,14 @@ function armTagTip(chip, tag) {
   chip.addEventListener('click', hideTagTip);
 }
 
-function tagChip(tag, { onCycle, onRemove } = {}) {
+/** The colour a category's tags are drawn in, as a chip for a menu row. */
+function categorySwatch(category) {
+  const dot = el('span', 'cat-swatch');
+  dot.dataset.category = category;
+  return dot;
+}
+
+function tagChip(tag, { onCycle, onRemove, tip = true } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
 
@@ -3185,8 +3323,11 @@ function tagChip(tag, { onCycle, onRemove } = {}) {
 
   // Not clickable. A term's category is a property of the term, not of one
   // usage, so it is set once in the Glossary rather than per species here.
+  //
+  // No `title` here: the browser's own tooltip fires on roughly the same delay
+  // as the glossary one and lands on top of it, hiding the definition behind
+  // the category — which the glossary tooltip already names at its foot.
   const label = el('span', 'tag-text', tag.text);
-  label.title = `${Model.tagCategory(tag.category).label} — set in the Glossary`;
   chip.append(label);
   void onCycle;
 
@@ -3197,7 +3338,7 @@ function tagChip(tag, { onCycle, onRemove } = {}) {
     drop.addEventListener('click', onRemove);
     chip.append(drop);
   }
-  armTagTip(chip, tag);
+  if (tip) armTagTip(chip, tag);
   return chip;
 }
 
@@ -3304,7 +3445,10 @@ function tagField(spec, value, onChange) {
       row.append(label);
       const chips = el('div', 'tag-list is-static');
       for (const term of group.terms) {
-        const chip = tagChip(term);
+        // No glossary tooltip on these: they carry their own, saying how often
+        // the term has been used here, and two tooltips on one chip is the
+        // problem being avoided. This is a picking surface, not a reading one.
+        const chip = tagChip(term, { tip: false });
         chip.classList.add('is-suggestion');
         chip.title = term.here ? `Used ${plural(term.here, 'time')} under ${spec.label}` : 'Not used here yet';
         // mousedown, not click: the input must not blur first, or its own blur
