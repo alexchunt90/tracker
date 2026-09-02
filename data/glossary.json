@@ -1,0 +1,1648 @@
+{
+  "version": 4,
+  "terms": {
+    "acrid": {
+      "definition": "with a sharp biting taste, hot and peppery",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "adnate": {
+      "definition": "describes gills that are attached to the stipe along all or most of their height",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "adnexed": {
+      "definition": "narrowly attached; describes gills that are attached to the stipe along only a part of their height, or appear as though a small part of the gill had been cut away next to the stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "agaricoid": {
+      "definition": "Built like a typical gilled mushroom: a cap on a stipe, with gills underneath.",
+      "source": "written for this log"
+    },
+    "alder": {
+      "definition": ""
+    },
+    "almond": {
+      "definition": ""
+    },
+    "amber-brown": {
+      "definition": ""
+    },
+    "anastomosing": {
+      "definition": "describes gills that split and re-join in network fashion, like a braided stream",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "anise": {
+      "definition": ""
+    },
+    "annulus": {
+      "definition": "a skirt-like ring",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "apricot": {
+      "definition": ""
+    },
+    "aromatic": {
+      "definition": ""
+    },
+    "aspen": {
+      "definition": ""
+    },
+    "asymmetric": {
+      "definition": ""
+    },
+    "banded": {
+      "definition": ""
+    },
+    "barrel-shaped": {
+      "definition": ""
+    },
+    "basal bulb": {
+      "definition": "A swollen, rounded base to the stipe.",
+      "source": "written for this log"
+    },
+    "bean-like": {
+      "definition": ""
+    },
+    "bearded margin": {
+      "definition": ""
+    },
+    "beech": {
+      "definition": ""
+    },
+    "beige": {
+      "definition": ""
+    },
+    "berry canes": {
+      "definition": ""
+    },
+    "bicolored": {
+      "definition": ""
+    },
+    "big-leaf maple": {
+      "definition": ""
+    },
+    "birch": {
+      "definition": ""
+    },
+    "bird carcasses": {
+      "definition": ""
+    },
+    "birds nest": {
+      "definition": ""
+    },
+    "bitter": {
+      "definition": "With a persistently bitter taste.",
+      "source": "written for this log"
+    },
+    "black": {
+      "definition": ""
+    },
+    "blackish": {
+      "definition": ""
+    },
+    "blackish brown": {
+      "definition": ""
+    },
+    "bleach": {
+      "definition": ""
+    },
+    "blue": {
+      "definition": ""
+    },
+    "blue-green": {
+      "definition": ""
+    },
+    "blue-grey": {
+      "definition": ""
+    },
+    "bog": {
+      "definition": ""
+    },
+    "bolete": {
+      "definition": "a fleshy mushroom with a tube layer on the underside of the cap",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "boletoid": {
+      "definition": "Built like a bolete: a cap on a stipe, with a spongy layer of tubes and pores underneath instead of gills.",
+      "source": "written for this log"
+    },
+    "bracket": {
+      "definition": "A shelf-like fruit body growing sideways out of wood, with no stipe.",
+      "source": "written for this log"
+    },
+    "branching": {
+      "definition": ""
+    },
+    "brick": {
+      "definition": ""
+    },
+    "bright orange": {
+      "definition": ""
+    },
+    "bright red": {
+      "definition": ""
+    },
+    "bright yellow": {
+      "definition": ""
+    },
+    "brittle": {
+      "definition": "Snapping cleanly rather than tearing.",
+      "source": "written for this log"
+    },
+    "broad": {
+      "definition": ""
+    },
+    "broadleaf": {
+      "definition": ""
+    },
+    "brown": {
+      "definition": ""
+    },
+    "brownish": {
+      "definition": ""
+    },
+    "brownish grey": {
+      "definition": ""
+    },
+    "brownish orange": {
+      "definition": ""
+    },
+    "bruises black": {
+      "definition": "Turning black where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises blue": {
+      "definition": "Turning blue where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises brown": {
+      "definition": "Turning brown where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises green": {
+      "definition": "Turning green where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises orange": {
+      "definition": ""
+    },
+    "bruises purple": {
+      "definition": ""
+    },
+    "bruises red": {
+      "definition": "Turning red where cut or handled.",
+      "source": "written for this log"
+    },
+    "bruises yellow": {
+      "definition": "Turning yellow where cut or handled.",
+      "source": "written for this log"
+    },
+    "buff": {
+      "definition": "a pale yellow color with slight grayish tones",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "bulbous": {
+      "definition": "Swollen and rounded, usually at the stipe base.",
+      "source": "written for this log"
+    },
+    "bumps": {
+      "definition": ""
+    },
+    "burgundy": {
+      "definition": ""
+    },
+    "buried": {
+      "definition": ""
+    },
+    "buried wood": {
+      "definition": "Growing from wood buried in the soil, so appearing to grow from the ground.",
+      "source": "written for this log"
+    },
+    "burn site": {
+      "definition": "Growing on ground that has been burnt.",
+      "source": "written for this log"
+    },
+    "butterscotch": {
+      "definition": ""
+    },
+    "caespitose": {
+      "definition": "see cespitose",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "campanulate": {
+      "definition": "bell-shaped",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "cantharelloid": {
+      "definition": "Built like a chanterelle: vase- or trumpet-shaped, with blunt forking ridges rather than true gills.",
+      "source": "written for this log"
+    },
+    "cap": {
+      "definition": "the broad expanded umbrella-like portion of a typical mushroom, which bears gills, tubes, spines, or a smooth surface on its underside",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "caramel": {
+      "definition": ""
+    },
+    "cartilaginous": {
+      "definition": "rigid and brittle, breaking with a snap; usually in reference to a stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "cedar": {
+      "definition": ""
+    },
+    "central": {
+      "definition": "Attached at the middle.",
+      "source": "written for this log"
+    },
+    "chambered": {
+      "definition": ""
+    },
+    "cherry": {
+      "definition": ""
+    },
+    "chestnut": {
+      "definition": ""
+    },
+    "cinnamon": {
+      "definition": ""
+    },
+    "cinnamon-brown": {
+      "definition": ""
+    },
+    "clavarioid": {
+      "definition": "Club- or coral-shaped, with the spore-bearing surface on the outside of the branches.",
+      "source": "written for this log"
+    },
+    "clavate": {
+      "definition": "club-shaped",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "clay": {
+      "definition": ""
+    },
+    "close": {
+      "definition": "in reference to spacing of gills, farther apart than crowded, but closer together than subdistant",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "club": {
+      "definition": "An unbranched, upright, club-shaped fruit body.",
+      "source": "written for this log"
+    },
+    "clustered": {
+      "definition": "Growing in tight groups from a common base.",
+      "source": "written for this log"
+    },
+    "coarse": {
+      "definition": ""
+    },
+    "coarsely scaly": {
+      "definition": ""
+    },
+    "columella": {
+      "definition": "sterile stipe-like tissue within some false truffes or puffballs",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "concentric": {
+      "definition": "Arranged in rings around a common centre.",
+      "source": "written for this log"
+    },
+    "cone": {
+      "definition": ""
+    },
+    "cone scales": {
+      "definition": ""
+    },
+    "conical": {
+      "definition": "Cone-shaped.",
+      "source": "written for this log"
+    },
+    "conifer": {
+      "definition": "a cone-bearing tree, usually evergreen, such as pine, spruce, or Douglas-fir",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "conifer seeds": {
+      "definition": ""
+    },
+    "contorted": {
+      "definition": ""
+    },
+    "convex": {
+      "definition": "rounded, like an upside-down bowl",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "convoluted": {
+      "definition": ""
+    },
+    "coral": {
+      "definition": "A branched, upright fruit body resembling marine coral.",
+      "source": "written for this log"
+    },
+    "corky": {
+      "definition": "Firm and light, like cork.",
+      "source": "written for this log"
+    },
+    "corticioid": {
+      "definition": "Forming a thin crust flat against its substrate, with no cap and no stipe.",
+      "source": "written for this log"
+    },
+    "cortina": {
+      "definition": "A cobwebby partial veil of fine fibres, typical of Cortinarius.",
+      "source": "written for this log"
+    },
+    "cottonwood": {
+      "definition": ""
+    },
+    "cracked": {
+      "definition": ""
+    },
+    "cream": {
+      "definition": ""
+    },
+    "cream buff": {
+      "definition": ""
+    },
+    "cream-white": {
+      "definition": ""
+    },
+    "creamy orange": {
+      "definition": ""
+    },
+    "creamy yellow": {
+      "definition": ""
+    },
+    "crenulate": {
+      "definition": "scalloped, finely scalloped, usually in reference to the edge of a gill or cap",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "crowded": {
+      "definition": "in reference to spacing of gills, packed closely together",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "crust": {
+      "definition": "A thin flat sheet of fungal tissue spread over its substrate.",
+      "source": "written for this log"
+    },
+    "cup": {
+      "definition": "A cup- or bowl-shaped fruit body, open at the top.",
+      "source": "written for this log"
+    },
+    "curved": {
+      "definition": ""
+    },
+    "cushion-like": {
+      "definition": ""
+    },
+    "cyanide": {
+      "definition": ""
+    },
+    "dark brown": {
+      "definition": ""
+    },
+    "dark grey": {
+      "definition": ""
+    },
+    "dark olive-brown": {
+      "definition": ""
+    },
+    "dark olive-grey": {
+      "definition": ""
+    },
+    "dark purple-black": {
+      "definition": ""
+    },
+    "dark vinaceous brown": {
+      "definition": ""
+    },
+    "dark-brown": {
+      "definition": ""
+    },
+    "darkening": {
+      "definition": ""
+    },
+    "darkens when bruised": {
+      "definition": ""
+    },
+    "dead hardwood": {
+      "definition": ""
+    },
+    "dead wood": {
+      "definition": ""
+    },
+    "decaying mushrooms": {
+      "definition": ""
+    },
+    "decurrent": {
+      "definition": "describes gills that are attached to, and extend down, the stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "deep purple": {
+      "definition": ""
+    },
+    "deep reddish brown": {
+      "definition": ""
+    },
+    "deliquescent": {
+      "definition": ""
+    },
+    "depressed": {
+      "definition": "in reference to the cap, having the central portion sunken relative to the margin",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "discolors when bruised": {
+      "definition": ""
+    },
+    "distant": {
+      "definition": "in reference to spacing of gills, rather far apart",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "douglas fir": {
+      "definition": ""
+    },
+    "dry": {
+      "definition": "Neither sticky nor moist to the touch.",
+      "source": "written for this log"
+    },
+    "duff": {
+      "definition": "plant litter making up the surface layer of forest soil; usually applied in conifer forests",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "dull orange": {
+      "definition": ""
+    },
+    "dull yellow": {
+      "definition": ""
+    },
+    "dung": {
+      "definition": "Growing on animal droppings.",
+      "source": "written for this log"
+    },
+    "ear-shaped": {
+      "definition": ""
+    },
+    "earthball": {
+      "definition": "A tough-skinned, roughly spherical fruit body with a dark spore mass inside.",
+      "source": "written for this log"
+    },
+    "earthstar": {
+      "definition": "A puffball whose outer layer splits into star-like rays that peel back from the spore sac.",
+      "source": "written for this log"
+    },
+    "earthy": {
+      "definition": ""
+    },
+    "eccentric": {
+      "definition": "Attached off-centre.",
+      "source": "written for this log"
+    },
+    "egg-yellow": {
+      "definition": ""
+    },
+    "elastic": {
+      "definition": ""
+    },
+    "elongated": {
+      "definition": ""
+    },
+    "emarginate": {
+      "definition": "Gills abruptly notched at the stipe.",
+      "source": "written for this log"
+    },
+    "encrusted": {
+      "definition": ""
+    },
+    "entire": {
+      "definition": "even, smooth, not toothed or broken up; usually in reference to the cap or gill margin",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "equal": {
+      "definition": "of the same diameter throughout; usually in reference to a stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "eroded": {
+      "definition": "irregularly toothed; usually in reference to the gill edge",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "eyelash hairs": {
+      "definition": ""
+    },
+    "fading": {
+      "definition": ""
+    },
+    "fairy ring": {
+      "definition": ""
+    },
+    "fallen branches": {
+      "definition": ""
+    },
+    "false gills": {
+      "definition": "Blunt, forking, vein-like ridges that look like gills but are folds of the cap surface.",
+      "source": "written for this log"
+    },
+    "false morel": {
+      "definition": "A brain-like or saddle-shaped fruit body superficially resembling a morel; several are dangerously toxic.",
+      "source": "written for this log"
+    },
+    "fan": {
+      "definition": "A flat, fan-shaped fruit body, usually attached at one edge.",
+      "source": "written for this log"
+    },
+    "fan-shaped": {
+      "definition": ""
+    },
+    "farinaceous": {
+      "definition": "odor or taste like that of freshly ground meal; when strong, somewhat like that of cucumber or watermelon rind",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "ferruginous": {
+      "definition": ""
+    },
+    "fetid": {
+      "definition": ""
+    },
+    "fibrillose": {
+      "definition": "composed of fibrils",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "fibrillose-scaly": {
+      "definition": ""
+    },
+    "fibrous": {
+      "definition": "tough and stringy",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "finely scaly": {
+      "definition": ""
+    },
+    "fir": {
+      "definition": ""
+    },
+    "fishy": {
+      "definition": ""
+    },
+    "flat": {
+      "definition": ""
+    },
+    "flattened": {
+      "definition": ""
+    },
+    "flesh-pink": {
+      "definition": ""
+    },
+    "fleshy": {
+      "definition": "Soft and substantial, like a typical mushroom cap.",
+      "source": "written for this log"
+    },
+    "folded": {
+      "definition": ""
+    },
+    "folds": {
+      "definition": "Shallow wrinkles or creases on the spore-bearing surface.",
+      "source": "written for this log"
+    },
+    "forking": {
+      "definition": "Splitting into two or more branches.",
+      "source": "written for this log"
+    },
+    "fragile": {
+      "definition": ""
+    },
+    "free": {
+      "definition": "describes gills that are not at all attached to the stipe along their height",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "fruity": {
+      "definition": ""
+    },
+    "fungus": {
+      "definition": "Growing on another fungus, as a parasite or a decomposer of it.",
+      "source": "written for this log"
+    },
+    "funnel-shaped": {
+      "definition": ""
+    },
+    "furrowed": {
+      "definition": ""
+    },
+    "fused": {
+      "definition": ""
+    },
+    "garlic": {
+      "definition": ""
+    },
+    "garry oak": {
+      "definition": ""
+    },
+    "gasteroid": {
+      "definition": "Producing spores inside a closed fruit body, released when it opens, tears or is struck.",
+      "source": "written for this log"
+    },
+    "gelatinous": {
+      "definition": "Jelly-like in texture, often shrinking to a hard crust when dry and reviving when wet.",
+      "source": "written for this log"
+    },
+    "gilled": {
+      "definition": ""
+    },
+    "gills": {
+      "definition": "Thin blade-like plates under the cap, bearing the spores.",
+      "source": "written for this log"
+    },
+    "glabrous": {
+      "definition": "smooth, naked",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "glandular dots": {
+      "definition": "tufts of caulocystidia that exude a sticky fluid; usually in reference to the stipe of certain suilluses",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "gleba": {
+      "definition": "in gasteromycetes, the tissue in which the spores are formed; may include capillitium",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "goblet-shaped": {
+      "definition": ""
+    },
+    "gold": {
+      "definition": ""
+    },
+    "golden orange": {
+      "definition": ""
+    },
+    "golden yellow": {
+      "definition": ""
+    },
+    "grand fir": {
+      "definition": ""
+    },
+    "granular": {
+      "definition": ""
+    },
+    "granulose": {
+      "definition": "covered with small sugar-like particles",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "grass": {
+      "definition": ""
+    },
+    "green": {
+      "definition": ""
+    },
+    "greenish": {
+      "definition": ""
+    },
+    "greenish black": {
+      "definition": ""
+    },
+    "greenish brownish yellow": {
+      "definition": ""
+    },
+    "greenish yellow": {
+      "definition": ""
+    },
+    "grey": {
+      "definition": ""
+    },
+    "grey-brown": {
+      "definition": ""
+    },
+    "greyish": {
+      "definition": ""
+    },
+    "greyish brown": {
+      "definition": ""
+    },
+    "greyish vinaceous": {
+      "definition": ""
+    },
+    "greyish white": {
+      "definition": ""
+    },
+    "hair": {
+      "definition": ""
+    },
+    "hairy": {
+      "definition": ""
+    },
+    "hardwood": {
+      "definition": "flowering trees with broad leaves such as alder, maple, madrone, and oak; may be deciduous or evergreen",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "hazel-brown": {
+      "definition": ""
+    },
+    "hemlock": {
+      "definition": ""
+    },
+    "hollow": {
+      "definition": "With a cavity running through it.",
+      "source": "written for this log"
+    },
+    "honey-like": {
+      "definition": ""
+    },
+    "hornbeam": {
+      "definition": ""
+    },
+    "hydnoid": {
+      "definition": "Bearing spores on downward-hanging spines or teeth rather than gills or pores.",
+      "source": "written for this log"
+    },
+    "hygrophanous": {
+      "definition": "changing from translucent to opaque, and often markedly fading in color (expallent), upon drying; usually in reference to the cap surface",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "immediately": {
+      "definition": ""
+    },
+    "incurved": {
+      "definition": "With the margin bent inward but not tightly rolled.",
+      "source": "written for this log"
+    },
+    "infundibuliform": {
+      "definition": "deeply depressed, funnel-like",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "inrolled": {
+      "definition": "With the margin curled under.",
+      "source": "written for this log"
+    },
+    "irregular": {
+      "definition": "Without a regular or predictable shape.",
+      "source": "written for this log"
+    },
+    "ivory": {
+      "definition": ""
+    },
+    "jelly": {
+      "definition": "A gelatinous fruit body, often shapeless, lobed or ear-like.",
+      "source": "written for this log"
+    },
+    "keratin": {
+      "definition": "Growing on hair, wool, feathers, horn or other keratin-rich remains.",
+      "source": "written for this log"
+    },
+    "kidney-shaped": {
+      "definition": ""
+    },
+    "lacerate": {
+      "definition": ""
+    },
+    "lactarius": {
+      "definition": ""
+    },
+    "lamellae": {
+      "definition": ""
+    },
+    "larch": {
+      "definition": ""
+    },
+    "large": {
+      "definition": ""
+    },
+    "lateral": {
+      "definition": "attached at one side, as in the short stipe of many shelf-fungi",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "latex": {
+      "definition": "watery or milky fluid; produced by lactariuses and certain other fungi",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "lawn": {
+      "definition": ""
+    },
+    "leaf litter": {
+      "definition": ""
+    },
+    "leathery": {
+      "definition": "Pliable and tough, like leather.",
+      "source": "written for this log"
+    },
+    "lemon-yellow": {
+      "definition": ""
+    },
+    "light brown": {
+      "definition": ""
+    },
+    "light grey": {
+      "definition": ""
+    },
+    "light orange": {
+      "definition": ""
+    },
+    "lighter edge": {
+      "definition": ""
+    },
+    "lilac": {
+      "definition": ""
+    },
+    "litter": {
+      "definition": ""
+    },
+    "living tree": {
+      "definition": "Growing on a tree that is still alive.",
+      "source": "written for this log"
+    },
+    "lobed": {
+      "definition": ""
+    },
+    "lodgepole pine": {
+      "definition": ""
+    },
+    "log": {
+      "definition": ""
+    },
+    "long": {
+      "definition": ""
+    },
+    "madrone": {
+      "definition": ""
+    },
+    "maple": {
+      "definition": ""
+    },
+    "marginate": {
+      "definition": "having a distinctly marked border, such as a gill with differently colored edge or bulb on stipe bearing a sharply flaring rim Melzer’s reagent",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "maroon": {
+      "definition": ""
+    },
+    "maze-like": {
+      "definition": ""
+    },
+    "mealy": {
+      "definition": ""
+    },
+    "medium brown": {
+      "definition": ""
+    },
+    "mild": {
+      "definition": "Without a sharp or distinctive taste.",
+      "source": "written for this log"
+    },
+    "mixed woodland": {
+      "definition": ""
+    },
+    "moist": {
+      "definition": "Damp but not sticky.",
+      "source": "written for this log"
+    },
+    "morchelloid": {
+      "definition": "Built like a morel: a pitted, honeycombed head on a hollow stipe.",
+      "source": "written for this log"
+    },
+    "morel": {
+      "definition": "A hollow fruit body with a pitted, honeycombed head.",
+      "source": "written for this log"
+    },
+    "moss": {
+      "definition": ""
+    },
+    "mustard": {
+      "definition": ""
+    },
+    "narrow": {
+      "definition": ""
+    },
+    "needle litter": {
+      "definition": ""
+    },
+    "nidulariaceous": {
+      "definition": "Built like a bird's nest: a small cup holding egg-like peridioles that rain splashes out.",
+      "source": "written for this log"
+    },
+    "nutty": {
+      "definition": ""
+    },
+    "oak": {
+      "definition": ""
+    },
+    "ochraceous": {
+      "definition": "having an ocher colour",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "ochre": {
+      "definition": ""
+    },
+    "olivaceous": {
+      "definition": ""
+    },
+    "olive": {
+      "definition": ""
+    },
+    "olive-brown": {
+      "definition": ""
+    },
+    "olive-buff": {
+      "definition": ""
+    },
+    "olive-yellow": {
+      "definition": ""
+    },
+    "onion": {
+      "definition": ""
+    },
+    "orange": {
+      "definition": ""
+    },
+    "orange-brown": {
+      "definition": ""
+    },
+    "orange-buff": {
+      "definition": ""
+    },
+    "orange-yellow": {
+      "definition": ""
+    },
+    "orangish": {
+      "definition": ""
+    },
+    "orangish brown": {
+      "definition": ""
+    },
+    "orangish tan": {
+      "definition": ""
+    },
+    "ovoid": {
+      "definition": "egg-shaped",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "owl pellets": {
+      "definition": ""
+    },
+    "pale": {
+      "definition": ""
+    },
+    "pale blue": {
+      "definition": ""
+    },
+    "pale brown": {
+      "definition": ""
+    },
+    "pale buff": {
+      "definition": ""
+    },
+    "pale cream": {
+      "definition": ""
+    },
+    "pale golden brown": {
+      "definition": ""
+    },
+    "pale grey": {
+      "definition": ""
+    },
+    "pale greyish brown": {
+      "definition": ""
+    },
+    "pale lilac": {
+      "definition": ""
+    },
+    "pale orange": {
+      "definition": ""
+    },
+    "pale pink": {
+      "definition": ""
+    },
+    "pale tan": {
+      "definition": ""
+    },
+    "pale yellow": {
+      "definition": ""
+    },
+    "pale yellowish brown": {
+      "definition": ""
+    },
+    "partial veil": {
+      "definition": "Tissue covering the gills of a young mushroom, often leaving a ring on the stipe.",
+      "source": "written for this log"
+    },
+    "peach": {
+      "definition": ""
+    },
+    "peelable": {
+      "definition": ""
+    },
+    "peels easily": {
+      "definition": ""
+    },
+    "peppery": {
+      "definition": "Hot and biting, like pepper.",
+      "source": "written for this log"
+    },
+    "peridiole": {
+      "definition": "small chambers in the gleba of some gasteromycetes, or the “eggs” of bird’s nest fungi; spores are produced within them",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "pezizoid": {
+      "definition": "Cup- or disc-shaped, an ascomycete bearing spores on the open upper surface.",
+      "source": "written for this log"
+    },
+    "phenolic": {
+      "definition": ""
+    },
+    "pine": {
+      "definition": ""
+    },
+    "pink": {
+      "definition": ""
+    },
+    "pinkish": {
+      "definition": ""
+    },
+    "pinkish buff": {
+      "definition": ""
+    },
+    "pinkish grey": {
+      "definition": ""
+    },
+    "pinkish orange": {
+      "definition": ""
+    },
+    "plane": {
+      "definition": "flat",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "pleasant": {
+      "definition": ""
+    },
+    "plicate": {
+      "definition": "folded like a fan or pleated skirt",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "polypore": {
+      "definition": "A bracket fungus with a pored underside, usually on wood and usually without a stipe.",
+      "source": "written for this log"
+    },
+    "polyporoid": {
+      "definition": "Built like a bracket fungus: tough, usually growing from wood, with pores underneath.",
+      "source": "written for this log"
+    },
+    "ponderosa pine": {
+      "definition": ""
+    },
+    "poplar": {
+      "definition": ""
+    },
+    "pores": {
+      "definition": "The open ends of tubes on the underside, through which spores fall.",
+      "source": "written for this log"
+    },
+    "potato": {
+      "definition": ""
+    },
+    "potato-like": {
+      "definition": ""
+    },
+    "powdery": {
+      "definition": ""
+    },
+    "pruinose": {
+      "definition": "finely powdery",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "puffball": {
+      "definition": "A rounded fruit body with spores formed inside, puffed out through a pore or tear.",
+      "source": "written for this log"
+    },
+    "pungent": {
+      "definition": ""
+    },
+    "purple": {
+      "definition": ""
+    },
+    "purple-brown": {
+      "definition": ""
+    },
+    "purplish": {
+      "definition": ""
+    },
+    "purplish brown": {
+      "definition": ""
+    },
+    "purplish grey": {
+      "definition": ""
+    },
+    "purplish pink": {
+      "definition": ""
+    },
+    "purplish-brown": {
+      "definition": ""
+    },
+    "radially streaked": {
+      "definition": ""
+    },
+    "radially wrinkled": {
+      "definition": ""
+    },
+    "radish": {
+      "definition": ""
+    },
+    "rancid": {
+      "definition": ""
+    },
+    "rays": {
+      "definition": "The star-like arms formed when an earthstar's outer layer splits and peels back.",
+      "source": "written for this log"
+    },
+    "red": {
+      "definition": ""
+    },
+    "red alder": {
+      "definition": ""
+    },
+    "red-brown": {
+      "definition": ""
+    },
+    "red-orange": {
+      "definition": ""
+    },
+    "reddish": {
+      "definition": ""
+    },
+    "reddish brown": {
+      "definition": ""
+    },
+    "reddish orange": {
+      "definition": ""
+    },
+    "reddish purple": {
+      "definition": ""
+    },
+    "reduced": {
+      "definition": ""
+    },
+    "resupinate": {
+      "definition": "flat-lying fruitbody, with the upper “cap” surface attached to the substrate (usually a log) and fertile surface facing outward",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "reticulate": {
+      "definition": ""
+    },
+    "reticulation": {
+      "definition": "A raised net-like pattern, usually on the upper stipe.",
+      "source": "written for this log"
+    },
+    "rhizomorphs": {
+      "definition": "Cords of bundled mycelium at the base, like roots.",
+      "source": "written for this log"
+    },
+    "ribs": {
+      "definition": ""
+    },
+    "ridged": {
+      "definition": ""
+    },
+    "ridges": {
+      "definition": "Blunt raised folds bearing spores, as in the chanterelles.",
+      "source": "written for this log",
+      "sameAs": "false gills"
+    },
+    "ring": {
+      "definition": "membranous skirt-like remnant of a partial veil borne on a stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "rooting": {
+      "definition": "With a tapering base extending down into the substrate.",
+      "source": "written for this log"
+    },
+    "rose": {
+      "definition": ""
+    },
+    "rosy red": {
+      "definition": ""
+    },
+    "rotten wood": {
+      "definition": ""
+    },
+    "rotting cabbage": {
+      "definition": ""
+    },
+    "rough": {
+      "definition": ""
+    },
+    "round": {
+      "definition": ""
+    },
+    "rudimentary": {
+      "definition": ""
+    },
+    "russula": {
+      "definition": ""
+    },
+    "rust": {
+      "definition": ""
+    },
+    "rust-brown": {
+      "definition": ""
+    },
+    "saddle": {
+      "definition": "A lobed head folded like a saddle, typical of Helvella.",
+      "source": "written for this log"
+    },
+    "saddle-shaped": {
+      "definition": ""
+    },
+    "salmon": {
+      "definition": ""
+    },
+    "salmonberry": {
+      "definition": ""
+    },
+    "sand": {
+      "definition": ""
+    },
+    "saucer-like": {
+      "definition": ""
+    },
+    "scabers": {
+      "definition": "Small dark tufted scales on the stipe, typical of Leccinum.",
+      "source": "written for this log"
+    },
+    "scaly": {
+      "definition": "Covered in flat or raised scales.",
+      "source": "written for this log"
+    },
+    "scarlet": {
+      "definition": ""
+    },
+    "scattered": {
+      "definition": "Growing separately, not in groups.",
+      "source": "written for this log"
+    },
+    "scrobiculate": {
+      "definition": "with shallow pits or depressions",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "serrate": {
+      "definition": "With a saw-toothed edge.",
+      "source": "written for this log"
+    },
+    "sessile": {
+      "definition": "Attached directly, without a stipe.",
+      "source": "written for this log"
+    },
+    "shaggy": {
+      "definition": ""
+    },
+    "shiny": {
+      "definition": ""
+    },
+    "shore pine": {
+      "definition": ""
+    },
+    "short": {
+      "definition": ""
+    },
+    "silky": {
+      "definition": ""
+    },
+    "sinuate": {
+      "definition": "Gills notched just before they meet the stipe.",
+      "source": "written for this log"
+    },
+    "sitka spruce": {
+      "definition": ""
+    },
+    "slender": {
+      "definition": ""
+    },
+    "slimy": {
+      "definition": ""
+    },
+    "slowly": {
+      "definition": ""
+    },
+    "small": {
+      "definition": ""
+    },
+    "smoky": {
+      "definition": ""
+    },
+    "smooth": {
+      "definition": "Without hairs, scales, ridges or roughness.",
+      "source": "written for this log"
+    },
+    "soapy": {
+      "definition": ""
+    },
+    "soft": {
+      "definition": ""
+    },
+    "soil": {
+      "definition": ""
+    },
+    "solid": {
+      "definition": "Filled throughout, not hollow.",
+      "source": "written for this log"
+    },
+    "solitary": {
+      "definition": "Growing singly.",
+      "source": "written for this log"
+    },
+    "sour": {
+      "definition": ""
+    },
+    "spermatic": {
+      "definition": ""
+    },
+    "spherical": {
+      "definition": ""
+    },
+    "spicy": {
+      "definition": ""
+    },
+    "spines": {
+      "definition": "Sharp downward-pointing projections bearing spores.",
+      "source": "written for this log"
+    },
+    "split": {
+      "definition": ""
+    },
+    "spore print": {
+      "definition": "The deposit of spores left when a cap is laid on paper, used to read their colour.",
+      "source": "written for this log"
+    },
+    "spotted": {
+      "definition": ""
+    },
+    "spruce": {
+      "definition": ""
+    },
+    "stains orange": {
+      "definition": ""
+    },
+    "stains substrate": {
+      "definition": ""
+    },
+    "star-shaped": {
+      "definition": ""
+    },
+    "stinkhorn": {
+      "definition": "A fruit body that emerges from an egg and bears a foul-smelling spore slime that attracts flies.",
+      "source": "written for this log"
+    },
+    "stipe": {
+      "definition": "stem",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "stocky": {
+      "definition": ""
+    },
+    "stout": {
+      "definition": ""
+    },
+    "straw": {
+      "definition": ""
+    },
+    "streaked": {
+      "definition": ""
+    },
+    "streaky": {
+      "definition": ""
+    },
+    "striate": {
+      "definition": "having small parallel or radiating lines or grooves (“striped”); often in reference to a cap margin or spore",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "strong when drying": {
+      "definition": ""
+    },
+    "stuffed": {
+      "definition": "Filled with soft loose tissue that may later hollow out.",
+      "source": "written for this log"
+    },
+    "stump": {
+      "definition": ""
+    },
+    "subdecurrent": {
+      "definition": "Gills running only slightly down the stipe.",
+      "source": "written for this log"
+    },
+    "subdistant": {
+      "definition": "in reference to spacing of gills, farther apart than close, but closer together than distant",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "suede-like": {
+      "definition": ""
+    },
+    "sweet": {
+      "definition": ""
+    },
+    "tan": {
+      "definition": ""
+    },
+    "tapering": {
+      "definition": "Narrowing gradually towards one end.",
+      "source": "written for this log"
+    },
+    "tawny": {
+      "definition": ""
+    },
+    "teeth": {
+      "definition": "Downward-hanging spines that bear the spores.",
+      "source": "written for this log"
+    },
+    "thick": {
+      "definition": ""
+    },
+    "tomentose": {
+      "definition": "Covered in matted woolly hairs.",
+      "source": "written for this log"
+    },
+    "toothed": {
+      "definition": "Bearing spores on downward-pointing spines or teeth.",
+      "source": "written for this log"
+    },
+    "tough": {
+      "definition": "Resistant to tearing; leathery rather than fleshy.",
+      "source": "written for this log"
+    },
+    "translucent": {
+      "definition": ""
+    },
+    "troops": {
+      "definition": ""
+    },
+    "true cedar": {
+      "definition": ""
+    },
+    "truffle": {
+      "definition": "A fruit body that matures underground and never opens.",
+      "source": "written for this log"
+    },
+    "trumpet": {
+      "definition": "A hollow, funnel- or trumpet-shaped fruit body open at the top.",
+      "source": "written for this log"
+    },
+    "tubes": {
+      "definition": "The layer of small vertical pipes under a bolete's cap, ending in pores.",
+      "source": "written for this log"
+    },
+    "turquoise": {
+      "definition": ""
+    },
+    "umber": {
+      "definition": ""
+    },
+    "umbonate": {
+      "definition": "With a raised boss or knob at the centre.",
+      "source": "written for this log"
+    },
+    "unchanging": {
+      "definition": "Keeping its colour when cut or handled.",
+      "source": "written for this log"
+    },
+    "undulating": {
+      "definition": ""
+    },
+    "uneven": {
+      "definition": ""
+    },
+    "universal veil": {
+      "definition": "Tissue enclosing the whole young fruit body, often leaving a volva and cap patches.",
+      "source": "written for this log"
+    },
+    "unpleasant": {
+      "definition": ""
+    },
+    "upturned": {
+      "definition": ""
+    },
+    "vase-shaped": {
+      "definition": ""
+    },
+    "veil": {
+      "definition": "A layer of tissue covering part of the young fruit body, often leaving traces as it tears.",
+      "source": "written for this log"
+    },
+    "velvety": {
+      "definition": "Covered in a dense short pile, like velvet.",
+      "source": "written for this log"
+    },
+    "verdigris": {
+      "definition": ""
+    },
+    "vinaceous": {
+      "definition": "said to be the color of red wine; in practice, not so deeply colored and with duller gray to brown tones, yielding more of a dark salmon-pink",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "vinaceous brown": {
+      "definition": ""
+    },
+    "vinaceous pink": {
+      "definition": ""
+    },
+    "vine maple": {
+      "definition": ""
+    },
+    "violet": {
+      "definition": ""
+    },
+    "violet-brown": {
+      "definition": ""
+    },
+    "viscid": {
+      "definition": "sticky",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "volva": {
+      "definition": "remnants of a universal veil found at the base of the stipe",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "warty": {
+      "definition": ""
+    },
+    "wavy": {
+      "definition": ""
+    },
+    "waxy": {
+      "definition": "Feeling greasy or wax-like, and often translucent.",
+      "source": "written for this log"
+    },
+    "western hemlock": {
+      "definition": ""
+    },
+    "western red cedar": {
+      "definition": ""
+    },
+    "western white pine": {
+      "definition": ""
+    },
+    "white": {
+      "definition": ""
+    },
+    "white mycelium at base": {
+      "definition": ""
+    },
+    "whitish": {
+      "definition": ""
+    },
+    "whitish edge": {
+      "definition": ""
+    },
+    "willow": {
+      "definition": ""
+    },
+    "wine-red": {
+      "definition": ""
+    },
+    "wood": {
+      "definition": ""
+    },
+    "woodchips": {
+      "definition": ""
+    },
+    "wool": {
+      "definition": ""
+    },
+    "woolly": {
+      "definition": ""
+    },
+    "wrinkled": {
+      "definition": ""
+    },
+    "wrinkles": {
+      "definition": ""
+    },
+    "yellow": {
+      "definition": ""
+    },
+    "yellow-brown": {
+      "definition": ""
+    },
+    "yellow-green": {
+      "definition": ""
+    },
+    "yellow-orange": {
+      "definition": ""
+    },
+    "yellowish": {
+      "definition": ""
+    },
+    "yellowish brown": {
+      "definition": ""
+    },
+    "yellowish tan": {
+      "definition": ""
+    },
+    "yellowish white": {
+      "definition": ""
+    },
+    "zonate": {
+      "definition": "with concentric bands of different color or different shades of one basic color; usually in reference to the cap surface Stipe shapes. Illustration by Marsha Mello.",
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "helvelloid": {
+      "definition": "Built like an elfin saddle or false morel: a lobed, saddle-shaped or brain-like head on a stipe.",
+      "source": "written for this log"
+    },
+    "apical pore": {
+      "definition": "A single opening at the top of a puffball through which spores escape.",
+      "source": "written for this log"
+    },
+    "warts": {
+      "definition": "Raised lumps or patches on the surface, often veil remnants on a cap.",
+      "source": "written for this log"
+    }
+  }
+}

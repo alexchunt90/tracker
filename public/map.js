@@ -75,6 +75,34 @@ const MapView = (() => {
    * the map owns the viewport. Keeping those apart is what lets a filter redraw
    * the pins without throwing away where you had panned to.
    */
+  const SVG = 'http://www.w3.org/2000/svg';
+
+  /**
+   * Shape says whose record it is, colour and fill say how edible: a circle
+   * for your own find, a triangle for somebody else's.
+   *
+   * SVG rather than a CSS border, because half the edibility tiers are
+   * hollow and a CSS triangle is a border trick with no interior to leave
+   * empty \u2014 it can only ever be solid.
+   */
+  function pinShape(kind) {
+    const svg = document.createElementNS(SVG, 'svg');
+    svg.setAttribute('viewBox', '0 0 20 20');
+    svg.setAttribute('aria-hidden', 'true');
+    let shape;
+    if (kind === 'inat') {
+      shape = document.createElementNS(SVG, 'polygon');
+      shape.setAttribute('points', '10,3.5 17.5,16.5 2.5,16.5');
+    } else {
+      shape = document.createElementNS(SVG, 'circle');
+      shape.setAttribute('cx', '10');
+      shape.setAttribute('cy', '10');
+      shape.setAttribute('r', '6.8');
+    }
+    svg.append(shape);
+    return svg;
+  }
+
   function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange }) {
     const view = { lat: 0, lon: 0, zoom: 2 };
     let pins = [];
@@ -210,12 +238,14 @@ const MapView = (() => {
         marker.type = 'button';
         marker.className = `map-pin is-${pin.kind}`;
         marker.dataset.type = pin.type;
+        // Only set when the caller has an edibility to say; without it the pin
+        // falls back to its type colour rather than claiming "not recorded".
+        if (pin.edibility) marker.dataset.edibility = pin.edibility;
         marker.style.left = `${left}px`;
         marker.style.top = `${top}px`;
         marker.title = pin.label;
         marker.setAttribute('aria-label', pin.label);
-        if (pin.dangerous) marker.classList.add('is-dangerous');
-        if (pin.choice) marker.classList.add('is-choice');
+        marker.append(pinShape(pin.kind));
         marker.addEventListener('click', (ev) => {
           ev.stopPropagation();
           onSelect?.(pin);
@@ -392,7 +422,7 @@ const MapView = (() => {
     };
   }
 
-  return { create, project, unproject, fitBounds };
+  return { create, project, unproject, fitBounds, pinShape };
 })();
 
 if (typeof module !== 'undefined') module.exports = MapView;

@@ -61,6 +61,7 @@ const CONFIG_PATH = path.join(STATE_DIR, 'config.json');
 const DATA_DIR = path.join(STATE_DIR, 'data');
 const OBSERVATIONS_PATH = path.join(DATA_DIR, 'observations.json');
 const SPECIES_PATH = path.join(DATA_DIR, 'species.json');
+const GLOSSARY_PATH = path.join(DATA_DIR, 'glossary.json');
 const PHOTO_DIR = path.join(STATE_DIR, 'photos');
 const TILE_DIR = path.join(STATE_DIR, 'tiles');
 
@@ -138,6 +139,9 @@ async function readJson(file, fallback) {
 const readConfig = () => readJson(CONFIG_PATH);
 const readObservations = () => readJson(OBSERVATIONS_PATH, []);
 const readSpecies = () => readJson(SPECIES_PATH, []);
+// What the tag vocabulary means, and any category set by hand. One object
+// rather than a collection: it is a single document that is edited in place.
+const readGlossary = () => readJson(GLOSSARY_PATH, { version: 0, terms: {} });
 
 // --- photos -----------------------------------------------------------------
 
@@ -398,10 +402,10 @@ const server = http.createServer(async (req, res) => {
   try {
     // Everything the browser needs to render, in one round trip.
     if (pathname === '/api/state' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const [config, observations, species] = await Promise.all([
-        readConfig(), readObservations(), readSpecies(),
+      const [config, observations, species, glossary] = await Promise.all([
+        readConfig(), readObservations(), readSpecies(), readGlossary(),
       ]);
-      return json(res, 200, { config, observations, species });
+      return json(res, 200, { config, observations, species, glossary });
     }
 
     if (pathname === '/api/config' && req.method === 'PUT') {
@@ -440,6 +444,26 @@ const server = http.createServer(async (req, res) => {
       // and no temp-and-rename dance needed.
       await fsp.writeFile(path.join(PHOTO_DIR, file), body);
       return json(res, 201, { file, url: `photos/${file}`, bytes: body.length, mime: type });
+    }
+
+    if (pathname === '/api/glossary' && req.method === 'PUT') {
+      const incoming = JSON.parse(await readBody(req) || '{}');
+      if (!incoming.terms || typeof incoming.terms !== 'object') {
+        return json(res, 400, { error: 'terms must be an object' });
+      }
+      const current = await readGlossary();
+      const held = Number(current.version) || 0;
+      const sent = Number(incoming.version) || 0;
+      if (sent !== held) {
+        return json(res, 409, {
+          error: `glossary was changed elsewhere (you have v${sent}, the file is v${held})`,
+          version: held,
+          glossary: current,
+        });
+      }
+      const merged = { ...current, terms: incoming.terms, version: held + 1 };
+      await writeJsonAtomic(GLOSSARY_PATH, merged);
+      return json(res, 200, { saved: true, version: merged.version, glossary: merged });
     }
 
     // --- iNaturalist ---------------------------------------------------------

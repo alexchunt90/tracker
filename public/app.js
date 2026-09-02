@@ -10,7 +10,7 @@
 
 'use strict';
 
-const VIEWS = ['log', 'map', 'species'];
+const VIEWS = ['log', 'species', 'glossary'];
 
 const state = {
   config: null,
@@ -19,14 +19,20 @@ const state = {
   view: 'log',
   // View state, not saved: a filter is a way of looking at the log, not a
   // property of it.
-  filters: { type: 'all', status: 'all', q: '' },
+  //
+  // The gallery and the map are two renderings of one set of finds, so they
+  // share one filter object. Filtering to chanterelles and then switching to
+  // the map should show you those chanterelles, not start again.
+  filters: { types: Model.TYPE_IDS.slice(), status: 'all', q: '', edibility: Model.EDIBILITY_IDS.slice(), speciesId: '' },
+  // Which rendering is on screen.
+  mode: 'finds',
   speciesFilters: { type: 'all', q: '' },
   speciesSort: { col: 'commonName', key: 'commonName', dir: 'asc' },
-  // The map's own filters, kept apart from the gallery's: looking at where the
-  // chanterelles are is a different question from listing them.
-  mapFilters: { type: 'all', speciesId: '', choiceOnly: false, showInat: false },
-  mapSelection: null,
-  inat: { results: [], loading: false, problem: null, box: null },
+  glossary: { version: 0, terms: {} },
+  glossaryFilters: { category: 'all', state: 'all', q: '' },
+  // Other people's records are fetched only for one species at a time, so
+  // `speciesId` says whose they are and a stale set can be recognised.
+  inat: { results: [], loading: false, problem: null, box: null, speciesId: null, taxa: new Map() },
   sheetDirty: false,
   closeSheet: null,
 };
@@ -93,14 +99,6 @@ function el(tag, cls, text) {
   return n;
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function svgEl(tag, attrs, text) {
-  const n = document.createElementNS(SVG_NS, tag);
-  for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
-  if (text != null) n.textContent = text;
-  return n;
-}
-
 const clear = (node) => { while (node.firstChild) node.removeChild(node.firstChild); return node; };
 
 /** A labelled form control, matching the markup `.entry-row` expects. */
@@ -126,6 +124,22 @@ function input(type, value, attrs = {}) {
   for (const [k, v] of Object.entries(attrs)) if (v != null) node.setAttribute(k, v);
   return node;
 }
+
+/**
+ * The scientific name, unless it is already what the heading says.
+ *
+ * Most species in a field guide have no vernacular name at all, so the display
+ * name falls back to the binomial — and printing it twice, once bold and once
+ * italic underneath, reads as a rendering fault rather than as a species with
+ * no common name.
+ */
+function sciLine(displayName, scientificName, cls) {
+  const sci = (scientificName || '').trim();
+  if (!sci || sci === (displayName || '').trim().replace(/\?$/, '')) return null;
+  return el('p', cls, sci);
+}
+
+const strongText = (text) => el('strong', null, text);
 
 function typeBadge(type) {
   const badge = el('span', 'type-badge');
@@ -178,6 +192,9 @@ async function reloadState() {
   state.config = payload.config;
   state.observations = payload.observations || [];
   state.species = payload.species || [];
+  state.glossary = payload.glossary || { version: 0, terms: {} };
+  Model.applyGlossary(state.glossary);
+  invalidateUsage();
   applyTheme(state.config.theme);
   render();
 }
@@ -196,6 +213,7 @@ async function saveRecord(kind, record) {
     // Take the server's copy, not the one just sent: it carries the version
     // the next save has to echo back.
     if (at === -1) list.push(payload.record); else list[at] = payload.record;
+    invalidateUsage();
     notice('');
     status('saved');
     return true;
@@ -218,6 +236,7 @@ async function deleteRecord(kind, id) {
     const list = kind === 'species' ? state.species : state.observations;
     const at = list.findIndex((x) => x.id === id);
     if (at !== -1) list.splice(at, 1);
+    invalidateUsage();
     notice('');
     status('deleted');
     // Observations keep pointing at a deleted species and read as unidentified
@@ -520,7 +539,7 @@ function render() {
   const d = derive();
   renderMasthead(d);
   if (state.view === 'log') renderLog(d);
-  else if (state.view === 'map') renderMap(d);
+  else if (state.view === 'glossary') renderGlossary(d);
   else renderSpecies(d);
 }
 
@@ -542,150 +561,344 @@ function renderMasthead({ rows, summary: s }) {
 
 // --- the log view -----------------------------------------------------------
 
-function renderLog({ rows, summary: s }) {
-  $('big-finds').textContent = s.total;
-  $('finds-caption').textContent = s.total
-    ? `${s.identified} identified, ${s.unidentified} still open`
-    : 'Add a photo below to start.';
-  $('big-species').textContent = s.speciesSeen;
-  $('species-caption').textContent = s.speciesSeen
-    ? `distinct species behind ${plural(s.identified, 'find')}`
-    : 'none identified yet';
-
-  for (const type of Model.TYPE_IDS) $(`stat-${type}`).textContent = s.counts[type];
-  $('stat-unidentified').textContent = s.unidentified;
-  $('stat-uncertain').textContent = s.uncertain;
-  $('stat-placed').textContent = s.placed;
-  $('stat-choice').textContent = Model.choiceFinds(rows).length;
-
-  renderLogVerdict(rows, s);
-  renderSeason(rows);
+function renderLog({ rows }) {
   renderFilters(rows);
-  renderGallery(rows);
-}
+  const shown = Model.sortByDate(Model.filter(rows, state.filters));
 
-/**
- * One sentence about the state of the log. The useful one is almost always the
- * backlog: an unidentified pile is a to-do list, and an uncertain one is a
- * re-check list.
- */
-function renderLogVerdict(rows, s) {
-  const node = $('log-verdict');
-  clear(node);
-  if (!s.total) {
-    node.textContent = 'Nothing logged yet. A photo is enough to start — the species can wait.';
-    return;
-  }
-  const parts = [];
-  if (s.unidentified) parts.push(`${plural(s.unidentified, 'find')} still unidentified`);
-  if (s.uncertain) parts.push(`${plural(s.uncertain, 'identification')} marked uncertain`);
-  if (!parts.length) {
-    node.append(document.createTextNode('Everything logged is identified and settled. '), strongText(`${plural(s.speciesSeen, 'species')} on the life list.`));
-    return;
-  }
-  node.append(strongText(parts.join(', ')), document.createTextNode(`. ${s.placed} of ${s.total} carry a location.`));
-}
+  $('mode-finds').classList.toggle('is-on', state.mode === 'finds');
+  $('mode-map').classList.toggle('is-on', state.mode === 'map');
+  $('mode-finds').setAttribute('aria-selected', String(state.mode === 'finds'));
+  $('mode-map').setAttribute('aria-selected', String(state.mode === 'map'));
+  $('finds-gallery').hidden = state.mode !== 'finds';
+  $('map-pane').hidden = state.mode !== 'map';
 
-const strongText = (text) => el('strong', null, text);
+  const picked = selectedSpecies();
+  const wantedNotFound = picked && !rows.some((r) => r.species?.id === picked.id);
+  $('finds-note').textContent = wantedNotFound
+    ? `You have not logged ${picked.commonName || picked.scientificName} yet.`
+    : !state.filters.types.length
+      ? 'No types selected — tick one to see your finds.'
+      : shown.length === rows.length
+        ? `${plural(rows.length, 'find')}, newest first.`
+        : `${shown.length} of ${rows.length} finds.`;
 
-/** Stacked bars: finds per calendar month, split by kingdom. */
-function renderSeason(rows) {
-  const svg = clear($('chart-season'));
-  const W = 760, H = 240;
-  const padL = 36, padR = 14, padT = 20, padB = 34;
-  const plotW = W - padL - padR;
-  const plotH = H - padT - padB;
+  if (state.mode === 'finds') renderGallery(shown, rows);
+  else renderMap(shown, rows);
 
-  const { months, dated, peak } = Model.byMonth(rows);
-
-  if (!dated) {
-    svg.append(svgEl('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', class: 'chart-empty' }, 'No dated finds yet'));
-    $('season-note').textContent = 'Finds by calendar month. Nothing dated to plot yet.';
-    clear($('season-legend'));
-    sizeChart(svg, W);
-    return;
-  }
-
-  // A y-axis in whole finds. Fractional gridlines on a count are nonsense, so
-  // the step is forced to at least 1 and the top rounded up onto it.
-  const rawMax = Math.max(1, peak.total);
-  const step = Math.max(1, Math.ceil(rawMax / 4));
-  const top = step * Math.ceil(rawMax / step);
-  const y = (v) => padT + plotH - (v / top) * plotH;
-
-  for (let v = 0; v <= top; v += step) {
-    svg.append(svgEl('line', { x1: padL, x2: W - padR, y1: y(v), y2: y(v), class: v === 0 ? 'axis-line' : 'chart-grid' }));
-    svg.append(svgEl('text', { x: padL - 7, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-text' }, String(v)));
-  }
-
-  const slot = plotW / 12;
-  const barW = Math.min(38, slot * 0.62);
-  months.forEach((m, i) => {
-    const cx = padL + slot * (i + 0.5);
-    let base = y(0);
-    for (const type of Model.TYPE_IDS) {
-      const n = m.counts[type];
-      if (!n) continue;
-      const h = (n / top) * plotH;
-      svg.append(svgEl('rect', { x: cx - barW / 2, y: base - h, width: barW, height: h, class: `bar-${type}` }));
-      base -= h;
-    }
-    svg.append(svgEl('text', { x: cx, y: H - padB + 18, 'text-anchor': 'middle', class: 'axis-text' }, m.label));
-    if (m.total && m === peak) {
-      svg.append(svgEl('text', { x: cx, y: base - 6, 'text-anchor': 'middle', class: 'chart-peak-label' }, 'Peak'));
-    }
-  });
-
-  $('season-note').textContent = `${plural(dated, 'dated find')} across ${plural(Model.years(rows).length, 'year')}. Busiest month: ${peak.label}.`;
-
-  const legend = clear($('season-legend'));
-  const totals = Object.fromEntries(Model.TYPE_IDS.map((t) => [t, months.reduce((a, m) => a + m.counts[t], 0)]));
-  for (const type of Model.TYPE_IDS) {
-    const item = el('div', 'legend-item' + (totals[type] ? '' : ' is-zero'));
-    const swatch = el('span', 'legend-swatch');
-    swatch.style.background = `var(--${type})`;
-    item.append(swatch, document.createTextNode(Model.typeLabel(type)), el('span', 'legend-value', String(totals[type])));
-    legend.append(item);
-  }
-
-  sizeChart(svg, W);
-}
-
-/**
- * Hold chart text at a roughly constant physical size. Type is sized in viewBox
- * user units, so a chart scaled down to phone width would shrink its labels
- * with it; --chart-k is the inverse of that scale.
- */
-function sizeChart(svg, viewBoxWidth) {
-  const rendered = svg.clientWidth;
-  svg.style.setProperty('--chart-k', rendered ? (viewBoxWidth / rendered).toFixed(3) : '1');
+  renderFindsVerdict(shown, rows);
 }
 
 // --- filters ----------------------------------------------------------------
 
 function renderFilters(rows) {
-  const typeSet = clear($('filter-type'));
   const counts = Model.summary(rows).counts;
-  typeSet.append(pill('All', state.filters.type === 'all', rows.length, () => { state.filters.type = 'all'; render(); }));
-  for (const t of Model.TYPES) {
-    typeSet.append(pill(t.label, state.filters.type === t.id, counts[t.id], () => { state.filters.type = t.id; render(); }));
-  }
+  const sum = Model.summary(rows);
+
+  // Changing what is shown is also a new question for iNaturalist, not just a
+  // redraw of what is already here.
+  const refresh = () => { loadInat(); render(); };
+
+  const typeSet = clear($('filter-type'));
+  typeSet.append(typeDropdown(counts, refresh));
 
   const statusSet = clear($('filter-status'));
-  const s = Model.summary(rows);
-  const options = [
-    { id: 'all', label: 'Any ID', count: s.total },
-    { id: 'identified', label: 'Identified', count: s.identified },
-    { id: 'unidentified', label: 'Unidentified', count: s.unidentified },
-    { id: 'uncertain', label: 'Uncertain', count: s.uncertain },
-  ];
-  for (const o of options) {
-    statusSet.append(pill(o.label, state.filters.status === o.id, o.count, () => { state.filters.status = o.id; render(); }));
+  statusSet.append(statusDropdown(sum, refresh));
+
+  const extra = clear($('filter-extra'));
+  extra.append(edibilityDropdown(Model.edibilityCounts(rows), refresh));
+  /*
+   * What the picker offers: species you have found, and the choice edibles.
+   *
+   * Found species filter your own finds. A choice edible you have not found
+   * yet filters nothing — it is there to ask iNaturalist where other people
+   * are finding it, which is the question worth asking about a species you
+   * want and do not have. Grouped, so the two kinds are not confused.
+   */
+  const picker = $('filter-species');
+  const held = state.filters.speciesId;
+  clear(picker);
+  picker.append(new Option('Any species', ''));
+
+  const seen = new Map();
+  for (const r of rows) if (r.species) seen.set(r.species.id, (seen.get(r.species.id) || 0) + 1);
+
+  // The type filter narrows this too. Offering a fungus while the view is
+  // filtered to Flora would produce a picker whose every choice empties the
+  // page.
+  const ofType = (sp) => state.filters.types.includes(sp.kind);
+  const found = state.species.filter((sp) => seen.has(sp.id) && ofType(sp));
+  const wanted = state.species.filter((sp) => Model.isChoice(sp) && !seen.has(sp.id) && ofType(sp));
+  const label = (sp) => sp.commonName || sp.scientificName || 'Unnamed';
+  const byName = (a, b) => label(a).localeCompare(label(b));
+
+  if (found.length) {
+    const group = document.createElement('optgroup');
+    group.label = 'Found';
+    for (const sp of [...found].sort(byName)) group.append(new Option(`${label(sp)} (${seen.get(sp.id)})`, sp.id));
+    picker.append(group);
   }
-  statusSet.append(pill('Choice edible', !!state.filters.edible, Model.choiceFinds(rows).length, () => {
-    state.filters.edible = !state.filters.edible;
-    render();
-  }));
+  if (wanted.length) {
+    const group = document.createElement('optgroup');
+    group.label = 'Choice edibles, not yet found';
+    for (const sp of [...wanted].sort(byName)) group.append(new Option(label(sp), sp.id));
+    picker.append(group);
+  }
+
+  picker.value = held;
+  if (picker.selectedIndex === -1) { picker.value = ''; state.filters.speciesId = ''; }
+  $('filter-species-wrap').hidden = !found.length && !wanted.length;
+}
+
+/** One sentence about what is on screen. */
+function renderFindsVerdict(shown, rows) {
+  const node = clear($('finds-verdict'));
+  if (!rows.length) {
+    node.textContent = 'Nothing logged yet. A photo is enough to start — the species can wait.';
+    return;
+  }
+  if (state.inat.problem && state.mode === 'map' && selectedSpecies()) {
+    node.append(strongText(state.inat.problem), document.createTextNode(' Your own finds are unaffected.'));
+    return;
+  }
+  const picked = selectedSpecies();
+  if (picked && !rows.some((r) => r.species?.id === picked.id)) {
+    const name = picked.commonName || picked.scientificName;
+    if (state.mode === 'map') {
+      node.append(
+        strongText(state.inat.results.length
+          ? `${plural(state.inat.results.length, 'record')} of ${name} from other people.`
+          : `No records of ${name} from other people in view.`),
+        document.createTextNode(' None of your own — pan or zoom out to widen the search.'));
+    } else {
+      node.append(strongText(`You have not found ${name} yet.`),
+        document.createTextNode(' Switch to the map to see where other people have.'));
+    }
+    return;
+  }
+
+  const sum = Model.summary(shown);
+  const parts = [];
+  if (sum.unidentified) parts.push(`${plural(sum.unidentified, 'find')} still unidentified`);
+  if (sum.uncertain) parts.push(`${plural(sum.uncertain, 'identification')} marked uncertain`);
+  if (state.mode === 'map') {
+    const off = shown.length - sum.placed;
+    node.append(strongText(`${plural(sum.placed, 'pin')} on the map.`),
+      document.createTextNode(off ? ` ${off} without a location, not shown.` : ''));
+    const picked = selectedSpecies();
+    if (picked && state.inat.results.length) {
+      node.append(document.createTextNode(
+        ` ${plural(state.inat.results.length, 'record')} of it from other people, hollow.`));
+    } else if (!picked) {
+      node.append(document.createTextNode(' Pick a species to see where other people have found it.'));
+    }
+    return;
+  }
+  node.append(parts.length ? strongText(parts.join(', ') + '.') : strongText('Everything shown is identified and settled.'),
+    document.createTextNode(` ${sum.placed} of ${shown.length} carry a location.`));
+}
+
+/**
+ * The type filter, as a dropdown of checkboxes.
+ *
+ * Three pills where only one could be lit made "fungi and flora, but not
+ * fauna" unsayable. Unchecking everything is allowed and means nothing is
+ * shown — snapping back to "all" would quietly do the opposite of what was
+ * asked.
+ */
+function typeDropdown(counts, onChange) {
+  const wrap = el('div', 'dropdown');
+  const chosen = state.filters.types;
+
+  const button = el('button', 'dropdown-button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'true');
+  button.setAttribute('aria-expanded', 'false');
+
+  const label = chosen.length === Model.TYPE_IDS.length ? 'All types'
+    : !chosen.length ? 'No types'
+      : Model.TYPES.filter((t) => chosen.includes(t.id)).map((t) => t.label).join(', ');
+  button.append(el('span', 'dropdown-label', label));
+  const total = Model.TYPE_IDS.filter((t) => chosen.includes(t)).reduce((n, t) => n + (counts[t] || 0), 0);
+  button.append(el('span', 'count', String(total)));
+  button.append(el('span', 'dropdown-caret', '▾'));
+  if (!chosen.length) button.classList.add('is-empty');
+  wrap.append(button);
+
+  const menu = el('div', 'dropdown-menu');
+  menu.hidden = true;
+  for (const t of Model.TYPES) {
+    const row = el('label', 'dropdown-option');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = chosen.includes(t.id);
+    box.addEventListener('change', () => {
+      const next = new Set(state.filters.types);
+      if (box.checked) next.add(t.id); else next.delete(t.id);
+      // Keep a stable order so the button label does not reshuffle.
+      state.filters.types = Model.TYPE_IDS.filter((id) => next.has(id));
+      onChange();
+    });
+    const badge = typeBadge(t.id);
+    row.append(box, badge, el('span', 'count', String(counts[t.id] || 0)));
+    menu.append(row);
+  }
+
+  const all = el('button', 'dropdown-all');
+  all.type = 'button';
+  all.textContent = chosen.length === Model.TYPE_IDS.length ? 'Clear all' : 'Select all';
+  all.addEventListener('click', () => {
+    state.filters.types = chosen.length === Model.TYPE_IDS.length ? [] : Model.TYPE_IDS.slice();
+    onChange();
+  });
+  menu.append(all);
+  wrap.append(menu);
+
+  wireDropdown(wrap, button, menu);
+  return wrap;
+}
+
+/**
+ * How settled the identification is, as a dropdown of one choice.
+ *
+ * Unlike types, these do not combine: identified and unidentified are
+ * complements, and uncertain is a slice of identified, so "identified and
+ * uncertain" would only ever mean "identified". Radios, not checkboxes, and
+ * picking one closes the menu \u2014 there is nothing else to say.
+ */
+function statusDropdown(sum, onChange) {
+  const options = [
+    { id: 'all', label: 'Any ID', count: sum.total },
+    { id: 'identified', label: 'Identified', count: sum.identified },
+    { id: 'unidentified', label: 'Unidentified', count: sum.unidentified },
+    { id: 'uncertain', label: 'Uncertain', count: sum.uncertain },
+  ];
+  const held = options.find((o) => o.id === state.filters.status) || options[0];
+
+  const wrap = el('div', 'dropdown');
+  const button = el('button', 'dropdown-button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'true');
+  button.setAttribute('aria-expanded', 'false');
+  button.append(el('span', 'dropdown-label', held.label));
+  button.append(el('span', 'count', String(held.count)));
+  button.append(el('span', 'dropdown-caret', '\u25be'));
+  wrap.append(button);
+
+  const menu = el('div', 'dropdown-menu');
+  menu.hidden = true;
+  for (const o of options) {
+    const row = el('label', 'dropdown-option' + (o.id === held.id ? ' is-on' : ''));
+    const dot = el('input');
+    dot.type = 'radio';
+    dot.name = 'filter-status';
+    dot.checked = o.id === held.id;
+    dot.addEventListener('change', () => {
+      state.filters.status = o.id;
+      close();
+      onChange();
+    });
+    row.append(dot, el('span', 'dropdown-option-label', o.label), el('span', 'count', String(o.count)));
+    menu.append(row);
+  }
+  wrap.append(menu);
+
+  const close = wireDropdown(wrap, button, menu);
+  return wrap;
+}
+
+/**
+ * The edibility tiers, as a dropdown of checkboxes.
+ *
+ * Checkboxes rather than one choice, because unlike the ID filter these
+ * genuinely combine: "choice or edible" is the forager's question and "toxic
+ * or deadly" is the cautionary one, and neither is a single tier. Seven of
+ * them would make seven pills, which is why this was a lone "choice edible"
+ * toggle before \u2014 the tiers were there, just unreachable.
+ */
+function edibilityDropdown(counts, onChange) {
+  const wrap = el('div', 'dropdown');
+  const chosen = state.filters.edibility;
+  const all = chosen.length === Model.EDIBILITY_IDS.length;
+  const name = (e) => (e.id === 'unknown' ? 'Not recorded' : e.short);
+
+  const button = el('button', 'dropdown-button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'true');
+  button.setAttribute('aria-expanded', 'false');
+
+  // Seven short labels joined would outrun the filter bar, so past a couple
+  // the button counts them instead of naming them.
+  const picked = Model.EDIBILITY.filter((e) => chosen.includes(e.id));
+  const label = all ? 'Any edibility'
+    : !picked.length ? 'No tiers'
+      : picked.length <= 2 ? picked.map(name).join(', ')
+        : `${picked.length} tiers`;
+  button.append(el('span', 'dropdown-label', label));
+  button.append(el('span', 'count', String(picked.reduce((n, e) => n + (counts[e.id] || 0), 0))));
+  button.append(el('span', 'dropdown-caret', '\u25be'));
+  if (!picked.length) button.classList.add('is-empty');
+  wrap.append(button);
+
+  const menu = el('div', 'dropdown-menu');
+  menu.hidden = true;
+  for (const e of Model.EDIBILITY) {
+    const row = el('label', 'dropdown-option');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = chosen.includes(e.id);
+    box.addEventListener('change', () => {
+      const next = new Set(state.filters.edibility);
+      if (box.checked) next.add(e.id); else next.delete(e.id);
+      // Keep tier order, so the button label reads worst-to-best consistently.
+      state.filters.edibility = Model.EDIBILITY_IDS.filter((id) => next.has(id));
+      onChange();
+    });
+    row.append(box, edibleBadge(e.id), el('span', 'count', String(counts[e.id] || 0)));
+    menu.append(row);
+  }
+
+  const toggle = el('button', 'dropdown-all');
+  toggle.type = 'button';
+  toggle.textContent = all ? 'Clear all' : 'Select all';
+  toggle.addEventListener('click', () => {
+    state.filters.edibility = all ? [] : Model.EDIBILITY_IDS.slice();
+    onChange();
+  });
+  menu.append(toggle);
+  wrap.append(menu);
+
+  wireDropdown(wrap, button, menu);
+  return wrap;
+}
+
+/**
+ * The open/close half of a dropdown: toggle on the button, close on a click
+ * outside or on Escape. Returns the closer so a menu that settles a question
+ * in one click can shut itself.
+ */
+function wireDropdown(wrap, button, menu) {
+  const close = () => {
+    if (menu.hidden) return;
+    menu.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('mousedown', onOutside);
+    document.removeEventListener('keydown', onKey);
+  };
+  const onOutside = (ev) => { if (!wrap.contains(ev.target)) close(); };
+  const onKey = (ev) => { if (ev.key === 'Escape') { close(); button.focus(); } };
+  button.addEventListener('click', () => {
+    const open = menu.hidden;
+    menu.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    if (open) {
+      document.addEventListener('mousedown', onOutside);
+      document.addEventListener('keydown', onKey);
+    } else {
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('keydown', onKey);
+    }
+  });
+  return close;
 }
 
 function pill(label, on, count, onClick) {
@@ -700,16 +913,10 @@ function pill(label, on, count, onClick) {
 
 // --- gallery ----------------------------------------------------------------
 
-function renderGallery(rows) {
-  const shown = Model.sortByDate(Model.filter(rows, state.filters));
+function renderGallery(shown, rows) {
   const gallery = clear($('finds-gallery'));
-
-  $('finds-note').textContent = shown.length === rows.length
-    ? `${plural(rows.length, 'find')}, newest first.`
-    : `${shown.length} of ${rows.length} finds.`;
-
   if (!shown.length) {
-    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Add a photo above.'));
+    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find above.'));
     return;
   }
   for (const row of shown) gallery.append(findCard(row));
@@ -735,7 +942,8 @@ function findCard(row) {
   const body = el('div', 'find-body');
   body.append(typeBadge(row.type));
   body.append(el('h3', 'find-name' + (row.identified ? '' : ' is-unknown'), row.name));
-  if (row.scientificName) body.append(el('p', 'find-sci sci', row.scientificName));
+  const sci = sciLine(row.name, row.scientificName, 'find-sci sci');
+  if (sci) body.append(sci);
 
   const bits = [fmtDate(row.when)];
   if (row.hasPlace) bits.push(Model.formatCoord(row.lat, row.lon));
@@ -770,7 +978,7 @@ function findCard(row) {
   return card;
 }
 
-// --- the map view -----------------------------------------------------------
+// --- the map ----------------------------------------------------------------
 
 /** Pins are the map's own shape: position, how to draw it, what to say. */
 function ownPins(rows) {
@@ -781,51 +989,37 @@ function ownPins(rows) {
     lon: r.lon,
     type: r.type,
     label: `${r.name} — ${fmtDate(r.when)}`,
-    choice: Model.isChoice(r.species),
-    dangerous: Model.isDangerous(r.species),
+    // Fungi only: it is the group where edibility is the thing you want to
+    // read off a map at a glance. Flora and fauna keep their type colour.
+    edibility: r.type === 'fungi' ? Model.findEdibility(r) : '',
     row: r,
   }));
 }
 
-function inatPins(results) {
-  const f = state.mapFilters;
-  // Also filtered client-side, not just re-queried: the request is in flight
-  // for a moment, and for that moment the overlay would otherwise show taxa
-  // the lit filter says are hidden.
-  return results.filter((o) => f.type === 'all' || o.type === f.type).map((o) => ({
+function inatPins(results, edibility) {
+  return results.map((o) => ({
     id: o.id,
     kind: 'inat',
     lat: o.lat,
     lon: o.lon,
     type: o.type,
     label: `${o.commonName || o.scientificName} — iNaturalist`,
-    choice: false,
-    dangerous: false,
+    // Other people's records only load for one species at a time, so they all
+    // share that species' tier \u2014 the same colour as your own finds of it.
+    edibility: o.type === 'fungi' ? edibility : '',
     inat: o,
   }));
 }
 
-/** The map's filters, applied to the user's own finds. */
-function mapVisible(rows) {
-  const f = state.mapFilters;
-  return rows.filter((r) => {
-    if (!r.hasPlace) return false;
-    if (f.type !== 'all' && r.type !== f.type) return false;
-    if (f.speciesId && r.species?.id !== f.speciesId) return false;
-    if (f.choiceOnly && !Model.isChoice(r.species)) return false;
-    return true;
-  });
-}
-
-function renderMap({ rows }) {
-  const shown = mapVisible(rows);
-  const placed = rows.filter((r) => r.hasPlace);
-
-  renderMapFilters(rows);
-
-  $('map-note').textContent = placed.length
-    ? `${shown.length} of ${plural(placed.length, 'placed find')} shown. Drag to pan, scroll to zoom.`
-    : 'No find carries a location yet. A photo with GPS switched on brings one with it.';
+/**
+ * The map, drawn from the same filtered rows the gallery would show.
+ *
+ * A pin does what a card does: opens the find. There is no separate selection
+ * panel any more — it was a second way of looking at one record, and the
+ * record already has a good one.
+ */
+function renderMap(shown, rows) {
+  const placed = shown.filter((r) => r.hasPlace);
 
   if (!mapView) {
     const config = state.config?.map || {};
@@ -834,181 +1028,115 @@ function renderMap({ rows }) {
       attribution: config.attribution || '',
       minZoom: config.minZoom ?? 2,
       maxZoom: config.maxZoom ?? 19,
-      onSelect: (pin) => { state.mapSelection = pin; renderMapSelection(); },
-      onViewChange: (box) => { state.inat.box = box; if (state.mapFilters.showInat) loadInat(); },
+      onSelect: (pin) => {
+        if (pin.kind === 'mine') {
+          if (pin.row.identified) openObservationSheet(pin.row.id);
+          else openIdentifySheet(pin.row.id);
+        } else {
+          openInatSheet(pin.inat);
+        }
+      },
+      onViewChange: (box) => { state.inat.box = box; loadInat(); },
     });
     const start = config.default || { lat: 0, lon: 0, zoom: 2 };
-    // Open on the finds if there are any; the configured default is only the
-    // answer for an empty log.
     const found = MapView.fitBounds(placed, $('map-canvas').clientWidth || 800, $('map-canvas').clientHeight || 420, { maxZoom: config.maxZoom ?? 19 });
     mapView.setView(found || start, { silent: true });
     state.inat.box = mapView.bounds();
   }
 
-  const pins = [...ownPins(shown), ...(state.mapFilters.showInat ? inatPins(state.inat.results) : [])];
-  mapView.setPins(pins);
-  // A tile layer drawn while the view was hidden measured a zero-width box.
-  mapView.redraw();
-
-  renderMapLegend(shown, pins);
-  renderMapSelection();
-  renderMapVerdict(shown, placed);
+  const picked = selectedSpecies();
+  mapView.setPins([...ownPins(placed), ...inatPins(state.inat.results, picked?.edibility || 'unknown')]);
+  // A tile layer drawn while the pane was hidden measured a zero-width box.
+  requestAnimationFrame(() => mapView.redraw());
+  renderMapLegend(placed);
+  void rows;
 }
 
-function renderMapFilters(rows) {
-  const placed = rows.filter((r) => r.hasPlace);
-  // The overlay is fetched per kingdom, so changing this filter is a new
-  // question for iNaturalist, not just a redraw of what is already here.
-  const pickType = (id) => {
-    state.mapFilters.type = id;
-    state.mapSelection = null;
-    if (state.mapFilters.showInat) loadInat();
-    render();
-  };
-  const set = clear($('map-filter-type'));
-  set.append(pill('All', state.mapFilters.type === 'all', placed.length, () => pickType('all')));
-  for (const t of Model.TYPES) {
-    const n = placed.filter((r) => r.type === t.id).length;
-    set.append(pill(t.label, state.mapFilters.type === t.id, n, () => pickType(t.id)));
-  }
-
-  const extra = clear($('map-filter-extra'));
-  const choiceCount = placed.filter((r) => Model.isChoice(r.species)).length;
-  extra.append(pill('Choice edibles', state.mapFilters.choiceOnly, choiceCount, () => {
-    state.mapFilters.choiceOnly = !state.mapFilters.choiceOnly;
-    render();
-  }));
-  if (state.config?.inaturalist?.enabled !== false) {
-    const label = state.inat.loading ? 'iNaturalist…' : 'iNaturalist';
-    extra.append(pill(label, state.mapFilters.showInat, state.mapFilters.showInat ? state.inat.results.length : null, () => {
-      state.mapFilters.showInat = !state.mapFilters.showInat;
-      state.mapSelection = null;
-      if (state.mapFilters.showInat) loadInat();
-      render();
-    }));
-  }
-
-  // Only species actually placed on the map are worth offering: picking one
-  // with no located find just empties the map with no explanation.
-  const picker = $('map-species');
-  const held = state.mapFilters.speciesId;
-  clear(picker);
-  picker.append(new Option('Any species', ''));
-  const seen = new Map();
-  for (const r of placed) if (r.species) seen.set(r.species.id, (seen.get(r.species.id) || 0) + 1);
-  for (const sp of state.species) {
-    if (!seen.has(sp.id)) continue;
-    picker.append(new Option(`${sp.commonName || sp.scientificName} (${seen.get(sp.id)})`, sp.id));
-  }
-  picker.value = held;
-  if (picker.selectedIndex === -1) { picker.value = ''; state.mapFilters.speciesId = ''; }
+/**
+ * A pin swatch drawn the same way the map draws it, so the key cannot drift
+ * from the thing it explains.
+ */
+function pinSwatch(kind, edibility, type) {
+  const swatch = el('span', `legend-pin map-pin is-${kind}`);
+  if (type) swatch.dataset.type = type;
+  if (edibility) swatch.dataset.edibility = edibility;
+  swatch.append(MapView.pinShape(kind));
+  return swatch;
 }
 
-function renderMapLegend(shown, pins) {
+function renderMapLegend(shown) {
   const legend = clear($('map-legend'));
   for (const t of Model.TYPES) {
     const n = shown.filter((r) => r.type === t.id).length;
     const item = el('div', 'legend-item' + (n ? '' : ' is-zero'));
-    const swatch = el('span', 'legend-swatch');
-    swatch.style.background = `var(--${t.id})`;
-    swatch.style.borderRadius = '50%';
-    item.append(swatch, document.createTextNode(t.label), el('span', 'legend-value', String(n)));
+    item.append(pinSwatch('mine', '', t.id), document.createTextNode(t.label), el('span', 'legend-value', String(n)));
     legend.append(item);
   }
-  if (state.mapFilters.showInat) {
-    const picked = state.mapFilters.speciesId ? state.species.find((sp) => sp.id === state.mapFilters.speciesId) : null;
-    const scoped = picked?.inatTaxonId ? `, ${picked.commonName || picked.scientificName} only` : '';
+
+  /*
+   * The edibility key, listing only the tiers actually on screen. A full
+   * seven-tier key would be mostly noise on a map showing three pins, and the
+   * tiers that are absent are the ones you least need explained.
+   */
+  const fungi = shown.filter((r) => r.type === 'fungi');
+  const present = Model.EDIBILITY.filter((e) => fungi.some((r) => Model.findEdibility(r) === e.id));
+  if (present.length > 1) {
+    const item = el('div', 'legend-item legend-tiers');
+    for (const e of present) {
+      const one = el('span', 'legend-tier');
+      one.append(pinSwatch('mine', e.id, 'fungi'),
+        document.createTextNode(e.id === 'unknown' ? 'Not recorded' : e.short));
+      item.append(one);
+    }
+    legend.append(item);
+  }
+
+  const picked = selectedSpecies();
+  if (picked) {
     const item = el('div', 'legend-item');
-    const swatch = el('span', 'legend-swatch');
-    swatch.style.cssText = 'border-radius:50%;border:2px solid var(--ink-soft);background:transparent';
-    item.append(swatch, document.createTextNode(`Hollow: iNaturalist, research grade${scoped}`), el('span', 'legend-value', String(pins.filter((p) => p.kind === 'inat').length)));
+    const name = picked.commonName || picked.scientificName;
+    item.append(pinSwatch('inat', picked.kind === 'fungi' ? picked.edibility || 'unknown' : '', picked.kind),
+      document.createTextNode(
+        state.inat.loading ? `Looking up ${name} on iNaturalist\u2026` : `Triangles: ${name} found by others, research grade`),
+      el('span', 'legend-value', String(state.inat.results.length)));
     legend.append(item);
   }
 }
 
-function renderMapVerdict(shown, placed) {
-  const node = clear($('map-verdict'));
-  if (state.inat.problem) {
-    node.append(strongText('iNaturalist is unreachable. '), document.createTextNode('Your own finds are unaffected.'));
-    return;
-  }
-  if (!placed.length) {
-    node.textContent = 'Locations come from the photograph. iPhone: Settings → Privacy → Location Services → Camera.';
-    return;
-  }
-  const choice = shown.filter((r) => Model.isChoice(r.species)).length;
-  node.append(
-    strongText(`${plural(shown.length, 'pin')} on the map.`),
-    document.createTextNode(choice ? ` ${plural(choice, 'find')} of a choice edible.` : ''),
-  );
-}
+/** Somebody else's record, read-only, in the same sheet the app uses for finds. */
+function openInatSheet(o) {
+  openSheet((sheet, close) => {
+    sheetHead(sheet, o.commonName || o.scientificName, o.scientificName, close);
+    const shown = sheetSection(sheet);
+    shown.append(el('span', 'source-tag', 'iNaturalist · someone else'));
+    if (o.photo) {
+      const hero = el('div', 'sheet-hero');
+      const img = el('img');
+      img.src = o.photo;
+      img.alt = '';
+      img.addEventListener('error', () => { clear(hero).append(el('span', 'no-preview', Model.typeGlyph(o.type))); }, { once: true });
+      hero.append(img);
+      shown.append(hero);
+    }
+    const facts = sheetSection(sheet, 'The record');
+    const list = el('dl', 'facts');
+    const add = (t, v) => { if (!v) return; const w = el('div'); w.append(el('dt', null, t)); const dd = el('dd'); dd.append(typeof v === 'string' ? document.createTextNode(v) : v); w.append(dd); list.append(w); };
+    add('Type', Model.typeLabel(o.type));
+    add('Observed', o.observedOn ? fmtDate(o.observedOn) : null);
+    add('By', o.by);
+    add('Position', Model.formatCoord(o.lat, o.lon) + (o.obscured ? ' (obscured)' : ''));
+    facts.append(list);
 
-/** What a clicked pin says. Yours is editable; somebody else's links out. */
-function renderMapSelection() {
-  const holder = clear($('map-selection'));
-  const pin = state.mapSelection;
-  if (!pin) return;
-
-  const card = el('div', 'map-selection');
-  const shot = el('div', 'map-selection-shot');
-  const src = pin.kind === 'mine' ? thumbSrc(coverOf(pin.row)) : pin.inat.photo;
-  if (src) {
-    const img = el('img');
-    img.src = src;
-    img.alt = '';
-    img.loading = 'lazy';
-    // An iNaturalist photo is fetched from their CDN by the browser; if it is
-    // blocked or gone, fall back rather than showing a broken frame.
-    img.addEventListener('error', () => { clear(shot).append(el('span', 'no-preview', Model.typeGlyph(pin.type))); }, { once: true });
-    shot.append(img);
-  } else {
-    shot.append(el('span', 'no-preview', Model.typeGlyph(pin.type)));
-  }
-  card.append(shot);
-
-  const body = el('div', 'map-selection-body');
-  if (pin.kind === 'mine') {
-    const row = pin.row;
-    body.append(typeBadge(row.type));
-    body.append(el('h3', 'map-selection-name' + (row.identified ? '' : ' is-unknown'), row.name));
-    if (row.scientificName) body.append(el('p', 'find-sci sci', row.scientificName));
-    if (row.species?.edibility && row.species.edibility !== 'unknown') body.append(edibleBadge(row.species.edibility));
-    body.append(el('p', 'map-selection-meta', [fmtWhen(row.when), Model.formatCoord(row.lat, row.lon), row.place].filter(Boolean).join(' · ')));
-
-    const actions = el('div', 'map-selection-actions');
-    const open = el('button', 'ghost-button', 'Open find');
-    open.type = 'button';
-    open.addEventListener('click', () => openObservationSheet(row.id));
-    actions.append(open);
-    const link = Model.mapLink(row.lat, row.lon);
-    if (link) actions.append(externalLink(link, 'View on OpenStreetMap'));
-    body.append(actions);
-  } else {
-    const o = pin.inat;
-    body.append(el('span', 'source-tag', 'iNaturalist · someone else'));
-    body.append(typeBadge(pin.type));
-    body.append(el('h3', 'map-selection-name', o.commonName || o.scientificName));
-    if (o.scientificName) body.append(el('p', 'find-sci sci', o.scientificName));
-    body.append(el('p', 'map-selection-meta', [o.observedOn ? fmtDate(o.observedOn) : null, o.by ? `by ${o.by}` : null, o.obscured ? 'location obscured' : null].filter(Boolean).join(' · ')));
-
-    const actions = el('div', 'map-selection-actions');
+    const actions = el('div', 'form-actions');
     actions.append(externalLink(o.url, 'Open on iNaturalist'));
-    // Turning somebody else's record into a species of your own is the useful
-    // move here — it fills the names in, and leaves the identification yours.
-    const adopt = el('button', 'ghost-button', 'Add as species');
+    const adopt = el('button', 'solid-button', 'Add as species');
     adopt.type = 'button';
     adopt.addEventListener('click', () => {
-      openSpeciesSheet(null, {
-        kind: pin.type,
-        seed: { commonName: o.commonName || '', scientificName: o.scientificName || '' },
-      });
+      openSpeciesSheet(null, { kind: o.type, seed: { commonName: o.commonName || '', scientificName: o.scientificName || '' } });
     });
     actions.append(adopt);
-    body.append(actions);
-  }
-
-  card.append(body);
-  holder.append(card);
+    sheet.append(actions);
+  });
 }
 
 function externalLink(href, text) {
@@ -1027,33 +1155,90 @@ function edibleBadge(id) {
   return badge;
 }
 
+const selectedSpecies = () =>
+  (state.filters.speciesId ? state.species.find((sp) => sp.id === state.filters.speciesId) : null) || null;
+
 /**
- * Pull other people's records for whatever is currently on screen.
+ * Every iNaturalist taxon that means this species.
  *
- * Debounced, because panning fires this constantly and iNaturalist asks
- * callers to be gentle. A failure is reported quietly: the map still has your
- * own pins on it, which is the part that matters.
+ * The imported library carries names, not ids, so almost nothing has one
+ * stored — resolving on demand is what makes this work for four hundred
+ * species rather than the handful matched by hand. A species can resolve to
+ * more than one taxon, because a guide and iNaturalist can disagree about the
+ * accepted name; both sets of records are that species' records.
+ *
+ * Cached for the session. Nothing is written back to the library, because
+ * browsing a map should not quietly edit your records.
+ */
+async function resolveTaxa(species) {
+  if (state.inat.taxa.has(species.id)) return state.inat.taxa.get(species.id);
+
+  const names = Model.speciesNames(species);
+  const ids = [];
+  if (species.inatTaxonId) ids.push(species.inatTaxonId);
+
+  for (const name of names) {
+    try {
+      const payload = await request(`api/inat/taxa?q=${encodeURIComponent(name)}`, 'GET');
+      const want = name.toLowerCase();
+      // Exact binomial only. A fuzzy match would silently plot a different
+      // species' records under this one's name.
+      const hit = (payload.results || []).find((t) => (t.scientificName || '').toLowerCase() === want);
+      if (hit && !ids.includes(hit.id)) ids.push(hit.id);
+    } catch {
+      // A name that cannot be looked up is skipped; the others still count.
+    }
+  }
+  state.inat.taxa.set(species.id, ids);
+  return ids;
+}
+
+/**
+ * Other people's records for the one species you are looking at.
+ *
+ * This used to be a blanket overlay of everything anyone had seen nearby,
+ * which on a busy map is a few hundred dots of unrelated birds and weeds. It
+ * only ever answered a question worth asking when it was narrowed to a single
+ * species — so now that is the only way it fires.
  */
 let inatTimer = null;
 function loadInat() {
   clearTimeout(inatTimer);
+  const species = selectedSpecies();
+  if (!species || state.mode !== 'map' || state.config?.inaturalist?.enabled === false) {
+    if (state.inat.results.length || state.inat.speciesId) {
+      state.inat = { ...state.inat, results: [], problem: null, speciesId: null, loading: false };
+    }
+    return;
+  }
+
   inatTimer = setTimeout(async () => {
     const box = state.inat.box || mapView?.bounds();
     if (!box) return;
     state.inat.loading = true;
-    renderMapFilters(derive().rows);
+    state.inat.speciesId = species.id;
+    if (state.view === 'log') renderFilters(derive().rows);
+
+    const taxa = await resolveTaxa(species);
+    // A species iNaturalist does not recognise is not an error worth a banner.
+    if (!taxa.length) {
+      state.inat = { ...state.inat, results: [], loading: false,
+        problem: `iNaturalist has no exact match for ${species.scientificName || 'this species'}.` };
+      if (state.view === 'log') render();
+      return;
+    }
 
     const query = new URLSearchParams({
       swlat: box.swlat.toFixed(5), swlng: box.swlng.toFixed(5),
       nelat: box.nelat.toFixed(5), nelng: box.nelng.toFixed(5),
+      // Several ids where the species goes by several names; iNaturalist
+      // unions them.
+      taxon_id: taxa.join(','),
     });
-    const iconic = { fungi: 'Fungi', flora: 'Plantae', fauna: 'Animalia' }[state.mapFilters.type];
-    if (iconic) query.set('iconic', iconic);
-    const picked = state.mapFilters.speciesId ? state.species.find((sp) => sp.id === state.mapFilters.speciesId) : null;
-    if (picked?.inatTaxonId) query.set('taxon_id', String(picked.inatTaxonId));
-
     try {
       const payload = await request(`api/inat/observations?${query}`, 'GET');
+      // A slow reply for a species you have since moved off must not land.
+      if (state.filters.speciesId !== species.id) return;
       state.inat.results = payload.results || [];
       state.inat.problem = payload.problem || null;
     } catch (err) {
@@ -1061,7 +1246,7 @@ function loadInat() {
       state.inat.problem = err.message;
     } finally {
       state.inat.loading = false;
-      if (state.view === 'map') render();
+      if (state.view === 'log') render();
     }
   }, 400);
 }
@@ -1333,6 +1518,84 @@ function wireSortHeaders(headId, spec, onChange) {
   }
 }
 
+// --- tag suggestions --------------------------------------------------------
+
+/*
+ * How often each term is used, per character and overall.
+ *
+ * Cached because it walks the whole library — 400-odd species times nine
+ * characters — and a sheet builds nine tag fields at once. Invalidated
+ * whenever a record is written, which is the only thing that can change it.
+ */
+let usageCache = null;
+const invalidateUsage = () => { usageCache = null; };
+
+function tagUsage() {
+  if (usageCache) return usageCache;
+  const perCharacter = new Map();
+  const overall = new Map();
+  const bump = (map, key) => map.set(key, (map.get(key) || 0) + 1);
+  for (const record of [...state.species, ...state.observations]) {
+    for (const spec of Model.FUNGI_CHARACTERS) {
+      for (const tag of Model.character(record, spec.id).tags) {
+        const term = Model.normalizeTag(tag.text);
+        bump(perCharacter, `${spec.id}\t${term}`);
+        bump(overall, term);
+      }
+    }
+  }
+  usageCache = { perCharacter, overall };
+  return usageCache;
+}
+
+// How many of each category the popover offers before filtering. Enough to be
+// a menu, few enough to read without scrolling.
+const SUGGESTIONS_PER_CATEGORY = 5;
+
+/**
+ * Terms worth offering under one character, grouped by category.
+ *
+ * Ranked by how often the term is used on *this* character first, then
+ * anywhere, then alphabetically. What people actually write under Gills is a
+ * better suggestion than what a vocabulary list happens to contain, and
+ * `decurrent` should never be the first thing offered under Cap.
+ */
+function tagSuggestions(spec, query, taken) {
+  const { perCharacter, overall } = tagUsage();
+  const q = Model.normalizeTag(query);
+  const held = new Set(taken.map((t) => Model.normalizeTag(t.text)));
+
+  const pool = new Set([
+    ...Model.characterVocab(spec),
+    ...[...overall.keys()],
+  ]);
+
+  const groups = new Map(Model.TAG_CATEGORIES.map((c) => [c.id, []]));
+  for (const term of pool) {
+    const key = Model.normalizeTag(term);
+    if (held.has(key)) continue;
+    if (q && !key.includes(q)) continue;
+    // Measurements are values; there is nothing to suggest.
+    const category = Model.classifyTag(term, spec);
+    if (category === 'measure') continue;
+    groups.get(category)?.push({
+      text: term,
+      category,
+      here: perCharacter.get(`${spec.id}\t${key}`) || 0,
+      anywhere: overall.get(key) || 0,
+    });
+  }
+
+  const out = [];
+  for (const cat of Model.TAG_CATEGORIES) {
+    const list = groups.get(cat.id) || [];
+    if (!list.length) continue;
+    list.sort((a, b) => b.here - a.here || b.anywhere - a.anywhere || a.text.localeCompare(b.text));
+    out.push({ category: cat, terms: list.slice(0, SUGGESTIONS_PER_CATEGORY), total: list.length });
+  }
+  return out;
+}
+
 // --- photo trays ------------------------------------------------------------
 
 /**
@@ -1448,7 +1711,7 @@ function sheetHead(sheet, titleText, subText, close, { unknown } = {}) {
   const title = el('h2', 'sheet-title' + (unknown ? ' is-unknown' : ''), titleText);
   title.id = 'sheet-title';
   left.append(title);
-  const sub = el('p', 'sheet-sub sci', subText || '');
+  const sub = el('p', 'sheet-sub sci', subText && subText.trim() !== (titleText || '').trim().replace(/\?$/, '') ? subText : '');
   left.append(sub);
   head.append(left);
 
@@ -1784,7 +2047,6 @@ function buildObservationSheet(sheet, stored, close) {
     };
     if (await saveRecord('observations', next)) {
       // A find whose location or species changed moves or recolours its pin.
-      state.mapSelection = null;
       close({ force: true });
       render();
     }
@@ -1867,8 +2129,15 @@ function buildIdentifySheet(sheet, stored, close) {
   const candSection = sheetSection(sheet, 'Possible species');
   const candNote = el('p', 'block-note');
   candSection.querySelector('.block-head').append(candNote);
+  // The list scrolls inside its own box rather than pushing the decision off
+  // the bottom of the sheet. Four hundred candidates is a lot of thumb.
+  const candScroll = el('div', 'candidates-scroll');
   const candList = el('div', 'candidates');
-  candSection.append(candList);
+  candScroll.append(candList);
+  candSection.append(candScroll);
+  const candFoot = el('div', 'candidates-foot');
+  candSection.append(candFoot);
+  let showRuledOut = false;
 
   // --- the decision
   const footer = el('div', 'identify-footer');
@@ -1886,7 +2155,23 @@ function buildIdentifySheet(sheet, stored, close) {
   saveTags.title = 'Keep what you have written down and leave it unidentified.';
   saveTags.addEventListener('click', () => commit({}));
 
-  footer.append(footerText, confidenceWrap, saveTags, assign);
+  // Deleting a find is available whether or not it has a name. A photo of
+  // something you have since decided was a leaf is still worth throwing away,
+  // and until now the only route to Delete was through identifying it first.
+  const remove = el('button', 'ghost-button is-danger', 'Delete');
+  remove.type = 'button';
+  remove.addEventListener('click', async () => {
+    if (!confirm('Delete this find? Its photographs go with it.')) return;
+    if (await deleteRecord('observations', stored.id)) {
+      close({ force: true });
+      render();
+    }
+  });
+
+  const left = el('div', 'identify-actions-left');
+  left.append(remove);
+
+  footer.append(footerText, left, confidenceWrap, saveTags, assign);
   sheet.append(footer);
 
   // --- behaviour
@@ -1900,22 +2185,47 @@ function buildIdentifySheet(sheet, stored, close) {
     const { rows, anyTags, pool } = Model.rankCandidates(draftObs, state.species);
     const tagCount = Model.observedTagCount(draftObs);
 
+    const kept = rows.filter((m) => !m.contradicted).length;
     candNote.textContent = !pool
       ? `Nothing in the library is ${Model.typeLabel(draftObs.type).toLowerCase()} yet.`
       : anyTags
-        ? `${plural(pool, 'species')} on file, ranked against ${plural(tagCount, 'tag')}.`
+        ? `${plural(kept, 'species')} still possible, ranked against ${plural(tagCount, 'tag')}.`
         : `${plural(pool, 'species')} on file. Add tags above to narrow this down.`;
 
-    clear(candList);
-    // A species the tags rule out still stands to be chosen: the contradiction
-    // is usually right, but it can also mean the specimen was misread. Hiding
-    // the answer would help nobody.
-    for (const match of rows) candList.append(candidateRow(match));
+    // Ruled-out species are hidden, not dropped. A contradiction is usually
+    // right, but it can also mean the specimen was misread or the library is
+    // wrong, so they stay one click away rather than vanishing.
+    const ruledOut = rows.filter((m) => m.contradicted);
+    const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
 
-    if (!rows.length) {
-      candList.append(el('div', 'empty-state', 'No species of this type on file yet.'));
+    clear(candList);
+    for (const match of candidates) candList.append(candidateRow(match));
+    if (!candidates.length) {
+      candList.append(el('div', 'empty-state',
+        rows.length ? 'Every species is ruled out by these tags.' : 'No species of this type on file yet.'));
     }
-    candList.append(writeUpButton());
+    // Scrolled back to the top: after a new tag the best match is the first
+    // row, and leaving the box where it was hides it.
+    candScroll.scrollTop = 0;
+
+    clear(candFoot);
+    if (ruledOut.length) {
+      const dangerous = ruledOut.filter((m) => Model.isDangerous(m.species)).length;
+      const toggle = el('button', 'ghost-button' + (dangerous ? ' is-danger' : ''));
+      toggle.type = 'button';
+      // "ruled out" is a phrase, not a countable noun — plural() would make it
+      // "386 ruled outs".
+      const count = `${ruledOut.length} ruled out`;
+      toggle.textContent = showRuledOut
+        ? `Hide the ${count}`
+        : dangerous
+          // Naming the dangerous ones is the point of not simply dropping them.
+          ? `Show ${count} — ${dangerous} toxic or worse`
+          : `Show ${count}`;
+      toggle.addEventListener('click', () => { showRuledOut = !showRuledOut; redraw(); });
+      candFoot.append(toggle);
+    }
+    candFoot.append(writeUpButton());
     paintFooter();
   }
 
@@ -1949,7 +2259,8 @@ function buildIdentifySheet(sheet, stored, close) {
     line.append(el('h4', 'candidate-name', sp.commonName || sp.scientificName || 'Unnamed'));
     if (sp.edibility && sp.edibility !== 'unknown') line.append(edibleBadge(sp.edibility));
     body.append(line);
-    if (sp.scientificName) body.append(el('p', 'candidate-sci sci', sp.scientificName));
+    const sci = sciLine(sp.commonName || sp.scientificName, sp.scientificName, 'candidate-sci sci');
+    if (sci) body.append(sci);
 
     if (match.matched.length) {
       const chips = el('div', 'tag-list is-static');
@@ -1976,7 +2287,7 @@ function buildIdentifySheet(sheet, stored, close) {
 
   /** Nothing in the library fits — write the species up from these very tags. */
   function writeUpButton() {
-    const wrap = el('div', 'candidate-writeup');
+    const wrap = el('span', 'candidate-writeup');
     const button = el('button', 'ghost-button', 'None of these — write it up');
     button.type = 'button';
     button.addEventListener('click', () => {
@@ -2016,7 +2327,6 @@ function buildIdentifySheet(sheet, stored, close) {
     collect();
     const next = { ...stored, characters: draftObs.characters, ...changes };
     if (await saveRecord('observations', next)) {
-      state.mapSelection = null;
       close({ force: true });
       render();
     }
@@ -2024,13 +2334,251 @@ function buildIdentifySheet(sheet, stored, close) {
 
   // An existing identification can be taken back off without picking another.
   if (row.identified) {
-    const clear_ = el('button', 'ghost-button is-danger', 'Clear identification');
+    const clear_ = el('button', 'ghost-button', 'Clear identification');
     clear_.type = 'button';
+    clear_.title = 'Keep the find and its tags, drop the name.';
     clear_.addEventListener('click', () => commit({ speciesId: null, confidence: 'high' }));
-    footer.insertBefore(clear_, saveTags);
+    left.append(clear_);
   }
 
   redraw();
+}
+
+// --- the glossary -----------------------------------------------------------
+
+/**
+ * Every term the log knows, what it means, and what it is classified as.
+ *
+ * Also the one place a category is set. It used to be a click on the tag
+ * wherever it appeared, which made a global fact look like a local edit —
+ * reclassifying `angular` on one mushroom said nothing about the next.
+ */
+function glossaryRows(rows) {
+  const used = new Map();
+  for (const s of state.species) {
+    for (const spec of Model.FUNGI_CHARACTERS) {
+      for (const t of Model.character(s, spec.id).tags) {
+        const k = Model.normalizeTag(t.text);
+        const e = used.get(k) || { uses: 0, characters: new Set() };
+        e.uses += 1;
+        e.characters.add(spec.label);
+        used.set(k, e);
+      }
+    }
+  }
+  // Terms tagged on observations count too — they are the ones you are keying
+  // with, and a term used only in the field is the one most worth defining.
+  for (const r of rows) {
+    for (const spec of Model.FUNGI_CHARACTERS) {
+      for (const t of Model.character(r, spec.id).tags) {
+        const k = Model.normalizeTag(t.text);
+        const e = used.get(k) || { uses: 0, characters: new Set() };
+        e.uses += 1;
+        e.characters.add(spec.label);
+        used.set(k, e);
+      }
+    }
+  }
+
+  // Measurements are values, not vocabulary — "3-10 cm" has nothing to define
+  // and would bury the words that do.
+  const terms = new Set([...Object.keys(state.glossary.terms || {}), ...used.keys()]);
+  const all = [...terms];
+  return all.filter((t) => Model.guessCategory(t, null) !== 'measure').map((term) => {
+    const entry = state.glossary.terms[term] || {};
+    const usage = used.get(term) || { uses: 0, characters: new Set() };
+    return {
+      term,
+      definition: entry.definition || '',
+      source: entry.source || '',
+      override: entry.category || '',
+      category: Model.classifyTag(term, null),
+      guessed: Model.guessCategory(term, null),
+      sameAs: entry.sameAs || '',
+      synonyms: Model.synonymsOf(term, all),
+      uses: usage.uses,
+      characters: [...usage.characters],
+    };
+  }).sort((a, b) => a.term.localeCompare(b.term));
+}
+
+function renderGlossary({ rows }) {
+  const all = glossaryRows(rows);
+  const f = state.glossaryFilters;
+
+  const catSet = clear($('glossary-filter-cat'));
+  catSet.append(pill('All', f.category === 'all', all.length, () => { f.category = 'all'; render(); }));
+  for (const c of Model.TAG_CATEGORIES) {
+    const n = all.filter((t) => t.category === c.id).length;
+    catSet.append(pill(c.label, f.category === c.id, n, () => { f.category = c.id; render(); }));
+  }
+
+  const stateSet = clear($('glossary-filter-state'));
+  const undefinedCount = all.filter((t) => !t.definition).length;
+  const unknownCount = all.filter((t) => t.category === 'note').length;
+  for (const o of [
+    { id: 'all', label: 'Any', n: all.length },
+    { id: 'undefined', label: 'Undefined', n: undefinedCount },
+    { id: 'unknown', label: 'Unclassified', n: unknownCount },
+    { id: 'used', label: 'In use', n: all.filter((t) => t.uses).length },
+  ]) {
+    stateSet.append(pill(o.label, f.state === o.id, o.n, () => { f.state = o.id; render(); }));
+  }
+
+  const q = f.q.trim().toLowerCase();
+  const shown = all.filter((t) => {
+    if (f.category !== 'all' && t.category !== f.category) return false;
+    if (f.state === 'undefined' && t.definition) return false;
+    if (f.state === 'unknown' && t.category !== 'note') return false;
+    if (f.state === 'used' && !t.uses) return false;
+    if (q && !(t.term.includes(q) || t.definition.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  $('glossary-note').textContent =
+    `${all.length} terms · ${all.length - undefinedCount} defined · ${unknownCount} still unclassified.`;
+
+  const body = clear($('glossary-rows'));
+  if (!shown.length) {
+    const tr = el('tr');
+    const td = el('td');
+    td.colSpan = 5;
+    td.append(el('div', 'empty-state', 'No terms match.'));
+    tr.append(td);
+    body.append(tr);
+  }
+  for (const t of shown) body.append(glossaryRow(t));
+  // scrollHeight only means anything once the rows are laid out.
+  requestAnimationFrame(() => { for (const box of body.querySelectorAll('.glossary-def')) autosize(box); });
+
+  const verdict = clear($('glossary-verdict'));
+  if (unknownCount) {
+    verdict.append(strongText(`${plural(unknownCount, 'term')} the vocabulary does not recognise.`),
+      document.createTextNode(' They show dashed and grey wherever they are tagged. Set a category here and every use of the term follows.'));
+  } else {
+    verdict.append(strongText('Every term in use is classified.'));
+  }
+}
+
+/** Match a textarea's height to its content, up to a sane ceiling. */
+function autosize(box) {
+  box.style.height = 'auto';
+  box.style.height = `${Math.min(box.scrollHeight, 160)}px`;
+}
+
+function glossaryRow(t) {
+  const tr = el('tr', t.uses ? null : 'is-muted');
+
+  // The term, shown as the chip it renders as everywhere else.
+  const termCell = el('td', 'nowrap');
+  termCell.append(tagChip({ text: t.term, category: t.category }));
+  tr.append(termCell);
+
+  // The category, settable here and nowhere else.
+  const catCell = el('td', 'nowrap');
+  const pick = select(Model.TAG_CATEGORIES, t.category);
+  pick.addEventListener('change', () => setTermCategory(t.term, pick.value));
+  catCell.append(pick);
+  if (t.override) {
+    const mark = el('span', 'glossary-set-by-hand', 'set by hand');
+    mark.title = 'Overrides what the vocabulary would guess. Choose the guessed category again to clear it.';
+    catCell.append(mark);
+  }
+  tr.append(catCell);
+
+  // The definition, edited in place.
+  const defCell = el('td');
+  const box = el('textarea', 'glossary-def');
+  box.value = t.definition;
+  box.rows = 1;
+  box.placeholder = 'No definition yet';
+  box.addEventListener('change', () => setTermDefinition(t.term, box.value));
+  // Grow to the text rather than clipping it at one line. A definition you
+  // have to scroll a one-line box to read is not much better than none.
+  box.addEventListener('input', () => autosize(box));
+  defCell.append(box);
+  if (t.source) defCell.append(el('p', 'glossary-source', t.source));
+  tr.append(defCell);
+
+  const synCell = el('td');
+  if (t.synonyms.length) {
+    const wrap = el('div', 'tag-list is-static');
+    for (const syn of t.synonyms) wrap.append(tagChip({ text: syn, category: t.category }));
+    synCell.append(wrap);
+  }
+  // Point this term at another and they become one term for matching.
+  const same = input('text', t.sameAs, { placeholder: 'same as…', class: 'glossary-same' });
+  same.title = 'Name another term this one means. Both then match as one.';
+  same.addEventListener('change', () => setTermSameAs(t.term, same.value));
+  synCell.append(same);
+  tr.append(synCell);
+
+  const useCell = el('td', 'r');
+  useCell.append(document.createTextNode(String(t.uses)));
+  if (t.characters.length) useCell.append(el('span', 'glossary-chars', t.characters.join(', ')));
+  tr.append(useCell);
+
+  return tr;
+}
+
+async function saveGlossary(terms) {
+  const next = { ...state.glossary, terms };
+  status('saving…');
+  try {
+    const payload = await request('api/glossary', 'PUT', next);
+    state.glossary = payload.glossary;
+    Model.applyGlossary(state.glossary);
+    notice('');
+    status('saved');
+  } catch (err) {
+    status('');
+    if (err.status === 409) {
+      notice(`${err.message}. Reloaded from disk — your last edit was not saved.`);
+      await reloadState().catch(() => {});
+    } else {
+      notice(`Could not save: ${err.message}`);
+    }
+  }
+  render();
+}
+
+/**
+ * Choosing the category the vocabulary would have guessed clears the override
+ * rather than pinning it. Storing a redundant override would freeze the term
+ * against a later change to the word lists, which is the opposite of useful.
+ */
+function setTermCategory(term, category) {
+  const terms = { ...state.glossary.terms };
+  const entry = { ...(terms[term] || {}) };
+  if (category === Model.guessCategory(term, null)) delete entry.category;
+  else entry.category = category;
+  terms[term] = entry;
+  if (!entry.category && !entry.definition) delete terms[term];
+  saveGlossary(terms);
+}
+
+/**
+ * Point one term at another so they match as one.
+ *
+ * Self-reference and empty both clear it. A term pointed at itself would
+ * resolve to itself, which is the same as no synonym but reads as a rule.
+ */
+function setTermSameAs(term, sameAs) {
+  const target = Model.normalizeTag(sameAs);
+  const terms = { ...state.glossary.terms };
+  const entry = { ...(terms[term] || {}) };
+  if (!target || target === Model.normalizeTag(term)) delete entry.sameAs;
+  else entry.sameAs = target;
+  terms[term] = entry;
+  if (!entry.category && !entry.definition && !entry.sameAs) delete terms[term];
+  saveGlossary(terms);
+}
+
+function setTermDefinition(term, definition) {
+  const terms = { ...state.glossary.terms };
+  terms[term] = { ...(terms[term] || {}), definition: definition.trim() };
+  if (!terms[term].definition) delete terms[term].definition;
+  saveGlossary(terms);
 }
 
 // --- the species sheet ------------------------------------------------------
@@ -2047,7 +2595,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
     id: uid(), version: 0, kind: kind || state.config?.nature?.defaultType || 'fungi',
     commonName: '', scientificName: '', habitat: '', notes: '',
     edibility: 'unknown', lookalikes: '',
-    division: '', nutrition: 'unknown', characters: {}, formerNames: [], photos: [],
+    division: '', nutrition: 'unknown', characters: {}, formerNames: [], synonyms: [], photos: [],
     // A species adopted from somebody else's record arrives with its names
     // filled in; the identification is still yours to make.
     ...(seed || {}),
@@ -2161,12 +2709,12 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   const traitRow = el('div', 'entry-row');
   traitRow.append(
     field('Subkingdom / division', divisionPick, { grow: true }),
-    field('Nutrition', nutritionPick, { hint: 'How it feeds.' }),
+    field('Nutrition', nutritionPick, {}),
   );
   traits.append(traitRow);
 
   traits.append(el('p', 'character-note',
-    'Type a tag and press Enter. No tags means not recorded; tick N/A when the species genuinely has no such structure. Tags colour themselves by what they are — click one to reclassify it.'));
+    'Type a tag and press Enter. No tags means not recorded; tick N/A when the species genuinely has no such structure. Tags colour themselves by what they are — a term\u2019s category is set in the Glossary.'));
 
   const grid = el('div', 'characters');
   const characterFields = Model.FUNGI_CHARACTERS.map((spec) => {
@@ -2176,11 +2724,25 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   });
   traits.append(grid);
 
-  const former = formerNamesEditor(record.formerNames || []);
+  const former = nameListEditor(record.formerNames || [], 'A name it used to go by');
   const formerWrap = el('div');
   formerWrap.append(el('span', 'field-label', 'Former scientific names'), former.node);
   formerWrap.style.marginTop = '10px';
   traits.append(formerWrap);
+
+  /*
+   * Other current names for the same organism — not former ones. A guide and
+   * iNaturalist can simply disagree: the western matsutake is Tricholoma
+   * magnivelare in the book and T. murrillianum online, and records exist
+   * under both. Every name here is searched when looking the species up.
+   */
+  const synonyms = nameListEditor(record.synonyms || [], 'Another accepted name');
+  const synonymWrap = el('div');
+  synonymWrap.append(el('span', 'field-label', 'Also known as'), synonyms.node);
+  synonymWrap.append(el('p', 'field-hint',
+    'A different name for the same organism, current elsewhere. All of these are searched on iNaturalist.'));
+  synonymWrap.style.marginTop = '10px';
+  traits.append(synonymWrap);
 
   const syncKind = () => { traits.hidden = kindPick.value !== 'fungi'; };
   kindPick.addEventListener('change', syncKind);
@@ -2251,6 +2813,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
       nutrition: kindPick.value === 'fungi' ? nutritionPick.value : 'unknown',
       characters: kindPick.value === 'fungi' ? readCharacters(characterFields) : {},
       formerNames: kindPick.value === 'fungi' ? former.values() : [],
+      synonyms: kindPick.value === 'fungi' ? synonyms.values() : [],
     };
     // The two tri-states the characters replaced. Dropped on save so a
     // migrated record cannot carry two competing answers about its gills.
@@ -2315,15 +2878,12 @@ function tagChip(tag, { onCycle, onRemove } = {}) {
     chip.append(swatch);
   }
 
-  if (onCycle) {
-    const label = el('button', 'tag-text', tag.text);
-    label.type = 'button';
-    label.title = `${Model.tagCategory(tag.category).label} — click to reclassify`;
-    label.addEventListener('click', onCycle);
-    chip.append(label);
-  } else {
-    chip.append(el('span', 'tag-text', tag.text));
-  }
+  // Not clickable. A term's category is a property of the term, not of one
+  // usage, so it is set once in the Glossary rather than per species here.
+  const label = el('span', 'tag-text', tag.text);
+  label.title = `${Model.tagCategory(tag.category).label} — set in the Glossary`;
+  chip.append(label);
+  void onCycle;
 
   if (onRemove) {
     const drop = el('button', 'tag-drop', '×');
@@ -2369,28 +2929,24 @@ function tagField(spec, value, onChange) {
   const list = el('div', 'tag-list');
   const absentLine = el('p', 'tag-absent', spec.absent);
 
-  // A native datalist rather than a bespoke menu: it is one element, it works
-  // with the keyboard, and on a phone it is the platform's own picker.
-  const listId = `vocab-${spec.id}-${uid()}`;
-  const suggestions = el('datalist');
-  suggestions.id = listId;
-  for (const word of Model.characterVocab(spec)) suggestions.append(new Option(word));
+  // A datalist was the first attempt: one element, keyboard-friendly, and on a
+  // phone the platform's own picker. But it dumps every term as unstyled text
+  // in one undifferentiated list, and at fifty-odd options that is not a menu,
+  // it is a wall. This shows the terms as the chips they will become, grouped
+  // by category and ranked by use.
+  const suggestions = el('div', 'tag-suggest');
+  suggestions.hidden = true;
 
-  const box = input('text', '', { placeholder: 'Add a tag…', list: listId, autocomplete: 'off' });
+  const box = input('text', '', { placeholder: 'Add a tag…', autocomplete: 'off' });
 
-  const changed = () => { draw(); onChange?.(); };
+  const changed = () => { draw(); if (!suggestions.hidden) drawSuggestions(); onChange?.(); };
 
   const removeAt = (i) => { tags.splice(i, 1); changed(); };
-  const cycle = (tag) => {
-    const ids = Model.TAG_CATEGORIES.map((c) => c.id);
-    tag.category = ids[(ids.indexOf(tag.category) + 1) % ids.length];
-    changed();
-  };
 
   function draw() {
     clear(list);
     tags.forEach((tag, i) => {
-      list.append(tagChip(tag, { onCycle: () => cycle(tag), onRemove: () => removeAt(i) }));
+      list.append(tagChip(tag, { onRemove: () => removeAt(i) }));
     });
     list.append(box);
   }
@@ -2411,6 +2967,7 @@ function tagField(spec, value, onChange) {
   };
 
   box.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && !suggestions.hidden) { ev.stopPropagation(); closeSuggestions(); return; }
     if (ev.key === 'Enter' || ev.key === ',') { ev.preventDefault(); commit(); return; }
     // Backspace in an empty box takes the last tag back, the way every tag
     // field people already use behaves.
@@ -2424,10 +2981,54 @@ function tagField(spec, value, onChange) {
   wrap.append(list, absentLine, suggestions);
   cell.append(wrap);
 
+  function drawSuggestions() {
+    const groups = tagSuggestions(spec, box.value, tags);
+    clear(suggestions);
+    if (!groups.length) {
+      suggestions.append(el('p', 'tag-suggest-empty',
+        box.value.trim() ? 'No known term matches — press Enter to add it anyway.' : 'Nothing to suggest.'));
+      return;
+    }
+    for (const group of groups) {
+      const row = el('div', 'tag-suggest-group');
+      const label = el('span', 'tag-suggest-label', group.category.label);
+      if (group.total > group.terms.length) {
+        label.append(el('span', 'tag-suggest-more', `${group.total - group.terms.length} more`));
+      }
+      row.append(label);
+      const chips = el('div', 'tag-list is-static');
+      for (const term of group.terms) {
+        const chip = tagChip(term);
+        chip.classList.add('is-suggestion');
+        chip.title = term.here ? `Used ${plural(term.here, 'time')} under ${spec.label}` : 'Not used here yet';
+        // mousedown, not click: the input must not blur first, or its own blur
+        // handler commits whatever half-typed text is sitting in it.
+        chip.addEventListener('mousedown', (ev) => {
+          ev.preventDefault();
+          box.value = term.text;
+          commit();
+          drawSuggestions();
+        });
+        chips.append(chip);
+      }
+      row.append(chips);
+      suggestions.append(row);
+    }
+  }
+
+  const openSuggestions = () => { if (naBox.checked) return; drawSuggestions(); suggestions.hidden = false; };
+  const closeSuggestions = () => { suggestions.hidden = true; };
+
+  box.addEventListener('focus', openSuggestions);
+  box.addEventListener('click', openSuggestions);
+  box.addEventListener('input', () => { if (!suggestions.hidden) drawSuggestions(); });
+  box.addEventListener('blur', closeSuggestions);
+
   const sync = () => {
     cell.classList.toggle('is-na', naBox.checked);
     list.hidden = naBox.checked;
     absentLine.hidden = !naBox.checked;
+    if (naBox.checked) closeSuggestions();
   };
   naBox.addEventListener('change', () => { sync(); onChange?.(); });
   sync();
@@ -2447,7 +3048,7 @@ function readCharacters(fields) {
 }
 
 /** Chips with a × each, plus a box to add another. */
-function formerNamesEditor(initial) {
+function nameListEditor(initial, placeholder) {
   const values = [...(initial || [])];
   const wrap = el('div');
   const list = el('ul', 'former-names');
@@ -2471,7 +3072,7 @@ function formerNamesEditor(initial) {
     if (!values.length) list.append(el('li', 'muted', 'None recorded'));
   };
 
-  const box = input('text', '', { placeholder: 'A name it used to go by' });
+  const box = input('text', '', { placeholder });
   const add = el('button', 'ghost-button', 'Add');
   add.type = 'button';
   const commit = () => {
@@ -2512,16 +3113,27 @@ function wire() {
   $('obs-form').addEventListener('submit', submitObservation);
   $('obs-reset').addEventListener('click', () => { resetObsForm(); notice(''); });
 
-  $('filter-q').addEventListener('input', (ev) => { state.filters.q = ev.target.value; renderGallery(derive().rows); });
+  $('filter-q').addEventListener('input', (ev) => { state.filters.q = ev.target.value; render(); });
   $('filter-sp-q').addEventListener('input', (ev) => { state.speciesFilters.q = ev.target.value; renderSpeciesTable(derive().life); });
   $('species-new').addEventListener('click', () => openSpeciesSheet(null, {}));
-  $('map-species').addEventListener('change', (ev) => {
-    state.mapFilters.speciesId = ev.target.value;
-    state.mapSelection = null;
-    // A species that was matched against iNaturalist can narrow the overlay to
-    // that taxon — everyone else's finds of the same thing, nearby.
-    if (state.mapFilters.showInat) loadInat();
+  $('glossary-q').addEventListener('input', (ev) => { state.glossaryFilters.q = ev.target.value; render(); });
+  $('filter-species').addEventListener('change', (ev) => {
+    state.filters.speciesId = ev.target.value;
+    // Picking a species is what asks iNaturalist anything at all.
+    loadInat();
     render();
+  });
+  for (const [id, mode] of [['mode-finds', 'finds'], ['mode-map', 'map']]) {
+    $(id).addEventListener('click', () => { state.mode = mode; render(); });
+  }
+  // Logging is one action and not the thing you come here to look at, so the
+  // form stays out of the way until asked for.
+  $('entry-toggle').addEventListener('click', () => {
+    const open = $('entry-body').hidden;
+    $('entry-body').hidden = !open;
+    $('entry-toggle').setAttribute('aria-expanded', String(open));
+    $('entry-block').classList.toggle('is-open', open);
+    if (open) $('obs-drop').focus();
   });
   wireSortHeaders('species-head', state.speciesSort, () => render());
 
@@ -2538,7 +3150,7 @@ function wire() {
   let resizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { if (state.view === 'log') renderSeason(derive().rows); }, 150);
+    resizeTimer = setTimeout(() => { if (state.view === 'log' && state.mode === 'map') mapView?.redraw(); }, 150);
   });
 }
 
@@ -2548,6 +3160,8 @@ async function boot() {
     state.config = payload.config;
     state.observations = payload.observations || [];
     state.species = payload.species || [];
+    state.glossary = payload.glossary || { version: 0, terms: {} };
+    Model.applyGlossary(state.glossary);
     applyTheme(state.config.theme);
 
     fillTypeSelect($('obs-type'));

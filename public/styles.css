@@ -359,6 +359,65 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .form-actions .spacer { margin-right: auto; }
 .save-status { font-size: 12px; color: var(--ink-faint); }
 
+/* --- the entry call to action ------------------------------------------- */
+/*
+ * Logging a find is one action, and it is not what you open the app to look
+ * at. Collapsed, the block is a button; expanded, it is the form it always
+ * was. The padding moves onto the button so the collapsed state has no dead
+ * space around it.
+ */
+.block.is-collapsible { padding: 0; }
+
+.entry-cta {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  padding: 16px 20px; margin: 0;
+  background: none; border: none; border-radius: var(--radius);
+  color: inherit; font: inherit; cursor: pointer;
+}
+.entry-cta:hover .entry-cta-title { color: var(--accent); }
+.entry-cta:hover .entry-cta-mark { border-color: var(--accent-dim); color: var(--accent); }
+
+.entry-cta-mark {
+  flex: none; width: 30px; height: 30px;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 20px; line-height: 1;
+  color: var(--ink-soft); background: var(--card-sunk);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  /* Rotating a + into a × says "this closes again" without a second glyph. */
+  transition: transform 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.block.is-open .entry-cta-mark { transform: rotate(45deg); color: var(--accent); border-color: var(--accent-dim); }
+
+.entry-cta-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.entry-cta-title {
+  font-family: var(--display); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink);
+}
+.entry-cta-note { font-size: 13px; color: var(--ink-soft); }
+
+#entry-body { padding: 0 20px 20px; }
+.block.is-open .entry-cta { padding-bottom: 10px; }
+
+/* --- gallery / map toggle ------------------------------------------------ */
+/*
+ * Two renderings of one set of finds, so this sits in the block head beside
+ * the count rather than in the filter row — it changes how you look, not what
+ * you are looking at.
+ */
+.view-toggle {
+  display: flex; flex: none; gap: 0;
+  border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden;
+}
+.view-toggle-button {
+  font-family: var(--display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 14px; cursor: pointer;
+  background: transparent; color: var(--ink-soft); border: none;
+}
+.view-toggle-button + .view-toggle-button { border-left: 1px solid var(--rule); }
+.view-toggle-button:hover { color: var(--ink); }
+.view-toggle-button.is-on { background: var(--accent-wash); color: var(--accent); }
+
 /* --- filters ------------------------------------------------------------- */
 
 .filter-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 14px; }
@@ -377,6 +436,50 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   background: var(--card-sunk); color: var(--ink);
   border: 1px solid var(--rule); border-radius: var(--radius);
 }
+
+/* --- checkbox dropdown --------------------------------------------------- */
+
+.dropdown { position: relative; }
+
+.dropdown-button {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--display); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 5px 11px; cursor: pointer; border-radius: var(--radius);
+  background: var(--card-sunk); color: var(--ink-soft); border: 1px solid var(--rule);
+}
+.dropdown-button:hover { color: var(--ink); border-color: var(--accent-dim); }
+.dropdown-button[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-wash); }
+/* Nothing ticked shows nothing, which is a state worth looking odd. */
+.dropdown-button.is-empty { color: var(--warn); border-color: var(--warn); }
+.dropdown-caret { font-size: 9px; opacity: 0.7; }
+.dropdown-label { white-space: nowrap; }
+
+.dropdown-menu {
+  position: absolute; left: 0; top: 100%; z-index: 30;
+  margin-top: 4px; padding: 6px;
+  min-width: 190px; display: grid; gap: 2px;
+  background: var(--card-raised);
+  border: 1px solid var(--accent-dim); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.dropdown-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 7px; border-radius: var(--radius); cursor: pointer;
+}
+.dropdown-option:hover { background: var(--card-sunk); }
+.dropdown-option input { margin: 0; accent-color: var(--accent); }
+.dropdown-option .count { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+.dropdown-option-label { white-space: nowrap; }
+.dropdown-option.is-on .dropdown-option-label { color: var(--accent); }
+
+.dropdown-all {
+  margin-top: 3px; padding: 5px 7px;
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: none; border: none; border-top: 1px solid var(--rule-soft);
+  color: var(--ink-faint); cursor: pointer; text-align: left;
+}
+.dropdown-all:hover { color: var(--accent); }
 
 /* --- dropzone ------------------------------------------------------------ */
 
@@ -403,8 +506,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 }
 /* A fixed ratio is what keeps a row of portrait and landscape phone shots from
    stepping up and down the page. */
-.shot-frame { aspect-ratio: 1 / 1; display: grid; place-items: center; background: var(--paper); }
-.shot-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shot-frame { aspect-ratio: 1 / 1; display: grid; place-items: center; overflow: hidden; background: var(--paper); }
+/* min-height:0 is what makes the aspect-ratio hold. A grid item defaults to
+   min-height:auto, so a portrait photograph refuses to shrink below its own
+   height and stretches the frame — landscape ones fit and hide the bug. */
+.shot-frame img { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
 /* A HEIC that the browser cannot decode still uploads and is still stored —
    it just cannot be previewed, and says so rather than showing a broken icon. */
 .shot-frame .no-preview { font-size: 24px; opacity: 0.5; }
@@ -429,6 +535,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .gallery {
   display: grid;
+  /* Stretch, so cards in a row share a height and their frames line up. */
+  align-items: stretch;
   /* auto-fill, not auto-fit: with two finds logged, auto-fit would stretch
      each card to half the page and the photos would look like posters. */
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -442,8 +550,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 }
 .find:hover { border-color: var(--accent-dim); }
 .find:hover .find-name { color: var(--accent); }
-.find-frame { aspect-ratio: 4 / 3; background: var(--paper); display: grid; place-items: center; }
-.find-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.find-frame { aspect-ratio: 4 / 3; background: var(--paper); display: grid; place-items: center; overflow: hidden; }
+/* See .shot-frame: without min-height:0 a portrait photo stretches the frame
+   and the gallery grid goes ragged. */
+.find-frame img { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
 .find-frame .no-preview { font-size: 30px; opacity: 0.35; }
 .find-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
 .find-name { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.25; }
@@ -457,33 +567,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   border: 1px dashed var(--rule-soft); border-radius: var(--radius);
 }
 
-/* --- charts -------------------------------------------------------------- */
-/*
- * Chart type is sized in viewBox user units, so a chart scaled down to phone
- * width would shrink its labels with it. The renderer measures its rendered
- * width and sets --chart-k to the inverse ratio, holding labels at a roughly
- * constant physical size. The fallback of 1 leaves a chart alone if it is ever
- * drawn without one.
- */
-.chart-shell { background: var(--card-sunk); border-radius: var(--radius); padding: 8px; }
-.chart-shell svg { display: block; width: 100%; height: auto; }
-.axis-line { stroke: var(--rule); stroke-width: 1; }
-.axis-text { font-family: var(--mono); font-size: calc(11px * var(--chart-k, 1)); fill: var(--ink-faint); }
-.chart-grid { stroke: var(--rule-soft); stroke-width: 1; }
-.bar-fungi { fill: var(--fungi); }
-.bar-flora { fill: var(--flora); }
-.bar-fauna { fill: var(--fauna); }
-.chart-empty { font-family: var(--display); font-size: calc(13px * var(--chart-k, 1)); letter-spacing: 0.1em; text-transform: uppercase; fill: var(--ink-faint); }
-.chart-peak-label {
-  font-family: var(--display); font-size: calc(10px * var(--chart-k, 1)); letter-spacing: 0.1em;
-  text-transform: uppercase; fill: var(--accent);
-}
-
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 18px; margin-top: 14px; }
 .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-soft); }
-.legend-swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
 .legend-value { font-family: var(--mono); color: var(--ink-faint); }
 .legend-item.is-zero { opacity: 0.45; }
+/* A legend pin is the map's own pin, parked in the flow instead of positioned
+   over a tile. It must keep the .map-pin rules so the key cannot drift. */
+.map-pin.legend-pin { position: static; margin: 0; width: 15px; height: 15px; flex: none; cursor: default; opacity: 1; }
+.map-pin.legend-pin:hover { transform: none; }
+.legend-tiers { flex-wrap: wrap; gap: 12px; }
+.legend-tier { display: inline-flex; align-items: center; gap: 5px; }
 
 /* --- sheet --------------------------------------------------------------- */
 /*
@@ -699,6 +792,37 @@ button.tag-text:hover { text-decoration: underline dotted; }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 
+/* --- tag suggestions ----------------------------------------------------- */
+/*
+ * A menu of the terms themselves, drawn as the chips they will become, so the
+ * category is legible before you pick rather than after. Anchored under the
+ * field it belongs to.
+ */
+.tag-wrap { position: relative; }
+
+.tag-suggest {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 30;
+  margin-top: 4px; padding: 10px 12px 12px;
+  display: grid; gap: 10px;
+  max-height: 320px; overflow-y: auto;
+  background: var(--card-raised);
+  border: 1px solid var(--accent-dim); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.tag-suggest-group { display: grid; gap: 5px; }
+.tag-suggest-label {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.tag-suggest-more { font-family: var(--body); font-size: 10.5px; letter-spacing: 0; text-transform: none; opacity: 0.7; }
+.tag-suggest-empty { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+
+/* A suggestion is a button in all but name; it just looks like its result. */
+.tag.is-suggestion { cursor: pointer; }
+.tag.is-suggestion:hover { background: var(--accent-wash); }
+
 /* An absence is a positive claim, so it is stated rather than left blank. */
 .tag-absent {
   margin: 0; padding: 7px 9px;
@@ -720,7 +844,27 @@ button.tag-text:hover { text-decoration: underline dotted; }
   background: var(--card-sunk); border-left: 2px solid var(--rule); border-radius: var(--radius);
 }
 
+/*
+ * The list scrolls in its own box so the decision at the foot of the sheet
+ * stays reachable. Sized in vh: on a phone a fixed pixel height either wastes
+ * the screen or fills it.
+ */
+.candidates-scroll {
+  max-height: min(46vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* A hairline that says the box has its own scroll, without a heavy frame. */
+  border: 1px solid var(--rule-soft); border-radius: var(--radius);
+  padding: 8px;
+  background: var(--paper);
+}
+
 .candidates { display: grid; gap: 8px; }
+
+.candidates-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 10px;
+}
 
 .candidate {
   display: flex; align-items: flex-start; gap: 12px; text-align: left;
@@ -771,17 +915,25 @@ button.tag-text:hover { text-decoration: underline dotted; }
 }
 .candidate-ruled { color: var(--warn); }
 
-.candidate-writeup { margin-top: 4px; }
+.candidate-writeup { display: inline-flex; }
 
 /* The decision, held at the foot of the sheet so it is always the last thing
    read — and so a long candidate list never buries it. */
+/*
+ * Scrolls with the sheet rather than being pinned to its foot. Sticky kept the
+ * Identify button reachable down a long candidate list, but it also sat on top
+ * of the last few candidates and read as a stuck line rather than as the end
+ * of the form.
+ */
 .identify-footer {
-  position: sticky; bottom: 0; z-index: 2;
   display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;
   margin: 18px -20px -20px; padding: 14px 20px;
   background: var(--card-raised);
   border-top: 1px solid var(--rule);
 }
+/* Destructive actions to the left, away from Identify and Save. */
+.identify-actions-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
 .identify-choice { flex: 1 1 220px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .identify-chosen { font-size: 16px; font-weight: 600; color: var(--ink); }
 .identify-preview { font-size: 12.5px; color: var(--accent); }
@@ -795,10 +947,71 @@ button.tag-text:hover { text-decoration: underline dotted; }
 
 @media (max-width: 600px) {
   .identify-footer { margin: 18px -20px 0; }
+  .identify-actions-left { width: 100%; }
   .candidate-score { min-width: 0; }
 }
 
+/* --- glossary ------------------------------------------------------------ */
+
+.glossary-def {
+  /* No min-width: it was setting a floor the column could not go below, which
+     is the opposite of what a flexible column needs. The width comes from the
+     column instead. */
+  width: 100%; resize: vertical; overflow-y: auto;
+  padding: 5px 8px; font-family: var(--body); font-size: 13px; line-height: 1.45;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.glossary-def:placeholder-shown { color: var(--ink-faint); font-style: italic; }
+.glossary-source { margin: 3px 0 0; font-size: 11px; color: var(--ink-faint); }
+
+.glossary-same {
+  width: 100%; margin-top: 5px;
+  padding: 4px 7px; font-family: var(--body); font-size: 12.5px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.glossary-same::placeholder { color: var(--ink-faint); font-style: italic; }
+
+.glossary-set-by-hand {
+  display: block; margin-top: 3px;
+  font-family: var(--display); font-size: 9.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent);
+}
+/* Wraps, so a long character list cannot widen the column it sits in. */
+.glossary-chars {
+  display: block; font-family: var(--body); font-size: 11px; color: var(--ink-faint);
+  white-space: normal; line-height: 1.3;
+}
+
+/*
+ * The definition is the content; everything else is a control beside it. The
+ * table is laid out fixed so those proportions actually hold — under auto
+ * layout the longest definition in the whole list decided the width for all of
+ * them, and the short columns kept whatever they had claimed.
+ */
+#view-glossary table { table-layout: fixed; width: 100%; }
+#view-glossary th:nth-child(1), #glossary-rows td:nth-child(1) { width: 13%; }
+#view-glossary th:nth-child(2), #glossary-rows td:nth-child(2) { width: 12%; }
+#view-glossary th:nth-child(3), #glossary-rows td:nth-child(3) { width: 52%; }
+#view-glossary th:nth-child(4), #glossary-rows td:nth-child(4) { width: 15%; }
+#view-glossary th:nth-child(5), #glossary-rows td:nth-child(5) { width: 8%; }
+/* Tighter side padding: five columns of 10px each was 100px of nothing. */
+#view-glossary th, #glossary-rows td { padding-left: 6px; padding-right: 6px; }
+#view-glossary th:first-child, #glossary-rows td:first-child { padding-left: 0; }
+#view-glossary th:last-child, #glossary-rows td:last-child { padding-right: 0; }
+#glossary-rows td { vertical-align: top; padding-top: 10px; }
+/* A long term must wrap rather than force its column wider. */
+#glossary-rows td:nth-child(1) .tag { white-space: normal; }
+#glossary-rows select {
+  font-family: var(--body); font-size: 13px; padding: 4px 7px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
 /* --- map ----------------------------------------------------------------- */
+
+#map-pane { margin-top: 2px; }
 
 .map-shell {
   background: var(--card-sunk);
@@ -845,43 +1058,52 @@ button.tag-text:hover { text-decoration: underline dotted; }
   background-size: 64px 64px;
 }
 
+/* A pin says two things at once: shape is whose record it is (circle yours,
+   triangle somebody else's), colour and fill are how edible it is. The tiers
+   below are the .edible-badge rules restated for a shape — solid where the
+   badge has a background, hollow where it does not, dashed where it is. */
 .map-pin {
   position: absolute;
-  width: 16px; height: 16px;
-  margin: -8px 0 0 -8px;
-  padding: 0;
-  border-radius: 50%;
-  border: 2px solid var(--paper);
-  background: var(--ink-soft);
+  width: 18px; height: 18px;
+  margin: -9px 0 0 -9px;
+  padding: 0; border: 0; background: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  color: var(--ink-soft);
+  --pin-fill: currentColor;
+  --pin-dash: none;
 }
-.map-pin[data-type="fungi"] { background: var(--fungi); }
-.map-pin[data-type="flora"] { background: var(--flora); }
-.map-pin[data-type="fauna"] { background: var(--fauna); }
+.map-pin svg {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  /* A halo, so a hollow pin still reads over a light or busy tile. */
+  filter: drop-shadow(0 0 1.5px var(--paper)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+.map-pin svg > * {
+  fill: var(--pin-fill);
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-dasharray: var(--pin-dash);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-pin[data-type="fungi"] { color: var(--fungi); }
+.map-pin[data-type="flora"] { color: var(--flora); }
+.map-pin[data-type="fauna"] { color: var(--fauna); }
 .map-pin:hover { transform: scale(1.25); z-index: 3; }
-.map-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.map-pin:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
 
-/* Somebody else's record. Hollow, smaller, and behind yours — present for
-   context, never mistakable for something you found. */
-.map-pin.is-inat {
-  width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px;
-  background: transparent;
-  border-width: 2px;
-  opacity: 0.78;
-}
-.map-pin.is-inat[data-type="fungi"] { border-color: var(--fungi); }
-.map-pin.is-inat[data-type="flora"] { border-color: var(--flora); }
-.map-pin.is-inat[data-type="fauna"] { border-color: var(--fauna); }
+/* Somebody else's record: a triangle, slightly smaller and drawn behind yours
+   — present for context, never mistakable for something you found. */
+.map-pin.is-inat { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; opacity: 0.85; }
 
-/* A choice edible gets a ring; anything toxic gets a hard white core. Both
-   read at a glance without depending on hue alone. */
-.map-pin.is-choice { box-shadow: 0 0 0 2px var(--gain), 0 1px 3px rgba(0, 0, 0, 0.6); }
-.map-pin.is-dangerous { box-shadow: 0 0 0 2px var(--warn), 0 1px 3px rgba(0, 0, 0, 0.6); }
-.map-pin.is-dangerous::after {
-  content: ''; position: absolute; inset: 3px;
-  border-radius: 50%; background: var(--warn);
-}
+/* The tiers, in badge order. Choice and deadly are the filled ones, each the
+   emphatic end of its colour: the two a forager must never confuse. */
+.map-pin[data-edibility="unknown"]  { color: var(--ink-faint); --pin-fill: none; --pin-dash: 3 2.5; }
+.map-pin[data-edibility="choice"]   { color: var(--gain);      --pin-fill: var(--gain); }
+.map-pin[data-edibility="edible"]   { color: var(--gain);      --pin-fill: none; }
+.map-pin[data-edibility="inedible"] { color: var(--ink-soft);  --pin-fill: none; }
+.map-pin[data-edibility="dubious"]  { color: var(--caution);   --pin-fill: none; --pin-dash: 3 2.5; }
+.map-pin[data-edibility="toxic"]    { color: var(--warn);      --pin-fill: none; }
+.map-pin[data-edibility="deadly"]   { color: var(--warn);      --pin-fill: var(--warn); }
 
 .map-controls { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 4; }
 .map-button {

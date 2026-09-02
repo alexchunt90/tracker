@@ -1,0 +1,470 @@
+[
+  {
+    "id": "sp_death",
+    "version": 3,
+    "kind": "fungi",
+    "commonName": "Death Cap",
+    "scientificName": "Amanita phalloides",
+    "habitat": "Under oaks and hornbeam, urban plantings",
+    "edibility": "deadly",
+    "lookalikes": "Paddy straw mushroom; young puffballs; Amanita velosa",
+    "division": "Basidiomycota",
+    "nutrition": "mycorrhizal",
+    "inatTaxonId": 48701,
+    "characters": {
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "cap"
+          },
+          {
+            "text": "convex"
+          },
+          {
+            "text": "plane"
+          },
+          {
+            "text": "olive"
+          },
+          {
+            "text": "green"
+          },
+          {
+            "text": "striate"
+          },
+          {
+            "text": "viscid"
+          },
+          {
+            "text": "5-15 cm"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "gills"
+          },
+          {
+            "text": "free"
+          },
+          {
+            "text": "crowded"
+          },
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "stipe"
+          },
+          {
+            "text": "ring"
+          },
+          {
+            "text": "volva"
+          },
+          {
+            "text": "basal bulb"
+          },
+          {
+            "text": "white"
+          },
+          {
+            "text": "8-15 cm"
+          }
+        ]
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "scent": {
+        "na": false,
+        "tags": [
+          {
+            "text": "sweet"
+          },
+          {
+            "text": "faint"
+          }
+        ]
+      },
+      "staining": {
+        "na": true,
+        "tags": []
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "soil"
+          },
+          {
+            "text": "leaf litter"
+          }
+        ]
+      },
+      "trees": {
+        "na": false,
+        "tags": [
+          {
+            "text": "oak"
+          },
+          {
+            "text": "hornbeam"
+          },
+          {
+            "text": "chestnut"
+          }
+        ]
+      },
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "agaricoid"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Agaricus phalloides"
+    ],
+    "photos": []
+  },
+  {
+    "id": "u65efvi8",
+    "version": 5,
+    "kind": "fungi",
+    "commonName": "Pacific Golden Chanterelle",
+    "scientificName": "Cantharellus formosus",
+    "habitat": "Douglas fir duff, mossy slopes",
+    "edibility": "choice",
+    "lookalikes": "Jack-o'-lantern (Omphalotus olivascens); false chanterelle",
+    "division": "Basidiomycota",
+    "nutrition": "mycorrhizal",
+    "inatTaxonId": 120443,
+    "characters": {
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "cap"
+          },
+          {
+            "text": "convex"
+          },
+          {
+            "text": "depressed"
+          },
+          {
+            "text": "egg-yellow"
+          },
+          {
+            "text": "apricot"
+          },
+          {
+            "text": "wavy"
+          },
+          {
+            "text": "3-10 cm"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "false gills"
+          },
+          {
+            "text": "decurrent"
+          },
+          {
+            "text": "forking"
+          },
+          {
+            "text": "blunt"
+          },
+          {
+            "text": "egg-yellow"
+          }
+        ]
+      },
+      "stipe": {
+        "na": false,
+        "tags": [
+          {
+            "text": "stipe"
+          },
+          {
+            "text": "solid"
+          },
+          {
+            "text": "tapering"
+          },
+          {
+            "text": "pale yellow"
+          },
+          {
+            "text": "3-8 cm"
+          }
+        ]
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "pale yellow"
+          },
+          {
+            "text": "cream"
+          }
+        ]
+      },
+      "scent": {
+        "na": false,
+        "tags": [
+          {
+            "text": "apricot"
+          },
+          {
+            "text": "mild"
+          },
+          {
+            "text": "peppery"
+          }
+        ]
+      },
+      "staining": {
+        "na": true,
+        "tags": []
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "soil"
+          },
+          {
+            "text": "duff"
+          },
+          {
+            "text": "moss"
+          }
+        ]
+      },
+      "trees": {
+        "na": false,
+        "tags": [
+          {
+            "text": "douglas fir"
+          },
+          {
+            "text": "western hemlock"
+          },
+          {
+            "text": "sitka spruce"
+          }
+        ]
+      },
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "cantharelloid"
+          },
+          {
+            "text": "trumpet"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Cantharellus cibarius"
+    ],
+    "photos": []
+  },
+  {
+    "id": "sp_nettle",
+    "version": 1,
+    "kind": "flora",
+    "commonName": "Stinging Nettle",
+    "scientificName": "Urtica dioica",
+    "habitat": "Rich damp soil, disturbed ground",
+    "edibility": "edible",
+    "lookalikes": "Wood nettle",
+    "photos": []
+  },
+  {
+    "id": "sp_turkey",
+    "version": 2,
+    "kind": "fungi",
+    "commonName": "Turkey Tail",
+    "scientificName": "Trametes versicolor",
+    "habitat": "Dead hardwood in damp woodland",
+    "edibility": "inedible",
+    "lookalikes": "False turkey tail (Stereum ostrea) — smooth underside, no pores",
+    "division": "Basidiomycota",
+    "nutrition": "saprophytic",
+    "characters": {
+      "cap": {
+        "na": false,
+        "tags": [
+          {
+            "text": "bracket"
+          },
+          {
+            "text": "zonate"
+          },
+          {
+            "text": "concentric"
+          },
+          {
+            "text": "velvety"
+          },
+          {
+            "text": "brown"
+          },
+          {
+            "text": "grey"
+          },
+          {
+            "text": "buff"
+          },
+          {
+            "text": "3-8 cm"
+          }
+        ]
+      },
+      "hymenium": {
+        "na": false,
+        "tags": [
+          {
+            "text": "pores"
+          },
+          {
+            "text": "white"
+          },
+          {
+            "text": "3-5 per mm"
+          }
+        ]
+      },
+      "stipe": {
+        "na": true,
+        "tags": []
+      },
+      "sporePrint": {
+        "na": false,
+        "tags": [
+          {
+            "text": "white"
+          }
+        ]
+      },
+      "scent": {
+        "na": true,
+        "tags": []
+      },
+      "staining": {
+        "na": true,
+        "tags": []
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "dead hardwood"
+          },
+          {
+            "text": "stump"
+          },
+          {
+            "text": "log"
+          },
+          {
+            "text": "fallen branches"
+          }
+        ]
+      },
+      "trees": {
+        "na": true,
+        "tags": []
+      },
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "bracket"
+          },
+          {
+            "text": "polypore"
+          }
+        ]
+      }
+    },
+    "formerNames": [
+      "Polyporus versicolor",
+      "Coriolus versicolor"
+    ],
+    "photos": []
+  },
+  {
+    "id": "sp_ramaria",
+    "version": 0,
+    "kind": "fungi",
+    "commonName": "Yellow Coral",
+    "scientificName": "Ramaria rasilispora",
+    "habitat": "Conifer duff",
+    "edibility": "dubious",
+    "lookalikes": "Other Ramaria; some are purgative",
+    "division": "Basidiomycota",
+    "nutrition": "mycorrhizal",
+    "formerNames": [],
+    "photos": [],
+    "characters": {
+      "body": {
+        "na": false,
+        "tags": [
+          {
+            "text": "coral"
+          },
+          {
+            "text": "clavarioid"
+          },
+          {
+            "text": "yellow"
+          }
+        ]
+      },
+      "cap": {
+        "na": true,
+        "tags": []
+      },
+      "hymenium": {
+        "na": true,
+        "tags": []
+      },
+      "substrate": {
+        "na": false,
+        "tags": [
+          {
+            "text": "duff"
+          }
+        ]
+      }
+    }
+  }
+]

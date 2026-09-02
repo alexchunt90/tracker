@@ -40,8 +40,8 @@
 
 <nav class="tabs" role="tablist">
   <button role="tab" class="tab is-active" data-view="log">Log</button>
-  <button role="tab" class="tab" data-view="map">Map</button>
   <button role="tab" class="tab" data-view="species">Species</button>
+  <button role="tab" class="tab" data-view="glossary">Glossary</button>
   <span class="tab-status" id="save-status" role="status"></span>
 </nav>
 
@@ -50,122 +50,84 @@
 <!-- ===================================================================== -->
 <main class="frame" id="view-log">
 
-  <section class="console">
-    <h2 class="eyebrow">The log</h2>
-    <div class="readout">
-      <div class="readout-primaries">
-        <div class="readout-primary">
-          <span class="field-label">Finds logged</span>
-          <div class="big-number"><span data-num id="big-finds">—</span></div>
-          <p class="readout-caption" id="finds-caption">—</p>
+  <!-- Logging a find is one action, and it is not the thing you come here to
+       look at. Collapsed to its call to action until you want it. -->
+  <section class="block is-collapsible" id="entry-block">
+    <button type="button" class="entry-cta" id="entry-toggle" aria-expanded="false" aria-controls="entry-body">
+      <span class="entry-cta-mark" aria-hidden="true">+</span>
+      <span class="entry-cta-text">
+        <span class="entry-cta-title">Log a find</span>
+        <span class="entry-cta-note">Photos carry their own date and place. Name it later.</span>
+      </span>
+    </button>
+
+    <div id="entry-body" hidden>
+      <form id="obs-form">
+        <div class="dropzone" id="obs-drop" tabindex="0" role="button" aria-label="Add photos">
+          <span class="dropzone-title">Add photos</span>
+          <span class="dropzone-note">Drop them here, or click to choose. JPEG, PNG, HEIC.</span>
         </div>
-        <div class="readout-primary">
-          <span class="field-label">Species met</span>
-          <div class="big-number"><span data-num id="big-species">—</span></div>
-          <p class="readout-caption" id="species-caption">—</p>
+        <input type="file" id="obs-file" accept="image/*" multiple hidden />
+        <div class="shot-strip" id="obs-shots"></div>
+
+        <div class="entry-row">
+          <label>Type
+            <select id="obs-type"></select>
+            <span class="field-hint">Naming it comes later.</span>
+          </label>
+          <label>When
+            <input type="datetime-local" id="obs-when" />
+            <span class="field-hint" id="obs-when-hint">&nbsp;</span>
+          </label>
+          <label>Latitude<input type="text" class="coord" id="obs-lat" inputmode="decimal" placeholder="—" /></label>
+          <label>Longitude<input type="text" class="coord" id="obs-lon" inputmode="decimal" placeholder="—" /></label>
+          <label class="grow">Place<input type="text" id="obs-place" placeholder="Trailside, mixed conifer" /></label>
+          <label class="wide">Notes<textarea id="obs-notes" placeholder="Anything you will not remember: smell, substrate, what it was growing with…"></textarea></label>
         </div>
-      </div>
-      <dl class="readout-stats">
-        <div><dt>Fungi</dt><dd data-num data-type="fungi" id="stat-fungi">—</dd></div>
-        <div><dt>Flora</dt><dd data-num data-type="flora" id="stat-flora">—</dd></div>
-        <div><dt>Fauna</dt><dd data-num data-type="fauna" id="stat-fauna">—</dd></div>
-        <div><dt>Unidentified</dt><dd data-num id="stat-unidentified">—</dd></div>
-        <div><dt>Uncertain</dt><dd data-num id="stat-uncertain">—</dd></div>
-        <div><dt>Placed</dt><dd data-num id="stat-placed">—</dd></div>
-        <div><dt>Choice edible</dt><dd data-num id="stat-choice">—</dd></div>
-      </dl>
+
+        <div class="form-actions">
+          <span class="save-status spacer" id="obs-hint"></span>
+          <button type="button" class="ghost-button" id="obs-reset">Clear</button>
+          <button type="submit" class="solid-button" id="obs-submit">Log it</button>
+        </div>
+      </form>
     </div>
-    <p class="verdict" id="log-verdict"></p>
   </section>
 
-  <section class="block">
-    <div class="block-head">
-      <h2 class="eyebrow">Season</h2>
-      <p class="block-note" id="season-note">Finds by calendar month, pooled across years — fruiting is seasonal, and the pattern only shows once the years are stacked.</p>
-    </div>
-    <div class="chart-shell"><svg id="chart-season" viewBox="0 0 760 240" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <div class="legend" id="season-legend"></div>
-  </section>
-
-  <section class="block">
-    <div class="block-head">
-      <h2 class="eyebrow">Log a find</h2>
-      <p class="block-note">Photos carry their own date and place. Log it now and identify it later — an unidentified find is the point, not a failure.</p>
-    </div>
-
-    <form id="obs-form">
-      <div class="dropzone" id="obs-drop" tabindex="0" role="button" aria-label="Add photos">
-        <span class="dropzone-title">Add photos</span>
-        <span class="dropzone-note">Drop them here, or click to choose. JPEG, PNG, HEIC.</span>
-      </div>
-      <input type="file" id="obs-file" accept="image/*" multiple hidden />
-      <div class="shot-strip" id="obs-shots"></div>
-
-      <div class="entry-row">
-        <label>Type
-          <select id="obs-type"></select>
-          <span class="field-hint">Naming it comes later.</span>
-        </label>
-        <label>When
-          <input type="datetime-local" id="obs-when" />
-          <span class="field-hint" id="obs-when-hint">&nbsp;</span>
-        </label>
-        <label>Latitude<input type="text" class="coord" id="obs-lat" inputmode="decimal" placeholder="—" /></label>
-        <label>Longitude<input type="text" class="coord" id="obs-lon" inputmode="decimal" placeholder="—" /></label>
-        <label class="grow">Place<input type="text" id="obs-place" placeholder="Trailside, mixed conifer" /></label>
-        <label class="wide">Notes<textarea id="obs-notes" placeholder="Anything you will not remember: smell, substrate, what it was growing with…"></textarea></label>
-      </div>
-
-      <div class="form-actions">
-        <span class="save-status spacer" id="obs-hint"></span>
-        <button type="button" class="ghost-button" id="obs-reset">Clear</button>
-        <button type="submit" class="solid-button" id="obs-submit">Log it</button>
-      </div>
-    </form>
-  </section>
-
-  <section class="block">
+  <!-- One set of finds, two ways of looking at them. The filters belong to the
+       data, not to either rendering, so they sit above the toggle. -->
+  <section class="block" id="finds-block">
     <div class="block-head">
       <h2 class="eyebrow">Finds</h2>
       <p class="block-note" id="finds-note"></p>
+      <div class="view-toggle" role="tablist" aria-label="How to show the finds">
+        <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true">Gallery</button>
+        <button type="button" class="view-toggle-button" id="mode-map" role="tab" aria-selected="false">Map</button>
+      </div>
     </div>
+
     <div class="filter-row">
       <div class="filter-set" id="filter-type"></div>
       <div class="filter-set" id="filter-status"></div>
+      <div class="filter-set" id="filter-extra"></div>
+      <label class="inline-pick" id="filter-species-wrap">Species
+        <select id="filter-species"></select>
+      </label>
       <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
     </div>
+
     <div class="gallery" id="finds-gallery"></div>
+
+    <div id="map-pane" hidden>
+      <div class="map-shell"><div id="map-canvas"></div></div>
+      <div class="legend" id="map-legend"></div>
+    </div>
+
+    <p class="verdict" id="finds-verdict"></p>
   </section>
 
 </main>
 
-<!-- ===================================================================== -->
-<main class="frame" id="view-map" hidden>
-
-  <section class="block" id="map-block">
-    <div class="block-head">
-      <h2 class="eyebrow">Where</h2>
-      <p class="block-note" id="map-note">Every find that carries a location. Drag to pan, scroll to zoom.</p>
-    </div>
-
-    <div class="filter-row">
-      <div class="filter-set" id="map-filter-type"></div>
-      <div class="filter-set" id="map-filter-extra"></div>
-      <label class="inline-pick">Species
-        <select id="map-species"></select>
-      </label>
-    </div>
-
-    <div class="map-shell"><div id="map-canvas"></div></div>
-
-    <div class="legend" id="map-legend"></div>
-    <div id="map-selection"></div>
-    <p class="verdict" id="map-verdict"></p>
-  </section>
-
-</main>
-
-<!-- ===================================================================== -->
 <main class="frame" id="view-species" hidden>
 
   <section class="console">
@@ -221,6 +183,38 @@
         <tbody id="species-rows"></tbody>
       </table>
     </div>
+  </section>
+
+</main>
+
+<!-- ===================================================================== -->
+<main class="frame" id="view-glossary" hidden>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="eyebrow">The vocabulary</h2>
+      <p class="block-note" id="glossary-note"></p>
+    </div>
+    <div class="filter-row">
+      <div class="filter-set" id="glossary-filter-cat"></div>
+      <div class="filter-set" id="glossary-filter-state"></div>
+      <div class="filter-search"><input type="search" id="glossary-q" placeholder="Search terms…" aria-label="Search terms" /></div>
+    </div>
+    <div class="table-scroll">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th class="nowrap">Category</th>
+            <th>Definition</th>
+            <th class="nowrap">Same as</th>
+            <th class="r nowrap">Uses</th>
+          </tr>
+        </thead>
+        <tbody id="glossary-rows"></tbody>
+      </table>
+    </div>
+    <p class="verdict" id="glossary-verdict"></p>
   </section>
 
 </main>

@@ -122,6 +122,22 @@ saw** and **The species**, one above the other, which is the comparison.
 **Species** — the organism, not the encounter. Common and scientific name,
 habitat, example photographs, edibility, lookalikes.
 
+Three kinds of name, kept apart because the difference matters when looking a
+species up:
+
+| Field | Means |
+| --- | --- |
+| **Scientific name** | what this library calls it |
+| **Also known as** | another *current* name for the same organism |
+| **Former scientific names** | names it has been retired from |
+
+The middle one exists because a field guide and iNaturalist can simply
+disagree. *Mushrooms of the Pacific Northwest* files the western matsutake
+under *Tricholoma magnivelare*; iNaturalist splits it out as *T. murrillianum*.
+Searching only the guide's name finds a single record in the whole region;
+searching both finds several hundred. All three fields are searched, and
+iNaturalist unions the results.
+
 ## Fungal characters
 
 Shown only for fungi: subkingdom/division, former scientific names, how it
@@ -166,8 +182,8 @@ a colour word and an attachment term never look like the same kind of claim:
 | **note**       | dashed grey       | anything the vocabulary does not know |
 
 The category is **guessed** from a built-in mycological vocabulary and can be
-corrected by clicking the tag, which walks it through the categories. A guess
-with no way to correct it would be worse than no guess.
+corrected in the **Glossary**. A guess with no way to correct it would be worse
+than no guess.
 
 One rule makes the guess context-aware, because a word can mean different
 things under different characters: under **Scent / taste** a colour name is a
@@ -207,6 +223,44 @@ excluded from search**, which is what stops it matching the words it negates.
 Older records are read forward on load: free text splits on its commas into
 tags, and the `gills` / `stipe` tri-state that preceded it becomes tags or an
 explicit absence. Superseded keys are dropped the next time the species is saved.
+
+## The Glossary
+
+Every term the log knows, what it means, what it is classified as, and which
+terms are treated as the same thing.
+
+Definitions come from the field guide's own glossary where it has one, and are
+written here where it does not; each says which. A term with no definition yet
+is not an error — the Undefined filter is the writing queue, the same way
+dashed grey tags are the vocabulary queue.
+
+**A category is set here and nowhere else.** It used to be a click on the tag
+wherever it happened to appear, which made a global fact look like a local
+edit: reclassifying `angular` on one mushroom said nothing about the next one.
+A term's category is a property of the term, so it is set once and every use
+follows.
+
+Choosing the category the vocabulary would have guessed **clears** the override
+rather than pinning it. Storing a redundant override would freeze the term
+against a later change to the word lists, which is the opposite of useful.
+
+**Same as** is where two words for one idea are made one term. Point `ridges`
+at `false gills` and a specimen tagged either matches a species recorded as
+either — they are one character of one mushroom described two ways, and a key
+that treats them as different fails to match a chanterelle against itself.
+
+Three sources feed it, and the column shows all of them: pairings you set here,
+the growth-form groups (`bracket` = `polypore` = `polyporoid`, so writing one
+where the library holds another cannot rule a species out), and the
+`gray`/`grey` fold. Pairings are transitive and shown in both directions, so a
+synonym is never invisible from one side.
+
+What it does **not** do is merge things that merely sound similar: `gills` and
+`false gills` stay distinct, because they are different structures and the
+distinction is the whole point of the second name.
+
+Measurements are left out. "3–10 cm" is a value, not a word to define, and they
+would bury the terms that are.
 
 ## Photographs carry their own metadata
 

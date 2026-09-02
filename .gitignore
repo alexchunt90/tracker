@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 .env
+*.sublime-workspace
 
 # Uploaded photographs and the log itself: personal data, not source.
 photos/
@@ -12,3 +13,4 @@ tiles/
 
 # Reference material, kept out of the repo for size and licensing.
 fungi_ebooks/
+/research/

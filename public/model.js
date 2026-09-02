@@ -138,12 +138,17 @@ const Model = (() => {
    */
   function filter(rows, f) {
     return rows.filter((r) => {
-      if (f.type && f.type !== 'all' && r.type !== f.type) return false;
+      // `types` is the set that is checked. Absent means no filtering; empty
+      // means nothing is checked, which shows nothing rather than everything —
+      // unchecking the last box should not silently mean "all".
+      if (f.types && !f.types.includes(r.type)) return false;
       if (f.status === 'identified' && !r.identified) return false;
       if (f.status === 'unidentified' && r.identified) return false;
       if (f.status === 'uncertain' && !r.uncertain) return false;
       if (f.speciesId && r.species?.id !== f.speciesId) return false;
-      if (f.edible && !isChoice(r.species)) return false;
+      // `edibility` mirrors `types`: absent means no filtering, empty means
+      // nothing is checked and so nothing shows.
+      if (f.edibility && !f.edibility.includes(findEdibility(r))) return false;
       if (f.q) {
         const hay = [r.name, r.scientificName, r.notes, r.place, typeLabel(r.type)]
           .filter(Boolean).join(' ').toLowerCase();
@@ -168,30 +173,6 @@ const Model = (() => {
   }
 
   // --- seasonality ----------------------------------------------------------
-
-  /**
-   * Finds per calendar month, stacked by type. Fruiting is seasonal and the
-   * whole point of keeping the log for a few years is to see when — so months
-   * are pooled across years rather than laid out as a timeline.
-   */
-  function byMonth(rows) {
-    const months = Array.from({ length: 12 }, (_, i) => ({
-      month: i,
-      label: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i],
-      total: 0,
-      counts: Object.fromEntries(TYPE_IDS.map((t) => [t, 0])),
-    }));
-    let dated = 0;
-    for (const r of rows) {
-      if (!r.when) continue;
-      const m = Number(r.when.slice(5, 7)) - 1;
-      if (!(m >= 0 && m < 12)) continue;
-      dated += 1;
-      months[m].total += 1;
-      if (months[m].counts[r.type] !== undefined) months[m].counts[r.type] += 1;
-    }
-    return { months, dated, peak: months.reduce((a, b) => (b.total > a.total ? b : a), months[0]) };
-  }
 
   /** Distinct years the log covers, newest first. */
   function years(rows) {
@@ -237,10 +218,24 @@ const Model = (() => {
     olive: '#7a7a38', green: '#5a8848', 'blue-green': '#4a8878', verdigris: '#4f8f7a',
     grey: '#8a8a8a', 'blue-grey': '#7c8b99', blue: '#5a80b0', lilac: '#a890c0', purple: '#7a5090',
     violet: '#6a4a90', black: '#1a1a1a', 'flesh-pink': '#e4bfae', ferruginous: '#9c5220',
+    /*
+     * Hedged colours, which field guides use constantly and standing alone:
+     * "cap whitish", not "cap whitish something". They were the single largest
+     * gap in the vocabulary — 96 uses across one guide — because the modifier
+     * rule below only fires when a base colour follows. Muted renderings of
+     * their base, since that is what the words mean.
+     */
+    whitish: '#e8e6df', yellowish: '#d8c66a', brownish: '#8a6b4a', reddish: '#b05a4a',
+    greyish: '#9a9a9a', pinkish: '#d8b0b0', greenish: '#7a9a68', blackish: '#2e2e2e',
+    purplish: '#8a6a9a', orangish: '#d9964f',
   };
 
   // Modifiers that may precede a colour and still leave it a colour.
-  const COLOUR_MODIFIERS = new Set(['pale', 'dark', 'deep', 'bright', 'dull', 'light', 'faint', 'rich', 'dusky', 'greyish', 'brownish', 'yellowish', 'reddish', 'olivaceous']);
+  const COLOUR_MODIFIERS = new Set([
+    'pale', 'dark', 'deep', 'bright', 'dull', 'light', 'faint', 'rich', 'dusky', 'olivaceous',
+    'greyish', 'brownish', 'yellowish', 'reddish', 'pinkish', 'greenish', 'blackish', 'whitish',
+    'purplish', 'orangish', 'creamy', 'golden', 'wine',
+  ]);
 
   const FORMS = new Set([
     'gills', 'false gills', 'pores', 'teeth', 'spines', 'ridges', 'folds', 'wrinkles', 'gleba',
@@ -253,6 +248,10 @@ const Model = (() => {
     'clavarioid', 'hydnoid', 'gasteroid', 'pezizoid', 'cantharelloid',
     'earthstar', 'earthball', 'stinkhorn', 'truffle', 'jelly', 'toothed',
     'morel', 'false morel', 'saddle', 'trumpet', 'fan',
+    // Bird's-nest fungi. They look like tiny cups and are not remotely related
+    // to the cup fungi, so they need a form of their own — without one they
+    // were being tagged `cup` and matching pezizoid ascomycetes.
+    'nidulariaceous', "bird's nest", 'birds nest', 'peridiole',
   ]);
 
   const DESCRIPTORS = new Set([
@@ -288,16 +287,63 @@ const Model = (() => {
     'soil', 'duff', 'litter', 'leaf litter', 'moss', 'wood', 'dead wood', 'dead hardwood',
     'rotten wood', 'stump', 'log', 'fallen branches', 'living tree', 'buried wood', 'woodchips',
     'dung', 'burn site', 'grass', 'lawn', 'sand', 'bog',
+    // Two substrates that are neither soil nor wood. `fungus` covers the
+    // mycoparasites — Hypomyces on a russula, Asterophora on a blackened
+    // Russula — and `keratin` the hair, wool, feathers and owl pellets that
+    // Onygena lives on. Both were homeless, and both are whole niches.
+    'fungus', 'keratin',
     // what it grows with
     'conifer', 'hardwood', 'broadleaf', 'mixed woodland',
     'douglas fir', 'western hemlock', 'sitka spruce', 'western red cedar', 'grand fir',
     'shore pine', 'lodgepole pine', 'ponderosa pine', 'spruce', 'pine', 'fir', 'hemlock', 'cedar',
     'oak', 'garry oak', 'alder', 'red alder', 'big-leaf maple', 'vine maple', 'maple', 'birch',
     'cottonwood', 'willow', 'madrone', 'cherry', 'beech', 'chestnut', 'hornbeam', 'poplar', 'aspen',
+    // Understory, not canopy. Salal turned up twice — once from the field
+    // guide pass and once from a find logged in the app.
+    'salal',
   ]);
 
-  /** Lower-cased, collapsed whitespace. The form every lookup is keyed on. */
-  const normalizeTag = (text) => String(text || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  /*
+   * Categories set by hand in the glossary.
+   *
+   * A term's category is a property of the term, not of one usage of it — if
+   * `angular` describes a gill edge, it describes one everywhere. So the
+   * override lives here, keyed on the term, and beats whatever the vocabulary
+   * would have guessed. The glossary view is where they are set.
+   */
+  const termOverrides = new Map();
+
+  /*
+   * Terms that mean the same thing, set by hand in the glossary.
+   *
+   * `ridges` and `false gills` are one character of one mushroom described two
+   * ways, and a key that treats them as different terms fails to match a
+   * chanterelle against itself. Keyed term -> canonical term; matching
+   * compares canonical forms, so either spelling of an idea finds the other.
+   */
+  const termSynonyms = new Map();
+
+  const applyGlossary = (glossary) => {
+    termOverrides.clear();
+    termSynonyms.clear();
+    for (const [term, entry] of Object.entries(glossary?.terms || {})) {
+      const key = normalizeTag(term);
+      if (entry?.category) termOverrides.set(key, entry.category);
+      if (entry?.sameAs) termSynonyms.set(key, normalizeTag(entry.sameAs));
+    }
+  };
+
+  /**
+   * Lower-cased, collapsed whitespace. The form every lookup is keyed on.
+   *
+   * American "gray" folds to British "grey". Duplicating every grey entry in
+   * the tables was the alternative, and duplicated tables drift — one spelling
+   * gets a new shade and the other does not. Folding here also means a
+   * specimen tagged "gray" matches a species recorded as "grey", which is the
+   * behaviour anyone would expect of two spellings of one word.
+   */
+  const normalizeTag = (text) =>
+    String(text || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/\bgray/g, 'grey');
 
   /**
    * Guess what kind of thing a tag is.
@@ -307,9 +353,12 @@ const Model = (() => {
    * rule run, which is what lets "pale yellow" and "olive-brown" colour
    * themselves without every shade being listed.
    */
-  function classifyTag(text, spec) {
+  function classifyTag(text, spec, { ignoreOverrides = false } = {}) {
     const key = normalizeTag(text);
     if (!key) return 'note';
+    // A category set by hand outranks everything, including the per-character
+    // rules below: it was a decision, not a guess.
+    if (!ignoreOverrides && termOverrides.has(key)) return termOverrides.get(key);
     let found = null;
 
     if (COLOURS[key]) found = 'colour';
@@ -338,6 +387,9 @@ const Model = (() => {
     // which is the only way the vocabulary gets better.
     return found;
   }
+
+  /** What the vocabulary would say, ignoring any category set by hand. */
+  const guessCategory = (text, spec) => classifyTag(text, spec, { ignoreOverrides: true });
 
   /** The swatch a colour tag paints, or null. */
   function tagSwatch(text) {
@@ -371,7 +423,8 @@ const Model = (() => {
     { id: 'body', label: 'Fruit body', absent: 'No fruit body', alwaysPresent: true,
       vocab: ['agaricoid', 'gilled', 'boletoid', 'bracket', 'polypore', 'crust', 'resupinate',
         'cup', 'club', 'coral', 'fan', 'puffball', 'earthstar', 'earthball', 'stinkhorn',
-        'truffle', 'jelly', 'toothed', 'morel', 'false morel', 'saddle', 'trumpet'] },
+        'truffle', 'jelly', 'toothed', 'morel', 'false morel', 'saddle', 'trumpet',
+        'nidulariaceous', "bird's nest"] },
     { id: 'cap', label: 'Cap', absent: 'No distinct cap',
       vocab: ['cap', 'bracket', 'crust', 'convex', 'plane', 'depressed', 'umbonate', 'campanulate', 'conical', 'viscid', 'dry', 'velvety', 'scaly', 'zonate', 'striate', 'hygrophanous', 'inrolled', 'wavy', 'split'] },
     { id: 'hymenium', label: 'Gills / pores', absent: 'Neither gills nor pores',
@@ -385,7 +438,7 @@ const Model = (() => {
     { id: 'staining', label: 'Staining', absent: 'Does not stain',
       vocab: ['bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow', 'unchanging', 'slowly', 'immediately', 'latex'] },
     { id: 'substrate', label: 'Substrate', absent: 'No consistent substrate',
-      vocab: ['soil', 'duff', 'leaf litter', 'moss', 'wood', 'dead wood', 'dead hardwood', 'rotten wood', 'stump', 'log', 'fallen branches', 'living tree', 'buried wood', 'woodchips', 'dung', 'burn site', 'grass'] },
+      vocab: ['soil', 'duff', 'leaf litter', 'moss', 'wood', 'dead wood', 'dead hardwood', 'rotten wood', 'stump', 'log', 'fallen branches', 'living tree', 'buried wood', 'woodchips', 'dung', 'burn site', 'grass', 'fungus', 'keratin'] },
     { id: 'trees', label: 'Associated trees', absent: 'Not tree-associated',
       vocab: ['douglas fir', 'western hemlock', 'sitka spruce', 'western red cedar', 'grand fir', 'shore pine', 'oak', 'garry oak', 'red alder', 'big-leaf maple', 'vine maple', 'birch', 'cottonwood', 'madrone', 'conifer', 'hardwood', 'mixed woodland'] },
   ];
@@ -396,11 +449,19 @@ const Model = (() => {
     return [...spec.vocab, ...Object.keys(COLOURS).filter((c) => !seen.has(c))];
   }
 
+  /*
+   * How it feeds. `parasitic` covers living at another organism's expense —
+   * Cordyceps on truffles, Tremella on other fungi, Caloscypha on conifer
+   * seeds. It was added after three independent species in one pass had to be
+   * left "not recorded" for want of it, which is the wrong answer three times.
+   */
   const NUTRITION = [
     { id: 'unknown', label: 'Not recorded' },
     { id: 'saprophytic', label: 'Saprophytic' },
     { id: 'mycorrhizal', label: 'Mycorrhizal' },
-    { id: 'both', label: 'Both' },
+    { id: 'parasitic', label: 'Parasitic' },
+    // Named before there was a third mode; it still means the first two.
+    { id: 'both', label: 'Saprophytic and mycorrhizal' },
   ];
   const nutrition = (id) => NUTRITION.find((n) => n.id === (id || 'unknown')) || NUTRITION[0];
 
@@ -480,6 +541,30 @@ const Model = (() => {
   }
 
   /**
+   * Every scientific name that means this organism.
+   *
+   * Three sources, and the distinction between them is worth keeping. The
+   * `scientificName` is what this library calls it. `synonyms` are other
+   * *current* names for the same thing — a field guide and iNaturalist can
+   * simply disagree, as they do over the western matsutake, which the guide
+   * files under Tricholoma magnivelare and iNaturalist under T. murrillianum.
+   * `formerNames` are names it has been retired from. All three are worth
+   * searching, because records exist under all three.
+   */
+  function speciesNames(sp) {
+    const seen = new Set();
+    const out = [];
+    for (const n of [sp?.scientificName, ...(sp?.synonyms || []), ...(sp?.formerNames || [])]) {
+      const name = String(n || '').trim();
+      const key = name.toLowerCase();
+      if (!name || seen.has(key)) continue;
+      seen.add(key);
+      out.push(name);
+    }
+    return out;
+  }
+
+  /**
    * Everything about a species that a search box should match.
    *
    * Tags only — the wording for an absence is deliberately left out. It was
@@ -490,6 +575,7 @@ const Model = (() => {
     const tags = FUNGI_CHARACTERS.flatMap((spec) => character(sp, spec.id).tags.map((t) => t.text));
     return [
       sp.commonName, sp.scientificName, sp.habitat, sp.division, sp.lookalikes,
+      ...(sp.synonyms || []),
       edibility(sp.edibility).label,
       sp.nutrition && sp.nutrition !== 'unknown' ? nutrition(sp.nutrition).label : null,
       ...tags,
@@ -528,10 +614,59 @@ const Model = (() => {
     helvelloid: 'helvelloid', saddle: 'helvelloid', 'false morel': 'helvelloid',
     cantharelloid: 'cantharelloid', trumpet: 'cantharelloid',
     gelatinous: 'gelatinous', jelly: 'gelatinous',
+    nidulariaceous: 'nidulariaceous', "bird's nest": 'nidulariaceous', 'birds nest': 'nidulariaceous',
     stinkhorn: 'stinkhorn',
     truffle: 'truffle',
   };
   const bodyGroup = (text) => BODY_GROUPS[normalizeTag(text)] || null;
+
+  /*
+   * Every growth form the groups know is a form word, by construction.
+   *
+   * These two tables were maintained by hand and drifted: `morchelloid`,
+   * `helvelloid`, `corticioid` and `gelatinous` were group keys but never
+   * FORMS entries, so they classified as `note` — and because the contradiction
+   * check only reads tags categorised `form`, the morels quietly stopped ruling
+   * anything out. Deriving one from the other means that cannot recur.
+   */
+  for (const form of Object.keys(BODY_GROUPS)) FORMS.add(form);
+
+  /**
+   * Terms this app treats as the same thing, for a given term.
+   *
+   * Two kinds. Growth forms share a synonym group, so `bracket`, `polypore`
+   * and `polyporoid` are one form as far as ruling a species out goes. And
+   * `gray` folds to `grey` everywhere, so the two spellings are one tag.
+   */
+  function synonymsOf(text, knownTerms) {
+    const key = normalizeTag(text);
+    const group = termGroup(key);
+    const out = new Set();
+
+    // Growth-form groups.
+    for (const [term, g] of Object.entries(BODY_GROUPS)) if (g === group && term !== key) out.add(term);
+    // Anything pointed at the same canonical form by hand, in either direction.
+    for (const term of new Set([...termSynonyms.keys(), ...(knownTerms || [])])) {
+      if (term !== key && termGroup(term) === group) out.add(term);
+    }
+    if (/grey/.test(key)) out.add(key.replace(/grey/g, 'gray'));
+    return [...out].sort();
+  }
+
+  /**
+   * The canonical form of a tag, for comparison.
+   *
+   * Three layers: a synonym set by hand in the glossary wins, then the
+   * growth-form groups (so `bracket` and `polypore` are one thing), then the
+   * term itself. Everything that compares tags compares these, which is what
+   * makes two words for one idea behave as one.
+   */
+  function termGroup(text) {
+    const key = normalizeTag(text);
+    const named = termSynonyms.get(key);
+    if (named) return termSynonyms.get(named) || BODY_GROUPS[named] || named;
+    return BODY_GROUPS[key] || key;
+  }
 
   /**
    * Does an observed body form rule this species out?
@@ -597,9 +732,11 @@ const Model = (() => {
       if (known.state === 'unrecorded') continue;
 
       compared += 1;
-      const have = new Set(known.tags.map((t) => normalizeTag(t.text)));
+      // Canonical forms, so `ridges` on the specimen matches `false gills` in
+      // the library rather than counting as a miss.
+      const have = new Set(known.tags.map((t) => termGroup(t.text)));
       for (const tag of seen) {
-        if (have.has(normalizeTag(tag.text))) matched.push({ character: spec, tag });
+        if (have.has(termGroup(tag.text))) matched.push({ character: spec, tag });
         else unmatched += 1;
       }
     }
@@ -670,6 +807,7 @@ const Model = (() => {
     { id: 'deadly', label: 'Deadly', short: 'Deadly', rank: 6 },
   ];
   const edibility = (id) => EDIBILITY.find((e) => e.id === (id || 'unknown')) || EDIBILITY[0];
+  const EDIBILITY_IDS = EDIBILITY.map((e) => e.id);
   const isChoice = (sp) => sp?.edibility === 'choice';
   // Eaten by some, tolerated by not everyone. Its own mark, because rounding it
   // into either neighbour loses the only thing it says.
@@ -678,12 +816,19 @@ const Model = (() => {
   // be impossible to miss.
   const isDangerous = (sp) => sp?.edibility === 'toxic' || sp?.edibility === 'deadly';
 
-  /**
-   * The finds whose species is marked choice. Used for the "in season" readout:
-   * what is worth going back out for, and when it has been turning up.
+  /*
+   * A find's tier is its species' tier, and a find with no species is
+   * `unknown` \u2014 an unidentified mushroom is not edible-unless-proven, it is
+   * simply not yet known. That also keeps the tiers summing to the total, so
+   * the counts in the filter add up to the number of finds.
    */
-  function choiceFinds(rows) {
-    return rows.filter((r) => isChoice(r.species));
+  const findEdibility = (r) => r.species?.edibility || 'unknown';
+
+  function edibilityCounts(rows) {
+    const counts = {};
+    for (const e of EDIBILITY) counts[e.id] = 0;
+    for (const r of rows) counts[findEdibility(r)] = (counts[findEdibility(r)] || 0) + 1;
+    return counts;
   }
 
   // --- geography ------------------------------------------------------------
@@ -722,17 +867,18 @@ const Model = (() => {
   }
 
   return {
-    TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, FUNGI_CHARACTERS, NUTRITION,
+    TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
     TAG_CATEGORIES, COLOURS,
-    typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous, choiceFinds,
+    typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous,
+    findEdibility, edibilityCounts,
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,
     classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, characterSpec,
-    bodyGroup, bodyConflict,
+    bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup,
     byId, view, viewAll, displayName,
     summary, latestOf, lifeList,
-    filter, sortByDate, byMonth, years,
-    fungiTraits, formatCoord, mapLink, bounds,
+    filter, sortByDate, years,
+    fungiTraits, speciesNames, formatCoord, mapLink, bounds,
   };
 })();
 
