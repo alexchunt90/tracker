@@ -1,4 +1,4 @@
-# Tracker
+# Field Notes
 
 A local, single-user journal. The first view is a **nature log**: what you
 found, where, and what it turned out to be.

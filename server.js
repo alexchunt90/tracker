@@ -1,7 +1,7 @@
 'use strict';
 
 /* ---------------------------------------------------------------------------
- * Tracker — a local, single-user journal. First view: a nature log.
+ * Field Notes — a local, single-user journal. First view: a nature log.
  *
  * Same shape as `finances`: no dependencies, no build step, all the logic in
  * the browser. The server hands over stored state and writes it back.
@@ -135,7 +135,8 @@ const ORPHAN_GRACE_MS = 6 * 60 * 60 * 1000;
 
 // Outside services are asked to identify the caller, and iNaturalist's terms
 // ask for a contact address in the agent string.
-const USER_AGENT = process.env.TRACKER_USER_AGENT || 'Tracker/1.0 (personal nature log; https://github.com/)';
+const USER_AGENT = process.env.FIELDNOTES_USER_AGENT || process.env.TRACKER_USER_AGENT
+  || 'FieldNotes/1.0 (personal nature log; https://github.com/)';
 
 // Upstream calls must not hang a page load. Both services are fast when they
 // are up and unreachable when they are not; there is no useful middle.
@@ -882,7 +883,7 @@ function lanAddresses() {
   }
 
   server.listen(PORT, HOST, () => {
-    console.log(`Tracker → http://127.0.0.1:${PORT}`);
+    console.log(`Field Notes → http://127.0.0.1:${PORT}`);
     if (HOST !== '127.0.0.1') {
       for (const address of lanAddresses()) console.log(`        → http://${address}:${PORT}`);
       console.log('Reachable from other devices on this network. No login — set HOST=127.0.0.1 to restrict.');

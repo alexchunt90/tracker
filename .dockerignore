@@ -1,0 +1,28 @@
+# The build context is sent to the daemon in full, whether or not the
+# Dockerfile copies it. Without this, every build ships ~700MB of photographs
+# and cached map tiles across for nothing.
+
+# Your log and your photographs. State lives on a mounted volume.
+photos/
+tiles/
+data/
+state/
+config.json
+
+# Credentials. Never in an image.
+.env
+
+# Reference material, kept out for size and licensing.
+fungi_ebooks/
+research/
+
+# Local noise.
+.git/
+.gitignore
+node_modules/
+*.sublime-workspace
+*.sublime-project
+.DS_Store
+test/
+scripts/
+README.md

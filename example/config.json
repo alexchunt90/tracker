@@ -1,9 +1,8 @@
 {
   "version": 1,
   "app": {
-    "title": "Tracker",
-    "emoji": "\ud83c\udf44",
-    "tagline": "Field notes."
+    "title": "Field Notes",
+    "emoji": "\ud83c\udf44"
   },
   "theme": {
     "accent": "#A8C66C",

@@ -1,9 +1,8 @@
 {
-  "version": 0,
+  "version": 2,
   "app": {
-    "title": "Tracker",
-    "emoji": "🍄",
-    "tagline": "Field notes."
+    "title": "Field Notes",
+    "emoji": "🍄"
   },
   "theme": {
     "accent": "#A8C66C",
@@ -21,7 +20,11 @@
     "attribution": "© OpenStreetMap contributors",
     "maxZoom": 19,
     "minZoom": 2,
-    "default": { "lat": 47.62, "lon": -122.33, "zoom": 10 }
+    "default": {
+      "lat": 47.62,
+      "lon": -122.33,
+      "zoom": 10
+    }
   },
   "inaturalist": {
     "enabled": true,

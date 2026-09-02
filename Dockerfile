@@ -4,7 +4,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 COPY server.js ./
+COPY lib ./lib
 COPY public ./public
+# The seed for an empty store. A fresh volume, or a brand new bucket, opens on
+# a made-up handful of finds rather than a blank page.
+COPY example ./example
 
 # State lives on a mounted volume, not in the image. It must be a directory:
 # saves write a temp file and rename over the target, which fails against a

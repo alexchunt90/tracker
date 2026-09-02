@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tracker — black and near-black grounds, white text, one configurable accent.
+   Field Notes — black and near-black grounds, white text, one configurable accent.
    The same shell as the finances app, so the two read as one set of tools.
 
    What is new here is that this app has *photographs* in it. Everything added
@@ -828,6 +828,34 @@ button.tag-text:hover { text-decoration: underline dotted; }
  * stays reachable. Sized in vh: on a phone a fixed pixel height either wastes
  * the screen or fills it.
  */
+/* --- what a tag means ---------------------------------------------------- */
+/* Above sheets, below the full-size photograph. Never takes a click: the chip
+   underneath may carry a remove button. */
+.tag-tip {
+  position: fixed; z-index: 150; pointer-events: none;
+  max-width: 320px; padding: 9px 11px 10px;
+  background: var(--card-raised); color: var(--ink);
+  border: 1px solid var(--accent-dim); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+.tag-tip[hidden] { display: none; }
+.tag-tip-term {
+  font-family: var(--display); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+}
+.tag-tip-def { margin: 5px 0 0; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.tag-tip-none { margin: 5px 0 0; font-size: 12.5px; font-style: italic; color: var(--ink-faint); }
+.tag-tip-same { margin: 7px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+.tag-tip-label {
+  margin-right: 6px; font-family: var(--display); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint);
+}
+.tag-tip-cat {
+  margin: 7px 0 0; padding-top: 6px; border-top: 1px solid var(--rule-soft);
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
 /* --- the full-size photograph ------------------------------------------- */
 /* Above the sheet, which is already above the page: a photograph opened for a
    closer look must not be behind the thing it was opened from. */

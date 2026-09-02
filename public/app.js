@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tracker — views and wiring. The log's rules live in model.js, and the
+   Field Notes — views and wiring. The log's rules live in model.js, and the
    photo-metadata reading in exif.js.
 
    The shape of the app follows the finances one: load everything in a single
@@ -3089,6 +3089,89 @@ function lookupHit(hit, onPick) {
  * only guesses, and a guess with no way to correct it is worse than no guess —
  * so every tag can be reclassified in place.
  */
+/*
+ * What a tag means, on a pause.
+ *
+ * The vocabulary is the part of this log that has to be learned, and the
+ * definitions already exist in the Glossary — they were just two views away
+ * from the moment you need them, which is while reading a species and meeting
+ * "hygrophanous" for the third time.
+ *
+ * A second of hover, not instant: tags sit in dense rows, and a tooltip that
+ * fires on the way past is a flicker, not a help.
+ */
+const TAG_TIP_DELAY = 1000;
+let tagTipTimer = null;
+let tagTipNode = null;
+
+function tagTipElement() {
+  if (tagTipNode) return tagTipNode;
+  const node = el('div', 'tag-tip');
+  node.hidden = true;
+  // Never intercepts a click: the chip underneath may carry a remove button,
+  // and a tooltip that eats that click is worse than no tooltip.
+  document.body.append(node);
+  tagTipNode = node;
+  return node;
+}
+
+function hideTagTip() {
+  clearTimeout(tagTipTimer);
+  if (tagTipNode) tagTipNode.hidden = true;
+}
+
+function showTagTip(chip, tag) {
+  const key = Model.normalizeTag(tag.text);
+  const terms = state.glossary?.terms || {};
+  const entry = terms[key];
+  const synonyms = Model.synonymsOf(tag.text, Object.keys(terms));
+
+  const tip = clear(tagTipElement());
+  tip.append(el('div', 'tag-tip-term', key));
+
+  const definition = (entry?.definition || '').trim();
+  if (definition) {
+    tip.append(el('p', 'tag-tip-def', definition));
+  } else {
+    // Worth saying rather than showing nothing: an undefined term is a gap in
+    // the glossary, and this is exactly the moment it is noticed.
+    tip.append(el('p', 'tag-tip-none', 'Not defined yet \u2014 add one in the Glossary.'));
+  }
+
+  if (synonyms.length) {
+    const row = el('p', 'tag-tip-same');
+    row.append(el('span', 'tag-tip-label', 'Same as'), document.createTextNode(synonyms.join(', ')));
+    tip.append(row);
+  }
+  tip.append(el('p', 'tag-tip-cat', Model.tagCategory(tag.category).label));
+
+  // Measured after it has content, then placed under the chip and nudged back
+  // inside the viewport rather than allowed to hang off the edge.
+  tip.hidden = false;
+  const box = chip.getBoundingClientRect();
+  const size = tip.getBoundingClientRect();
+  const margin = 8;
+  let left = box.left;
+  if (left + size.width > window.innerWidth - margin) left = window.innerWidth - size.width - margin;
+  if (left < margin) left = margin;
+  // Below by default; above when there is no room below.
+  let top = box.bottom + 6;
+  if (top + size.height > window.innerHeight - margin) top = box.top - size.height - 6;
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(Math.max(margin, top))}px`;
+}
+
+/** Arm one chip. Hover to show, anything else to put it away. */
+function armTagTip(chip, tag) {
+  chip.addEventListener('mouseenter', () => {
+    clearTimeout(tagTipTimer);
+    tagTipTimer = setTimeout(() => showTagTip(chip, tag), TAG_TIP_DELAY);
+  });
+  chip.addEventListener('mouseleave', hideTagTip);
+  // A chip can be removed or re-rendered out from under an open tooltip.
+  chip.addEventListener('click', hideTagTip);
+}
+
 function tagChip(tag, { onCycle, onRemove } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
@@ -3114,6 +3197,7 @@ function tagChip(tag, { onCycle, onRemove } = {}) {
     drop.addEventListener('click', onRemove);
     chip.append(drop);
   }
+  armTagTip(chip, tag);
   return chip;
 }
 
