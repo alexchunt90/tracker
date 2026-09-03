@@ -264,10 +264,13 @@ const Model = (() => {
     // stipe
     'bulbous', 'equal', 'tapering', 'clavate', 'hollow', 'stuffed', 'solid', 'fibrous', 'brittle',
     'eccentric', 'lateral', 'central', 'sessile', 'rooting',
+    // growth habit
+    'solitary', 'scattered', 'gregarious', 'clustered', 'caespitose', 'troops', 'tufted', 'fairy ring',
     // flesh and texture
     'fleshy', 'leathery', 'corky', 'gelatinous', 'tough', 'soft',
     // staining
     'bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow',
+    'bruises green', 'bruises purple', 'bruises orange',
     'unchanging', 'slowly', 'immediately',
     // scent and taste
     'mild', 'bitter', 'acrid', 'peppery', 'farinaceous', 'mealy', 'anise', 'almond', 'radish',
@@ -430,11 +433,23 @@ const Model = (() => {
     { id: 'scent', label: 'Scent / taste', absent: 'Nothing distinctive', colourAs: 'descriptor',
       vocab: ['mild', 'bitter', 'acrid', 'peppery', 'farinaceous', 'anise', 'almond', 'radish', 'phenolic', 'sweet', 'fruity', 'apricot', 'fishy', 'garlic', 'rancid', 'earthy', 'nutty'] },
     { id: 'staining', label: 'Staining', absent: 'Does not stain',
-      vocab: ['bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow', 'unchanging', 'slowly', 'immediately', 'latex'] },
+      vocab: ['bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow',
+        'bruises green', 'bruises purple', 'bruises orange',
+        'unchanging', 'slowly', 'immediately', 'latex'] },
     { id: 'substrate', label: 'Substrate', absent: 'No consistent substrate',
       vocab: ['soil', 'duff', 'leaf litter', 'moss', 'wood', 'dead wood', 'dead hardwood', 'rotten wood', 'stump', 'log', 'fallen branches', 'living tree', 'buried wood', 'woodchips', 'dung', 'burn site', 'grass', 'fungus', 'keratin'] },
     { id: 'trees', label: 'Associated trees', absent: 'Not tree-associated',
       vocab: ['douglas fir', 'western hemlock', 'sitka spruce', 'western red cedar', 'grand fir', 'shore pine', 'oak', 'garry oak', 'red alder', 'big-leaf maple', 'vine maple', 'birch', 'cottonwood', 'madrone', 'conifer', 'hardwood', 'mixed woodland'] },
+    /*
+     * How the fruit bodies stand together, which the other nine had no room
+     * for. The guide says it constantly — "in large troops", "solitary",
+     * "in dense clusters" — and it was landing under Fruit body or, worse,
+     * under Gills, where "gills, clustered" reads as a fact about the gills.
+     *
+     * Always present: a mushroom grows somehow, so there is no N/A to tick.
+     */
+    { id: 'habit', label: 'Growth habit', absent: 'No consistent habit', alwaysPresent: true,
+      vocab: ['solitary', 'scattered', 'gregarious', 'clustered', 'caespitose', 'troops', 'tufted', 'fairy ring'] },
   ];
 
   /** Suggestions for one character: its own vocabulary, then every colour. */
@@ -574,6 +589,20 @@ const Model = (() => {
    * the old prose that made a search for "pores" return the chanterelle, whose
    * record says it has none of them.
    */
+  /**
+   * Does this species record the given term under any character?
+   *
+   * Compared as canonical forms, so a search for "false gills" finds the
+   * species tagged "ridges" — the two are one term for matching everywhere
+   * else, and a filter that disagreed with the matcher would be a trap.
+   */
+  function speciesHasTag(sp, term) {
+    const want = termGroup(normalizeTag(term || ''));
+    if (!want) return false;
+    return FUNGI_CHARACTERS.some((spec) =>
+      character(sp, spec.id).tags.some((t) => termGroup(t.text) === want));
+  }
+
   function speciesText(sp) {
     const tags = FUNGI_CHARACTERS.flatMap((spec) => character(sp, spec.id).tags.map((t) => t.text));
     return [
@@ -900,7 +929,7 @@ const Model = (() => {
   return {
     TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
     TAG_CATEGORIES, COLOURS,
-    typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous,
+    typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous, speciesHasTag,
     findEdibility, edibilityCounts, ageOpacity,
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,

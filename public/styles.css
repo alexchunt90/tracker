@@ -232,6 +232,36 @@ body {
 .verdict { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--rule-soft); font-size: 14px; color: var(--ink-soft); }
 .verdict strong { color: var(--accent); }
 
+/* The term the library is filtered to. Reads as a statement with a way out,
+   not as another control to operate. */
+.tag-filter {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 3px 6px 3px 9px; border-radius: var(--radius);
+  background: var(--accent-wash); border: 1px solid var(--accent-dim);
+}
+.tag-filter-label {
+  font-family: var(--display); font-size: 10.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+}
+.tag-filter-clear {
+  padding: 0 3px; font-size: 15px; line-height: 1;
+  color: var(--ink-faint); background: none; border: 0; cursor: pointer;
+}
+.tag-filter-clear:hover { color: var(--warn); }
+
+/* The use count in the Glossary, which is also the way into the library. */
+.uses-link {
+  padding: 0; font-family: var(--mono); font-size: inherit; font-weight: 600;
+  color: var(--ink); background: none; border: 0; cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+.uses-link:hover { color: var(--accent); text-decoration-style: solid; }
+
+/* Both names in one cell: what you would say, then the binomial under it. */
+.sp-names { display: block; min-width: 0; }
+.sp-name { line-height: 1.25; }
+.sp-sci { display: block; margin-top: 1px; font-size: 12.5px; }
+
 /* --- type badge ---------------------------------------------------------- */
 
 .type-badge {
@@ -1326,6 +1356,75 @@ button.chosen-shot { border: 1px solid var(--rule); }
 
 @media (max-width: 600px) {
   body { padding: 0 16px 48px; }
+
+  /* Three columns the species table can do without on a phone. Habitat is a
+     sentence that forces a horizontal scroll; Finds and Last seen answer a
+     question you ask of the log, not of the library. What is left — the
+     photograph, both names, kind and edibility — is what identifies a
+     species, and it fits. */
+  #view-species .ledger th.is-wide,
+  #view-species .ledger td.is-wide { display: none; }
+
+  /* With three columns gone the table is still wider than the screen, and the
+     two badge columns are why. The glyph already carries what the word says,
+     and edibility may wrap rather than reserve a line's width for
+     "Choice edible". Scoped to this table: the badges read in full everywhere
+     else. */
+  #view-species .ledger .type-badge .type-label { display: none; }
+  #view-species .ledger .type-badge { gap: 0; }
+  #view-species .ledger td.sp-edible { white-space: normal; }
+  #view-species .ledger .edible-badge { white-space: normal; }
+  /* Tighter still, to land the table inside the screen rather than a swipe
+     short of it. The thumbnail is a glance, not a photograph. */
+  #view-species .ledger td { padding: 7px 6px; }
+  /* The card's own padding is worth more to the table than to the margin:
+     narrower gutters here rather than a smaller badge, which would cost
+     legibility on the one column that matters for safety. */
+  #view-species .block { padding-left: 12px; padding-right: 12px; }
+  #view-species .ledger .type-badge,
+  #view-species .ledger .edible-badge { padding: 2px 5px; letter-spacing: 0.06em; }
+  /* A binomial is one long unbreakable word, and a table is never narrower
+     than its longest one. Letting it break is what makes this fit a phone at
+     all rather than only at 390px. */
+  #view-species .ledger .sp-names { overflow-wrap: anywhere; }
+
+  /* --- the Glossary, stacked ---------------------------------------------
+     Five columns in 390px gives the definition about 90px, which is a word
+     per line. It is the only column anyone reads, so on a phone the row
+     becomes two: the term, its category and its use count across the top,
+     then the definition and its synonym field full width beneath. Scoped to
+     this table — the species ledger scrolls sideways instead, because its
+     columns are short and comparable. */
+  #view-glossary .ledger thead { display: none; }
+  #view-glossary .ledger,
+  #view-glossary .ledger tbody { display: block; }
+  #view-glossary .ledger tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  #view-glossary .ledger tbody tr:last-child { border-bottom: none; }
+  #view-glossary .ledger td {
+    display: block; height: auto; padding: 0; border: none; width: auto;
+  }
+  /* Placed explicitly rather than left to flow: the use count is last in the
+     markup, so auto-placement drops it below the full-width cells instead of
+     onto the header line where it belongs. */
+  #view-glossary .ledger td.gl-term  { grid-row: 1; grid-column: 1; }
+  #view-glossary .ledger td.gl-cat   { grid-row: 1; grid-column: 2; }
+  #view-glossary .ledger td.gl-uses  { grid-row: 1; grid-column: 3; text-align: right; white-space: nowrap; }
+  #view-glossary .ledger td.gl-def   { grid-row: 2; grid-column: 1 / -1; }
+  #view-glossary .ledger td.gl-same  { grid-row: 3; grid-column: 1 / -1; }
+  /* The character list under the count would stretch the top row; it is the
+     least important thing in the row, so it goes. The count stays. */
+  #view-glossary .ledger td.gl-uses .glossary-chars { display: none; }
+  #view-glossary .ledger .glossary-def { min-height: 60px; }
+  /* The category select is the widest thing on the top row; let it give way. */
+  #view-glossary .ledger td.gl-cat { min-width: 0; }
+  #view-glossary .ledger td.gl-cat select { width: 100%; }
 
   /* Hidden on a phone. Four stat cards pushed the log itself below the fold,
      and none of them is why the app was opened — the finds are. They are all

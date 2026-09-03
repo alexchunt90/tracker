@@ -28,8 +28,11 @@ const state = {
   // Which rendering is on screen. Read from the URL for the same reason the
   // tab is: a refresh should land where you were looking.
   mode: modeFromUrl(),
-  speciesFilters: { type: 'all', q: '' },
-  speciesSort: { col: 'commonName', key: 'commonName', dir: 'asc' },
+  speciesFilters: { type: 'all', q: '', tag: tagFromUrl() },
+  // Sorted by binomial, which groups the library by genus — the Albatrellus
+  // together, the Amanita together. The column shows the common name first
+  // because that is what you would say; it orders by the name that files it.
+  speciesSort: { col: 'scientificName', key: 'scientificName', dir: 'asc' },
   glossary: { version: 0, terms: {} },
   glossaryFilters: { category: 'all', state: 'all', q: '' },
   // Other people's records are fetched only for one species at a time, so
@@ -146,7 +149,9 @@ const strongText = (text) => el('strong', null, text);
 function typeBadge(type) {
   const badge = el('span', 'type-badge');
   badge.dataset.type = type;
-  badge.append(el('span', 'glyph', Model.typeGlyph(type)), document.createTextNode(Model.typeLabel(type)));
+  // The word is its own element so a narrow table can drop it and keep the
+  // glyph, which already carries the meaning and the colour.
+  badge.append(el('span', 'glyph', Model.typeGlyph(type)), el('span', 'type-label', Model.typeLabel(type)));
   return badge;
 }
 
@@ -299,6 +304,11 @@ function viewFromUrl() {
   return VIEWS.includes(asked) ? asked : 'log';
 }
 
+/** A term the Species view is filtered to, named in the URL so it can be linked. */
+function tagFromUrl() {
+  return (new URLSearchParams(location.search).get('tag') || '').trim();
+}
+
 function modeFromUrl() {
   const asked = new URLSearchParams(location.search).get('mode');
   return MODES.includes(asked) ? asked : 'finds';
@@ -314,6 +324,12 @@ function routeUrl() {
   url.searchParams.set('view', state.view);
   if (state.mode === 'finds') url.searchParams.delete('mode');
   else url.searchParams.set('mode', state.mode);
+  // Only meaningful on the Species view, and only when set.
+  if (state.view === 'species' && state.speciesFilters.tag) {
+    url.searchParams.set('tag', state.speciesFilters.tag);
+  } else {
+    url.searchParams.delete('tag');
+  }
   return url;
 }
 
@@ -1536,16 +1552,55 @@ function renderSpeciesFilters(life) {
         mark: edibleBadge('choice'), markIsLabel: true },
     ],
   }));
+
+  /*
+   * A tag filter has no control of its own to sit in — it is arrived at from
+   * the Glossary, or from a URL. So it announces itself as a chip that says
+   * what is being filtered and offers the way out, rather than quietly
+   * shortening the list with nothing to explain why.
+   */
+  if (state.speciesFilters.tag) {
+    const term = state.speciesFilters.tag;
+    const held = el('div', 'tag-filter');
+    held.append(el('span', 'tag-filter-label', 'Tagged'));
+    held.append(tagChip({ text: term, category: Model.classifyTag(term, null) }));
+    const drop = el('button', 'tag-filter-clear', '×');
+    drop.type = 'button';
+    drop.title = `Stop filtering by “${term}”`;
+    drop.setAttribute('aria-label', `Clear the ${term} filter`);
+    drop.addEventListener('click', () => setSpeciesTag(''));
+    held.append(drop);
+    set.append(held);
+  }
+}
+
+/** Filter the library to one term, or clear it. Recorded in the URL either way. */
+function setSpeciesTag(term) {
+  state.speciesFilters.tag = (term || '').trim();
+  if (state.view !== 'species') {
+    setView('species');
+    return;
+  }
+  history.pushState(routeState(), '', routeUrl());
+  render();
 }
 
 function renderSpeciesTable(life) {
   const q = state.speciesFilters.q.trim().toLowerCase();
   // Sorting on the id string would order these alphabetically — choice between
   // deadly and edible — which is exactly backwards for the column's purpose.
-  const ranked = life.map((sp) => ({ ...sp, edibleRank: Model.edibility(sp.edibility).rank }));
+  const ranked = life.map((sp) => ({
+    ...sp,
+    edibleRank: Model.edibility(sp.edibility).rank,
+    // What the row actually reads, so sorting the column sorts what is shown.
+    // Sorting on commonName would pile every unnamed species under one blank.
+    displayName: sp.commonName || sp.scientificName || '',
+  }));
+  const tag = state.speciesFilters.tag;
   const shown = ranked.filter((sp) => {
     if (state.speciesFilters.type === 'choice') { if (!Model.isChoice(sp)) return false; }
     else if (state.speciesFilters.type !== 'all' && sp.kind !== state.speciesFilters.type) return false;
+    if (tag && !Model.speciesHasTag(sp, tag)) return false;
     if (!q) return true;
     return Model.speciesText(sp).includes(q);
   });
@@ -1560,7 +1615,7 @@ function renderSpeciesTable(life) {
   // Ties fall back to the common name so the order never shuffles between
   // renders — and the fallback is applied *after* the direction, or reversing
   // would flip the tie-break too.
-  const sorted = [...shown].sort((a, b) => sign * compare(a, b, spec.key) || compare(a, b, 'commonName'));
+  const sorted = [...shown].sort((a, b) => sign * compare(a, b, spec.key) || compare(a, b, 'displayName'));
 
   paintSortHeaders('species-head', spec);
 
@@ -1568,7 +1623,7 @@ function renderSpeciesTable(life) {
   if (!sorted.length) {
     const tr = el('tr');
     const td = el('td');
-    td.colSpan = 8;
+    td.colSpan = 7;
     td.append(el('div', 'empty-state', life.length ? 'No species match these filters.' : 'Nothing on file yet.'));
     tr.append(td);
     body.append(tr);
@@ -1578,13 +1633,28 @@ function renderSpeciesTable(life) {
   for (const sp of sorted) {
     const tr = el('tr', 'is-clickable' + (sp.seen ? '' : ' is-muted'));
     tr.append(cell(speciesThumb(sp), 'nowrap'));
-    tr.append(cell(sp.commonName || el('span', 'muted', 'Unnamed')));
-    tr.append(cell(sp.scientificName ? el('span', 'sci', sp.scientificName) : el('span', 'muted', '—')));
-    tr.append(cell(typeBadge(sp.kind), 'nowrap'));
-    tr.append(cell(sp.edibility && sp.edibility !== 'unknown' ? edibleBadge(sp.edibility) : el('span', 'muted', '—'), 'nowrap'));
-    tr.append(cell(sp.habitat || el('span', 'muted', '—')));
-    tr.append(cell(String(sp.count), 'r nowrap'));
-    tr.append(cell(sp.last ? fmtDate(sp.last) : el('span', 'muted', 'never'), 'nowrap'));
+    /*
+     * Both names in one cell, the way a find card shows them: the name you
+     * would say out loud, and the binomial under it. Two columns cost 300px
+     * of a 390px screen for what is one idea.
+     *
+     * A species with no common name leads with its binomial rather than the
+     * word "Unnamed" above it — 109 of the fungi have none, and a column of
+     * "Unnamed" is not a name column.
+     */
+    const names = el('div', 'sp-names');
+    names.append(el('div', 'sp-name', sp.displayName));
+    const under = sciLine(sp.displayName, sp.scientificName, 'sp-sci sci');
+    if (under) names.append(under);
+    tr.append(cell(names));
+    tr.append(cell(typeBadge(sp.kind), 'nowrap sp-kind'));
+    tr.append(cell(sp.edibility && sp.edibility !== 'unknown' ? edibleBadge(sp.edibility) : el('span', 'muted', '—'), 'nowrap sp-edible'));
+    // Marked wide: dropped on a phone, where the four columns that
+    // identify a species are worth more than the three that describe how
+    // often you have met it.
+    tr.append(cell(sp.habitat || el('span', 'muted', '—'), 'is-wide'));
+    tr.append(cell(String(sp.count), 'r nowrap is-wide'));
+    tr.append(cell(sp.last ? fmtDate(sp.last) : el('span', 'muted', 'never'), 'nowrap is-wide'));
     tr.addEventListener('click', () => openSpeciesSheet(sp.id));
     body.append(tr);
   }
@@ -2818,12 +2888,12 @@ function glossaryRow(t) {
   const tr = el('tr', t.uses ? null : 'is-muted');
 
   // The term, shown as the chip it renders as everywhere else.
-  const termCell = el('td', 'nowrap');
+  const termCell = el('td', 'nowrap gl-term');
   termCell.append(tagChip({ text: t.term, category: t.category }));
   tr.append(termCell);
 
   // The category, settable here and nowhere else.
-  const catCell = el('td', 'nowrap');
+  const catCell = el('td', 'nowrap gl-cat');
   const pick = select(Model.TAG_CATEGORIES, t.category);
   pick.addEventListener('change', () => setTermCategory(t.term, pick.value));
   catCell.append(pick);
@@ -2835,7 +2905,7 @@ function glossaryRow(t) {
   tr.append(catCell);
 
   // The definition, edited in place.
-  const defCell = el('td');
+  const defCell = el('td', 'gl-def');
   const box = el('textarea', 'glossary-def');
   box.value = t.definition;
   box.rows = 1;
@@ -2848,7 +2918,7 @@ function glossaryRow(t) {
   if (t.source) defCell.append(el('p', 'glossary-source', t.source));
   tr.append(defCell);
 
-  const synCell = el('td');
+  const synCell = el('td', 'gl-same');
   if (t.synonyms.length) {
     const wrap = el('div', 'tag-list is-static');
     for (const syn of t.synonyms) wrap.append(tagChip({ text: syn, category: t.category }));
@@ -2861,8 +2931,17 @@ function glossaryRow(t) {
   synCell.append(same);
   tr.append(synCell);
 
-  const useCell = el('td', 'r');
-  useCell.append(document.createTextNode(String(t.uses)));
+  const useCell = el('td', 'r gl-uses');
+  if (t.uses) {
+    // The count is the question "which ones?" — so it answers it.
+    const link = el('button', 'uses-link', String(t.uses));
+    link.type = 'button';
+    link.title = `Show the species tagged “${t.term}”`;
+    link.addEventListener('click', () => setSpeciesTag(t.term));
+    useCell.append(link);
+  } else {
+    useCell.append(document.createTextNode('0'));
+  }
   if (t.characters.length) useCell.append(el('span', 'glossary-chars', t.characters.join(', ')));
   tr.append(useCell);
 
@@ -3552,8 +3631,9 @@ function wire() {
     tab.addEventListener('click', () => setView(tab.dataset.view));
   }
   window.addEventListener('popstate', () => {
-    // Set the mode first: setView renders, and would otherwise draw the old one.
+    // Set these first: setView renders, and would otherwise draw the old ones.
     state.mode = modeFromUrl();
+    state.speciesFilters.tag = tagFromUrl();
     setView(viewFromUrl(), { push: false });
   });
 

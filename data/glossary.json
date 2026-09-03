@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 20,
   "terms": {
     "acrid": {
       "definition": "with a sharp biting taste, hot and peppery",
@@ -18,20 +18,22 @@
       "source": "written for this log"
     },
     "alder": {
-      "definition": ""
+      "definition": "Decidious trees in the Alnus genus"
     },
     "almond": {
       "definition": ""
     },
     "amber-brown": {
-      "definition": ""
+      "definition": "",
+      "category": "colour"
     },
     "anastomosing": {
       "definition": "describes gills that split and re-join in network fashion, like a braided stream",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "category": "descriptor"
     },
     "anise": {
-      "definition": ""
+      "definition": "smells of licorice"
     },
     "annulus": {
       "definition": "a skirt-like ring",
@@ -69,7 +71,8 @@
       "definition": ""
     },
     "beige": {
-      "definition": ""
+      "definition": "",
+      "category": "colour"
     },
     "berry canes": {
       "definition": ""
@@ -97,10 +100,12 @@
       "definition": ""
     },
     "blackish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "black"
     },
     "blackish brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "brown"
     },
     "bleach": {
       "definition": ""
@@ -136,10 +141,12 @@
       "definition": ""
     },
     "bright orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange"
     },
     "bright red": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "red"
     },
     "bright yellow": {
       "definition": ""
@@ -158,7 +165,8 @@
       "definition": ""
     },
     "brownish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "brown"
     },
     "brownish grey": {
       "definition": ""
@@ -183,10 +191,12 @@
       "source": "written for this log"
     },
     "bruises orange": {
-      "definition": ""
+      "definition": "Bruises or cuts turn orange.",
+      "source": "written for this log"
     },
     "bruises purple": {
-      "definition": ""
+      "definition": "Bruises or cuts turn purple.",
+      "source": "written for this log"
     },
     "bruises red": {
       "definition": "Turning red where cut or handled.",
@@ -226,7 +236,8 @@
     },
     "caespitose": {
       "definition": "see cespitose",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "sameAs": "clustered"
     },
     "campanulate": {
       "definition": "bell-shaped",
@@ -245,7 +256,8 @@
     },
     "cartilaginous": {
       "definition": "rigid and brittle, breaking with a snap; usually in reference to a stipe",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "category": "descriptor"
     },
     "cedar": {
       "definition": ""
@@ -359,16 +371,20 @@
       "definition": ""
     },
     "cream buff": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "buff"
     },
     "cream-white": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "white"
     },
     "creamy orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange"
     },
     "creamy yellow": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "yellow"
     },
     "crenulate": {
       "definition": "scalloped, finely scalloped, usually in reference to the edge of a gill or cap",
@@ -396,16 +412,19 @@
       "definition": ""
     },
     "dark brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "dark-brown"
     },
     "dark grey": {
       "definition": ""
     },
     "dark olive-brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "dark-brown"
     },
     "dark olive-grey": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "dark grey"
     },
     "dark purple-black": {
       "definition": ""
@@ -436,10 +455,12 @@
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
     "deep purple": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "purple"
     },
     "deep reddish brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "red-brown"
     },
     "deliquescent": {
       "definition": ""
@@ -470,7 +491,8 @@
       "definition": ""
     },
     "dull yellow": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "yellow"
     },
     "dung": {
       "definition": "Growing on animal droppings.",
@@ -580,7 +602,8 @@
       "definition": ""
     },
     "flat": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "plane"
     },
     "flattened": {
       "definition": ""
@@ -649,7 +672,8 @@
     },
     "glabrous": {
       "definition": "smooth, naked",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "sameAs": "smooth"
     },
     "glandular dots": {
       "definition": "tufts of caulocystidia that exude a sticky fluid; usually in reference to the stipe of certain suilluses",
@@ -666,10 +690,12 @@
       "definition": ""
     },
     "golden orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange"
     },
     "golden yellow": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "yellow"
     },
     "grand fir": {
       "definition": ""
@@ -688,13 +714,16 @@
       "definition": ""
     },
     "greenish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "green"
     },
     "greenish black": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "black"
     },
     "greenish brownish yellow": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "greenish yellow"
     },
     "greenish yellow": {
       "definition": ""
@@ -715,7 +744,8 @@
       "definition": ""
     },
     "greyish white": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "white"
     },
     "hair": {
       "definition": ""
@@ -794,7 +824,8 @@
       "definition": ""
     },
     "larch": {
-      "definition": ""
+      "definition": "",
+      "category": "habitat"
     },
     "large": {
       "definition": ""
@@ -824,10 +855,12 @@
       "definition": ""
     },
     "light grey": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "pale grey"
     },
     "light orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "pale orange"
     },
     "lighter edge": {
       "definition": ""
@@ -861,7 +894,7 @@
       "definition": ""
     },
     "marginate": {
-      "definition": "having a distinctly marked border, such as a gill with differently colored edge or bulb on stipe bearing a sharply flaring rim Melzer’s reagent",
+      "definition": "having a distinctly marked border, such as a gill with differently colored edge or bulb on stipe bearing a sharply flaring rim",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
     "maroon": {
@@ -899,7 +932,8 @@
       "definition": ""
     },
     "mustard": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "ochre"
     },
     "narrow": {
       "definition": ""
@@ -958,10 +992,12 @@
       "definition": ""
     },
     "orangish brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange-brown"
     },
     "orangish tan": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "tan"
     },
     "ovoid": {
       "definition": "egg-shaped",
@@ -974,19 +1010,23 @@
       "definition": ""
     },
     "pale blue": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "blue"
     },
     "pale brown": {
       "definition": ""
     },
     "pale buff": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "buff"
     },
     "pale cream": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "cream"
     },
     "pale golden brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "pale brown"
     },
     "pale grey": {
       "definition": ""
@@ -995,7 +1035,8 @@
       "definition": ""
     },
     "pale lilac": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "lilac"
     },
     "pale orange": {
       "definition": ""
@@ -1047,16 +1088,19 @@
       "definition": ""
     },
     "pinkish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "pink"
     },
     "pinkish buff": {
       "definition": ""
     },
     "pinkish grey": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "grey"
     },
     "pinkish orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange"
     },
     "plane": {
       "definition": "flat",
@@ -1120,13 +1164,16 @@
       "definition": ""
     },
     "purplish grey": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "grey"
     },
     "purplish pink": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "pink"
     },
     "purplish-brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "purplish brown"
     },
     "radially streaked": {
       "definition": ""
@@ -1154,10 +1201,12 @@
       "definition": ""
     },
     "red-orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "reddish orange"
     },
     "reddish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "red"
     },
     "reddish brown": {
       "definition": ""
@@ -1369,7 +1418,8 @@
       "definition": ""
     },
     "stains orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "bruises orange"
     },
     "stains substrate": {
       "definition": ""
@@ -1493,7 +1543,8 @@
       "source": "written for this log"
     },
     "undulating": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "wavy"
     },
     "uneven": {
       "definition": ""
@@ -1524,7 +1575,8 @@
     },
     "vinaceous": {
       "definition": "said to be the color of red wine; in practice, not so deeply colored and with duller gray to brown tones, yielding more of a dark salmon-pink",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "category": "colour"
     },
     "vinaceous brown": {
       "definition": ""
@@ -1539,7 +1591,8 @@
       "definition": ""
     },
     "violet-brown": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "brown"
     },
     "viscid": {
       "definition": "sticky",
@@ -1572,10 +1625,12 @@
       "definition": ""
     },
     "white mycelium at base": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor"
     },
     "whitish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "white"
     },
     "whitish edge": {
       "definition": ""
@@ -1611,19 +1666,23 @@
       "definition": ""
     },
     "yellow-green": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "green"
     },
     "yellow-orange": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "orange"
     },
     "yellowish": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "yellow"
     },
     "yellowish brown": {
       "definition": ""
     },
     "yellowish tan": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "tan"
     },
     "yellowish white": {
       "definition": ""
@@ -1642,7 +1701,12 @@
     },
     "warts": {
       "definition": "Raised lumps or patches on the surface, often veil remnants on a cap.",
-      "source": "written for this log"
+      "source": "written for this log",
+      "category": "descriptor"
+    },
+    "angular": {
+      "category": "descriptor",
+      "definition": "describes pores that end in angles, as opposed to rounded pores"
     }
   }
 }
