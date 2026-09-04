@@ -213,14 +213,6 @@ async function request(url, method, body) {
 // Matches the server's rounding, so the two agree on what one coordinate is.
 const groundKey = (lat, lon) => `${lat.toFixed(4)}_${lon.toFixed(4)}`;
 
-/** Where a height came from, said plainly. */
-function elevationNote(found) {
-  if (!found) return '';
-  return found.source === 'photo'
-    ? `${Model.formatElevation(found.metres)} — recorded by the camera${found.samples > 1 ? `, median of ${found.samples} photographs` : ''}.`
-    : `About ${Model.formatElevation(found.metres)} — ground elevation at these coordinates, from the USGS terrain model, not measured on the day.`;
-}
-
 /** What we can say about how high a find was, or null. */
 function findElevation(row) {
   if (row.elevation) return row.elevation;
@@ -1188,12 +1180,13 @@ function findCard(row) {
   if (row.hasPlace) bits.push(Model.formatCoord(row.lat, row.lon));
   else if (row.place) bits.push(row.place);
   const high = findElevation(row);
-  // A tilde is the whole distinction on a card this size: measured where you
-  // stood, or read off the terrain under the coordinate. The record spells it
-  // out for anyone who wants to know which.
-  if (high) bits.push(high.source === 'photo' ? Model.formatElevation(high.metres) : `~${Model.formatElevation(high.metres)}`);
+  // A tilde marks the one case that is not a reading of this find: the ground
+  // under the coordinate, off the terrain model. Recorded and photographed
+  // altitudes are stated plainly, because that is what they are.
+  const guessed = high && high.source === 'terrain';
+  if (high) bits.push(guessed ? `~${Model.formatElevation(high.metres)}` : Model.formatElevation(high.metres));
   const meta = el('p', 'find-meta', bits.join(' · '));
-  if (high) meta.title = elevationNote(high);
+  if (guessed) meta.title = 'Ground elevation at these coordinates, from the USGS terrain model.';
   body.append(meta);
 
   const marks = el('div', 'find-marks');
@@ -2368,6 +2361,8 @@ function buildObservationSheet(sheet, stored, close) {
   const latPick = input('text', stored.lat ?? '', { class: 'coord', inputmode: 'decimal', placeholder: '—' });
   const lonPick = input('text', stored.lon ?? '', { class: 'coord', inputmode: 'decimal', placeholder: '—' });
   const placePick = input('text', stored.place || '', { placeholder: 'Trailside, mixed conifer' });
+  const altPick = input('text', Number.isFinite(stored.elevation) ? String(Math.round(stored.elevation)) : '',
+    { class: 'coord', inputmode: 'decimal', placeholder: '—' });
   const notesPick = el('textarea');
   notesPick.value = stored.notes || '';
 
@@ -2416,31 +2411,39 @@ function buildObservationSheet(sheet, stored, close) {
     field('Type', typePick, {}),
     field('Confidence', confidencePick, {}),
     field('When', whenPick, {}),
+    // Where, in words, belongs with when — both answer questions about the
+    // outing. The row below is the same place in figures.
+    field('Place', placePick, { grow: true }),
   );
+
+  /*
+   * The altitude field carries what is known about this find: an altitude
+   * already on the record, or the one its photographs recorded. A terrain
+   * reading is offered as a placeholder rather than filled in, because it
+   * describes the ground at a coordinate and not this find — saving the sheet
+   * should not quietly turn a reading of the map into a reading of the day.
+   * Type it in and it becomes yours.
+   */
+  const paintAltitude = () => {
+    if (altPick.value) return;
+    const found = findElevation(row);
+    if (!found) return;
+    if (found.source === 'terrain') altPick.placeholder = `~${found.metres}`;
+    else altPick.value = String(found.metres);
+  };
+  paintAltitude();
+  // The terrain model may still be out; it says when it lands.
+  if (!altPick.value) state.ground.pending.add(paintAltitude);
 
   const rowB = el('div', 'entry-row');
-  // Derived, so it sits with the coordinates as a note rather than as a field:
-  // there is nothing here to edit, and a box you cannot type in invites you to
-  // try. Repainted if the terrain model answers while the sheet is still open.
-  const elevationHint = el('span', 'field-hint');
-  const paintElevation = () => {
-    const found = findElevation(row);
-    elevationHint.textContent = found ? elevationNote(found) : '';
-  };
-  paintElevation();
-  if (!elevationHint.textContent) state.ground.pending.add(paintElevation);
-
-  const elevationLine = el('div', 'derived-note');
-  elevationLine.append(elevationHint);
-  rowB.append(
+  const measured = [
     field('Latitude', latPick, {}),
     field('Longitude', lonPick, {}),
-    field('Place', placePick, { grow: true }),
-    // Full width, so it breaks the line after Place and reads as a footnote on
-    // the coordinates it was derived from rather than on the notes box below.
-    elevationLine,
-    field('Notes', notesPick, { wide: true }),
-  );
+    field('Altitude (m)', altPick, {}),
+  ];
+  // A phone gives these three one row between them rather than a column.
+  for (const one of measured) one.classList.add('measure');
+  rowB.append(...measured, field('Notes', notesPick, { wide: true }));
   form.append(rowA, rowB);
 
   // What you wrote down about this specimen, as against what the species is
@@ -2531,6 +2534,11 @@ function buildObservationSheet(sheet, stored, close) {
       notice('Latitude must be between −90 and 90, longitude between −180 and 180.');
       return;
     }
+    const elevation = coordValue(altPick.value, 9000);
+    if (elevation === false) {
+      notice('Altitude must be a number of metres.');
+      return;
+    }
     if ((lat === null) !== (lon === null)) {
       notice('A location needs both a latitude and a longitude.');
       return;
@@ -2546,7 +2554,7 @@ function buildObservationSheet(sheet, stored, close) {
       type: chosen ? chosen.kind : typePick.value,
       confidence: chosen ? confidencePick.value : 'high',
       observedAt: whenPick.value || null,
-      lat, lon,
+      lat, lon, elevation,
       place: placePick.value.trim() || null,
       notes: notesPick.value.trim() || null,
       photos: tray.photos(),

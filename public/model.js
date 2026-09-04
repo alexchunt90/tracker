@@ -57,9 +57,9 @@ const Model = (() => {
       scientificName: species ? species.scientificName || '' : '',
       when: obs.observedAt || null,
       hasPlace: Number.isFinite(obs.lat) && Number.isFinite(obs.lon),
-      // Null when no photograph recorded one; the ground model fills that in
-      // later, and only if it can.
-      elevation: photoElevation(obs),
+      // What is written on the record, else what the photographs said. Null when
+      // neither has one, and the ground model fills that in later if it can.
+      elevation: recordedElevation(obs) || photoElevation(obs),
     };
   }
 
@@ -912,6 +912,13 @@ const Model = (() => {
 
   // --- geography ------------------------------------------------------------
 
+  /** An altitude written on the record itself, which outranks any derivation. */
+  function recordedElevation(obs) {
+    return Number.isFinite(obs.elevation)
+      ? { metres: Math.round(obs.elevation), source: 'recorded' }
+      : null;
+  }
+
   /**
    * How high a find was, from the photographs that recorded it.
    *
@@ -987,7 +994,7 @@ const Model = (() => {
     summary, latestOf, lifeList,
     filter, sortByDate,
     fungiTraits, speciesNames, formatCoord, mapLink, bounds,
-    photoElevation, formatElevation,
+    photoElevation, recordedElevation, formatElevation,
   };
 })();
 
