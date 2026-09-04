@@ -43,6 +43,12 @@ const state = {
   // terrain model had no answer for — remembered so it is asked once, not on
   // every redraw.
   ground: { known: new Map(), queue: [], running: false, off: false, pending: new Set() },
+  // The rainfall overlay. Off until asked for — it costs a round trip and it
+  // is not what the map is usually for — and view state rather than saved
+  // state, like the filters: it is a way of looking at ground, not a fact
+  // about the log.
+  rain: { on: false, cells: [], spacing: 0, loading: false, problem: null, box: null,
+          days: 7, from: null, to: null, tooWide: false },
   sheetDirty: false,
   closeSheet: null,
   // The record the open sheet is showing, and so the record the URL names:
@@ -1217,6 +1223,204 @@ function findCard(row) {
   return card;
 }
 
+// --- recent rainfall --------------------------------------------------------
+
+/*
+ * Where it rained last week, drawn under the pins.
+ *
+ * This is the layer that answers "where should I go on Saturday", which is a
+ * question the log itself cannot answer: it knows where you have already been.
+ * Fungi fruit days behind the water, so wet ground a week ago is the signal,
+ * and the map is the only place that comparison can be made at a glance.
+ *
+ * It is off by default. Most sessions are about a find you already have, and a
+ * blue wash over the basemap would be in the way of those.
+ */
+
+/*
+ * Bands rather than a continuous gradient, so the legend and the map agree
+ * exactly — a gradient can be read to a precision the underlying model does
+ * not have, and "which band is this" is the question actually being asked.
+ *
+ * Blue through to pale cyan, deliberately clear of every colour a pin can be:
+ * the edibility tiers own green, amber and red, and a wash in any of those
+ * would read as a claim about what is growing there.
+ *
+ * These are light to add, not paint to cover — the layer is composited onto
+ * the basemap with `screen`, so each one lifts the tiles toward blue rather
+ * than hiding them. Translucent paint was the first attempt and it failed the
+ * case the layer exists for: over a uniformly wet region every cell landed in
+ * the same band, the washes met, and the result was a flat blue rectangle with
+ * the roads and ridgelines gone. A map you cannot navigate is no use for
+ * deciding where to walk, however accurate its colour.
+ *
+ * Which is also why they stay dark. Screen adds, so a bright band would blow
+ * out the terrain underneath just as surely as an opaque one covered it.
+ */
+const RAIN_BANDS = [
+  { over: 0.10, colour: 'rgb(18, 24, 50)',    label: 'a trace' },
+  { over: 0.25, colour: 'rgb(24, 46, 82)',    label: '¼″' },
+  { over: 0.50, colour: 'rgb(28, 70, 110)',   label: '½″' },
+  { over: 1.00, colour: 'rgb(32, 98, 132)',   label: '1″' },
+  { over: 2.00, colour: 'rgb(46, 130, 156)',  label: '2″' },
+  { over: 4.00, colour: 'rgb(82, 168, 184)',  label: '4″' },
+];
+
+/*
+ * The bands describe a week. A longer window would put every cell in the top
+ * band and say nothing, so the thresholds stretch with it — which keeps the
+ * layer meaning "wetter than usual for this long a stretch" at any setting.
+ */
+const rainScale = (days) => Math.max(1, days) / 7;
+
+/** The band a total falls in, or null when the ground is simply dry. */
+function rainBand(inches, days) {
+  const factor = rainScale(days);
+  let found = null;
+  for (const band of RAIN_BANDS) {
+    if (inches >= band.over * factor) found = band;
+  }
+  return found;
+}
+
+/** Cells the map can place: the dry ones are dropped rather than drawn clear. */
+function rainCells() {
+  const days = state.rain.days || 7;
+  return state.rain.cells
+    .map((c) => {
+      const band = rainBand(c.inches, days);
+      return band ? { lat: c.lat, lon: c.lon, colour: band.colour } : null;
+    })
+    .filter(Boolean);
+}
+
+let rainTimer = null;
+
+/**
+ * Fetch the overlay for whatever is on screen.
+ *
+ * Debounced harder than iNaturalist is: this samples a few hundred points, and
+ * a pan across a valley would otherwise fire a request per frame of momentum.
+ */
+function loadRain() {
+  clearTimeout(rainTimer);
+  if (!state.rain.on || state.mode !== 'map' || state.config?.rain?.enabled === false) return;
+
+  rainTimer = setTimeout(async () => {
+    const box = state.rain.box || mapView?.bounds();
+    if (!box) return;
+
+    // The box this request is for, so a reply that lands after the map has
+    // moved on can be recognised and dropped.
+    const asked = box;
+    state.rain.loading = true;
+    renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+
+    const query = new URLSearchParams({
+      swlat: box.swlat.toFixed(4), swlng: box.swlng.toFixed(4),
+      nelat: box.nelat.toFixed(4), nelng: box.nelng.toFixed(4),
+    });
+    try {
+      const payload = await request(`api/rain?${query}`, 'GET');
+      if (state.rain.box !== asked || !state.rain.on) return;
+      state.rain.cells = payload.cells || [];
+      state.rain.spacing = payload.spacing || 0;
+      state.rain.days = payload.days || 7;
+      state.rain.from = payload.from || null;
+      state.rain.to = payload.to || null;
+      state.rain.tooWide = !!payload.tooWide;
+      state.rain.problem = payload.problem || null;
+      // A feature switched off in config is not an error, it is an answer.
+      if (payload.enabled === false) state.rain.on = false;
+    } catch (err) {
+      state.rain.cells = [];
+      state.rain.problem = err.message;
+    } finally {
+      state.rain.loading = false;
+      drawRainLayer();
+      renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+    }
+  }, 500);
+}
+
+// Open-Meteo publish under CC-BY, so the layer names them while it is drawn.
+const RAIN_CREDIT = 'Rainfall © Open-Meteo, CC BY 4.0';
+
+/** Push the current cells at the map, and keep the button and credit in step. */
+function drawRainLayer() {
+  if (!mapView) return;
+  const cells = state.rain.on ? rainCells() : [];
+  mapView.setRain(cells, state.rain.spacing);
+  mapView.setRainActive(state.rain.on);
+
+  // Credited when their data is actually on screen, which is not the same as
+  // the layer being switched on: a viewport too wide to sample draws none of
+  // it, and crediting them for an empty layer would be as wrong as not
+  // crediting them for a full one.
+  const base = state.config?.map?.attribution || '';
+  mapView.setCredit(cells.length ? [base, RAIN_CREDIT].filter(Boolean).join(' · ') : base);
+}
+
+function toggleRain() {
+  state.rain.on = !state.rain.on;
+  if (state.rain.on) {
+    state.rain.box = mapView?.bounds() || null;
+    loadRain();
+  } else {
+    clearTimeout(rainTimer);
+    state.rain.problem = null;
+  }
+  drawRainLayer();
+  renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+}
+
+/** What the rain layer is saying, in the legend, when it is on. */
+function rainLegend(legend) {
+  if (!state.rain.on) return;
+
+  const item = el('div', 'legend-item legend-rain');
+  if (state.rain.tooWide) {
+    item.append(el('span', 'legend-rain-note', 'Rainfall: zoom in to sample this area'));
+    legend.append(item);
+    return;
+  }
+  if (state.rain.loading && !state.rain.cells.length) {
+    item.append(el('span', 'legend-rain-note', 'Looking up recent rainfall…'));
+    legend.append(item);
+    return;
+  }
+  if (state.rain.problem) {
+    item.append(el('span', 'legend-rain-note', state.rain.problem));
+    legend.append(item);
+    return;
+  }
+  if (!state.rain.cells.length) return;
+
+  const days = state.rain.days || 7;
+  const factor = rainScale(days);
+  item.append(el('span', 'legend-rain-title', `Rain, ${days} days`));
+  for (const band of RAIN_BANDS) {
+    const one = el('span', 'legend-tier');
+    const swatch = el('span', 'legend-rain-swatch');
+    // As an image, not a background colour: the stylesheet owns the dark
+    // ground underneath, and a translucent band has to composite over it the
+    // way it does over the basemap.
+    swatch.style.backgroundImage = `linear-gradient(${band.colour}, ${band.colour})`;
+    // The band labels are written for a week; at any other window they are the
+    // scaled figure, so the key never claims a threshold the map is not using.
+    const label = factor === 1 ? band.label
+      : `${Number((band.over * factor).toFixed(2))}″`;
+    one.append(swatch, document.createTextNode(label));
+    item.append(one);
+  }
+  // The window the totals cover, so the layer cannot be mistaken for a
+  // forecast — which is the thing every other weather map on a phone is.
+  if (state.rain.from && state.rain.to) {
+    item.append(el('span', 'legend-rain-note', `${fmtDate(state.rain.from)} – ${fmtDate(state.rain.to)}`));
+  }
+  legend.append(item);
+}
+
 // --- the map ----------------------------------------------------------------
 
 /*
@@ -1347,7 +1551,13 @@ function renderMap(shown, rows) {
           openInatSheet(pin.inat);
         }
       },
-      onViewChange: (box) => { state.inat.box = box; loadInat(); },
+      onViewChange: (box) => {
+        state.inat.box = box;
+        loadInat();
+        state.rain.box = box;
+        loadRain();
+      },
+      onRainToggle: () => toggleRain(),
       onHover: (pin, marker) => {
         clearTimeout(pinTipTimer);
         if (!pin) return hidePinTip();
@@ -1359,10 +1569,12 @@ function renderMap(shown, rows) {
     const found = MapView.fitBounds(placed, $('map-canvas').clientWidth || 800, $('map-canvas').clientHeight || 420, { maxZoom: config.maxZoom ?? 19 });
     mapView.setView(found || start, { silent: true });
     state.inat.box = mapView.bounds();
+    state.rain.box = state.inat.box;
   }
 
   const picked = selectedSpecies();
   mapView.setPins([...ownPins(placed), ...inatPins(state.inat.results, picked?.edibility || 'unknown')]);
+  drawRainLayer();
   // A tile layer drawn while the pane was hidden measured a zero-width box.
   requestAnimationFrame(() => mapView.redraw());
   renderMapLegend(placed);
@@ -1419,6 +1631,8 @@ function renderMapLegend(shown) {
       el('span', 'legend-value', String(state.inat.results.length)));
     legend.append(item);
   }
+
+  rainLegend(legend);
 }
 
 /** Somebody else's record, read-only, in the same sheet the app uses for finds. */

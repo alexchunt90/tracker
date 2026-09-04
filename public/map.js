@@ -103,9 +103,13 @@ const MapView = (() => {
     return svg;
   }
 
-  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover }) {
+  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover, onRainToggle }) {
     const view = { lat: 0, lon: 0, zoom: 2 };
     let pins = [];
+    // The rainfall overlay: cells on a fixed geographic lattice, each already
+    // carrying the colour the caller wants it drawn in. The map places them and
+    // says nothing about what they mean.
+    let rain = { cells: [], spacing: 0 };
     // Tiles that 404 or time out. Remembered so a dead basemap is not re-asked
     // for on every single pan.
     const failed = new Set();
@@ -115,9 +119,14 @@ const MapView = (() => {
 
     const tileLayer = document.createElement('div');
     tileLayer.className = 'map-tiles';
+    // Between the basemap and the pins on purpose: it is ground information,
+    // so it belongs under the pins the way the terrain does, not over them.
+    const rainLayer = document.createElement('div');
+    rainLayer.className = 'map-rain';
+    rainLayer.hidden = true;
     const pinLayer = document.createElement('div');
     pinLayer.className = 'map-pins';
-    node.append(tileLayer, pinLayer);
+    node.append(tileLayer, rainLayer, pinLayer);
 
     const controls = document.createElement('div');
     controls.className = 'map-controls';
@@ -136,6 +145,16 @@ const MapView = (() => {
       button('−', 'Zoom out', () => zoomBy(-1)),
       button('⤢', 'Fit to pins', () => fit()),
     );
+
+    // Only offered when the caller has somewhere to send the answer. A map
+    // built without an onRainToggle simply has no rain button.
+    let rainButton = null;
+    if (onRainToggle) {
+      rainButton = button('☂', 'Recent rainfall', () => onRainToggle());
+      rainButton.classList.add('map-button-toggle');
+      rainButton.setAttribute('aria-pressed', 'false');
+      controls.append(rainButton);
+    }
     node.append(controls);
 
     const credit = document.createElement('div');
@@ -220,6 +239,60 @@ const MapView = (() => {
       if (bare) note.textContent = 'No basemap here — offline, or the tile server is unreachable. Pins are still placed correctly.';
     }
 
+    /**
+     * The rainfall overlay: one rectangle per lattice cell, blurred into a field.
+     *
+     * The blur is the point. A grid of hard-edged squares reads as data the
+     * model does not have — it implies the rain stopped at 47.65° — whereas a
+     * soft field reads as what it is, which is an estimate over an area. It is
+     * also honest about the resolution: the smear is about as wide as one cell,
+     * so the picture cannot be over-read.
+     */
+    function drawRain() {
+      rainLayer.hidden = !rain.cells.length;
+      rainLayer.innerHTML = '';
+      if (!rain.cells.length) return;
+
+      const { x: ox, y: oy, w, h } = origin();
+      const half = rain.spacing / 2;
+
+      // Cell width is constant at a zoom; height is not, because Mercator
+      // stretches as it goes north. Measuring one cell gives both, and the
+      // width is the same for all of them.
+      const sample = rain.cells[0];
+      const west = project(sample.lat, sample.lon - half, view.zoom);
+      const east = project(sample.lat, sample.lon + half, view.zoom);
+      const cellW = Math.abs(east.x - west.x);
+
+      // A blur wide enough to join neighbouring cells but not to wash the field
+      // flat. Below a couple of pixels it stops reading as a gradient at all.
+      rainLayer.style.setProperty('--rain-blur', `${Math.max(2, cellW * 0.45).toFixed(1)}px`);
+
+      for (const cell of rain.cells) {
+        const top = project(cell.lat + half, cell.lon, view.zoom);
+        const bottom = project(cell.lat - half, cell.lon, view.zoom);
+        const cellH = Math.abs(bottom.y - top.y);
+        const left = project(cell.lat, cell.lon - half, view.zoom).x - ox;
+        const y = top.y - oy;
+
+        // The blur reaches beyond the cell, so a cell just off-screen still
+        // colours the edge of the viewport. Culling at the exact bounds would
+        // leave a visible seam there.
+        if (left < -cellW * 3 || y < -cellH * 3 || left > w + cellW * 2 || y > h + cellH * 2) continue;
+
+        const box = document.createElement('div');
+        box.className = 'map-rain-cell';
+        box.style.left = `${left}px`;
+        box.style.top = `${y}px`;
+        // Overlapped by a hair, so the seams between cells do not show through
+        // as a lighter grid once the blur has softened everything else.
+        box.style.width = `${cellW + 1}px`;
+        box.style.height = `${cellH + 1}px`;
+        box.style.background = cell.colour;
+        rainLayer.append(box);
+      }
+    }
+
     function drawPins() {
       const { x: ox, y: oy, w, h } = origin();
       // Panning rebuilds every marker, so a hover left open would point at an
@@ -265,7 +338,7 @@ const MapView = (() => {
       }
     }
 
-    const draw = () => { drawTiles(); drawPins(); };
+    const draw = () => { drawTiles(); drawRain(); drawPins(); };
 
     // --- viewport -----------------------------------------------------------
 
@@ -507,7 +580,17 @@ const MapView = (() => {
     });
 
     let resizeTimer = null;
-    const onResize = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(draw, 120); };
+    /*
+     * A resize changes what is on screen as surely as a pan does, so it has to
+     * be reported the same way. Redrawing alone was enough while the only
+     * things keyed to the viewport were pins the caller already had; a layer
+     * fetched per bounding box goes stale instead, and a phone turned sideways
+     * would keep drawing the cells it sampled for the old shape.
+     */
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { draw(); onViewChange?.(bounds()); }, 120);
+    };
     window.addEventListener('resize', onResize);
 
     return {
@@ -515,6 +598,28 @@ const MapView = (() => {
         pins = next || [];
         if (refit) fit(); else drawPins();
       },
+      /** Cells carry `{ lat, lon, colour }`; an empty list hides the layer. */
+      setRain(cells, spacing) {
+        rain = { cells: cells || [], spacing: spacing || 0 };
+        drawRain();
+      },
+      /*
+       * Whether the button reads as pressed. Held by the caller rather than
+       * toggled here, because the layer can also be off for reasons the map
+       * knows nothing about — a request still in flight, or a config that
+       * switched the whole feature off.
+       */
+      setRainActive(on) {
+        if (!rainButton) return;
+        rainButton.classList.toggle('is-on', !!on);
+        rainButton.setAttribute('aria-pressed', on ? 'true' : 'false');
+      },
+      /*
+       * The credit line, which changes with what is actually drawn. A layer
+       * carrying an attribution requirement has to name its source while it is
+       * on screen, and stop claiming it when it is not.
+       */
+      setCredit(text) { credit.textContent = text || ''; },
       setView,
       bounds,
       fit,
