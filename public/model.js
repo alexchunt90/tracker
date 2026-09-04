@@ -57,6 +57,9 @@ const Model = (() => {
       scientificName: species ? species.scientificName || '' : '',
       when: obs.observedAt || null,
       hasPlace: Number.isFinite(obs.lat) && Number.isFinite(obs.lon),
+      // Null when no photograph recorded one; the ground model fills that in
+      // later, and only if it can.
+      elevation: photoElevation(obs),
     };
   }
 
@@ -909,6 +912,35 @@ const Model = (() => {
 
   // --- geography ------------------------------------------------------------
 
+  /**
+   * How high a find was, from the photographs that recorded it.
+   *
+   * The median rather than the mean: a burst of three frames where one caught a
+   * bad fix should not drag the answer, and with an even count the midpoint of
+   * the two middles is still inside the spread of what the phone believed.
+   *
+   * This is the camera's altitude, not the ground's. They agree closely enough
+   * on flat ground and diverge on a slope, so the source rides along with the
+   * number and the two are never presented as the same fact.
+   */
+  function photoElevation(obs) {
+    const seen = (obs.photos || [])
+      .map((p) => p && p.altitude)
+      .filter((a) => Number.isFinite(a))
+      .sort((a, b) => a - b);
+    if (!seen.length) return null;
+    const mid = seen.length >> 1;
+    const metres = seen.length % 2 ? seen[mid] : (seen[mid - 1] + seen[mid]) / 2;
+    return { metres: Math.round(metres), source: 'photo', samples: seen.length };
+  }
+
+  /**
+   * Metres, written the way the rest of the log writes measurements. The space
+   * is non-breaking: on a phone the find card is half a screen wide, and a
+   * plain space leaves the unit stranded on a line of its own under the number.
+   */
+  const formatElevation = (metres) => (Number.isFinite(metres) ? `${Math.round(metres)}\u00a0m` : '');
+
   const formatCoord = (lat, lon) => {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
     const fmt = (v, pos, neg) => `${Math.abs(v).toFixed(4)}°${v >= 0 ? pos : neg}`;
@@ -955,6 +987,7 @@ const Model = (() => {
     summary, latestOf, lifeList,
     filter, sortByDate,
     fungiTraits, speciesNames, formatCoord, mapLink, bounds,
+    photoElevation, formatElevation,
   };
 })();
 

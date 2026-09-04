@@ -38,8 +38,18 @@ const state = {
   // Other people's records are fetched only for one species at a time, so
   // `speciesId` says whose they are and a stale set can be recognised.
   inat: { results: [], loading: false, problem: null, box: null, speciesId: null, taxa: new Map() },
+  // Ground elevation for the finds whose photographs carried none, keyed by
+  // rounded coordinate. A key present with a null value is a coordinate the
+  // terrain model had no answer for — remembered so it is asked once, not on
+  // every redraw.
+  ground: { known: new Map(), queue: [], running: false, off: false, pending: new Set() },
   sheetDirty: false,
   closeSheet: null,
+  // The record the open sheet is showing, and so the record the URL names:
+  // `{ kind: 'find' | 'species', id }`, or null when nothing addressable is
+  // up. What makes a find or a species linkable from outside — a phone
+  // widget, a note to yourself — rather than only reachable by clicking.
+  open: null,
 };
 
 // The entry form's photo tray, built at boot. Lives outside `state` because a
@@ -189,6 +199,87 @@ async function request(url, method, body) {
   return payload;
 }
 
+// --- ground elevation -------------------------------------------------------
+/*
+ * A find's height, and where the number came from.
+ *
+ * The photographs are asked first and usually answer: a phone writes
+ * GPSAltitude, measured where you were standing. Only when none of them did
+ * does the terrain model get a look in, and that is a different measurement —
+ * the ground at a coordinate rather than the camera above it — so the two are
+ * labelled apart wherever they are shown.
+ */
+
+// Matches the server's rounding, so the two agree on what one coordinate is.
+const groundKey = (lat, lon) => `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+
+/** Where a height came from, said plainly. */
+function elevationNote(found) {
+  if (!found) return '';
+  return found.source === 'photo'
+    ? `${Model.formatElevation(found.metres)} — recorded by the camera${found.samples > 1 ? `, median of ${found.samples} photographs` : ''}.`
+    : `About ${Model.formatElevation(found.metres)} — ground elevation at these coordinates, from the USGS terrain model, not measured on the day.`;
+}
+
+/** What we can say about how high a find was, or null. */
+function findElevation(row) {
+  if (row.elevation) return row.elevation;
+  if (!row.hasPlace) return null;
+  const key = groundKey(row.lat, row.lon);
+  if (state.ground.known.has(key)) return state.ground.known.get(key);
+  askGround(row.lat, row.lon, key);
+  return null;
+}
+
+/**
+ * Queue one coordinate for the terrain model.
+ *
+ * Serial, and drained on an idle callback: this is a footnote on a card, and
+ * it must never compete with the photographs for the connection. Answers are
+ * collected and drawn in one redraw at the end rather than one per reply,
+ * which keeps a log of forty unphotographed finds from repainting forty times.
+ */
+function askGround(lat, lon, key) {
+  if (state.ground.off) return;
+  // Claimed before the request goes out, so a second render mid-flight does
+  // not queue the same coordinate twice.
+  state.ground.known.set(key, null);
+  state.ground.queue.push({ lat, lon, key });
+  if (state.ground.running) return;
+
+  state.ground.running = true;
+  const drain = async () => {
+    let learned = false;
+    while (state.ground.queue.length && !state.ground.off) {
+      const { lat: y, lon: x, key: at } = state.ground.queue.shift();
+      try {
+        const payload = await request(`api/elevation?lat=${y.toFixed(4)}&lon=${x.toFixed(4)}`, 'GET');
+        if (payload.enabled === false) { state.ground.off = true; break; }
+        if (Number.isFinite(payload.metres)) {
+          state.ground.known.set(at, { metres: payload.metres, source: 'terrain' });
+          learned = true;
+        }
+      } catch {
+        // No elevation is not a failure worth reporting: the find keeps its
+        // date and its coordinates, which is what the card is actually for.
+      }
+    }
+    state.ground.running = false;
+    if (!learned) return;
+    if (state.view === 'log') render();
+    // A sheet open over the top of the log draws itself once and is not part
+    // of render(), so it asks to be told instead.
+    for (const relay of state.ground.pending) relay();
+    state.ground.pending.clear();
+  };
+  // Idle if the browser offers it, with a timeout so a busy page cannot defer
+  // this forever; a plain task otherwise. Not collapsed into one call: the two
+  // take different second arguments, and requestIdleCallback throws on a
+  // number rather than ignoring it.
+  if (window.requestIdleCallback) window.requestIdleCallback(drain, { timeout: 2000 });
+  else setTimeout(drain, 1);
+}
+
 /**
  * Pull everything fresh and redraw. Used after a version conflict: another
  * device wrote first, so the safe move is to take their state rather than
@@ -300,8 +391,12 @@ function tint(hex, alpha) {
  * to yourself lands where you left off.
  */
 function viewFromUrl() {
-  const asked = new URLSearchParams(location.search).get('view');
-  return VIEWS.includes(asked) ? asked : 'log';
+  const params = new URLSearchParams(location.search);
+  const asked = params.get('view');
+  if (VIEWS.includes(asked)) return asked;
+  // A link that names a species and nothing else lands on the library behind
+  // its sheet, so closing the sheet leaves you somewhere that follows on.
+  return params.get('species') ? 'species' : 'log';
 }
 
 /** A term the Species view is filtered to, named in the URL so it can be linked. */
@@ -313,6 +408,24 @@ function modeFromUrl() {
   const asked = new URLSearchParams(location.search).get('mode');
   return MODES.includes(asked) ? asked : 'finds';
 }
+
+/**
+ * The record a URL names, if it names one. `?find=` and `?species=` are what a
+ * widget, a bookmark or a link to yourself points at; the app writes the same
+ * parameter into the address bar whenever one of those sheets is open, so the
+ * link you can copy and the link that opens it are the same string.
+ */
+function openFromUrl() {
+  const params = new URLSearchParams(location.search);
+  for (const kind of ['find', 'species']) {
+    const id = (params.get(kind) || '').trim();
+    if (id) return { kind, id };
+  }
+  return null;
+}
+
+const sameRoute = (a, b) =>
+  (a?.kind ?? null) === (b?.kind ?? null) && (a?.id ?? null) === (b?.id ?? null);
 
 /**
  * Both routing facts in one URL, so neither can drop the other on the way
@@ -330,16 +443,70 @@ function routeUrl() {
   } else {
     url.searchParams.delete('tag');
   }
+  // At most one record is ever open, so both keys are cleared before the one
+  // that applies is set — otherwise a species link would still carry the find
+  // you were looking at a moment ago.
+  url.searchParams.delete('find');
+  url.searchParams.delete('species');
+  if (state.open) url.searchParams.set(state.open.kind, state.open.id);
   return url;
 }
 
-const routeState = () => ({ view: state.view, mode: state.mode });
+const routeState = () => ({ view: state.view, mode: state.mode, open: state.open });
 
 /** Gallery or map. The same routing contract the tabs get. */
 function setMode(mode, { push = true } = {}) {
   state.mode = MODES.includes(mode) ? mode : 'finds';
   if (push) history.pushState(routeState(), '', routeUrl());
   render();
+}
+
+/**
+ * Open whatever sheet a `?find=` or `?species=` names. False when the id is
+ * not in the log — a link to a record that has since been deleted, which the
+ * caller reports rather than silently landing on the wrong thing.
+ */
+function showRecord(route, { push = true } = {}) {
+  if (route.kind === 'species') {
+    if (!state.species.some((sp) => sp.id === route.id)) return false;
+    openSpeciesSheet(route.id, { push });
+    return true;
+  }
+  const stored = state.observations.find((o) => o.id === route.id);
+  if (!stored) return false;
+  // Which sheet a find opens into is the same decision a card or a pin makes.
+  if (Model.view(stored, Model.byId(state.species)).identified) openObservationSheet(route.id, { push });
+  else openIdentifySheet(route.id, { push });
+  return true;
+}
+
+/**
+ * Make what is on screen agree with what the URL says after a back or forward
+ * gesture: a step back out of a record closes its sheet, a step into one opens
+ * it again.
+ *
+ * A sheet with unsaved edits still gets to ask. If the answer is to keep it,
+ * the URL is the thing that has to give way — it is the one of the two that
+ * can be put back without losing anything.
+ */
+function syncOpenSheet() {
+  const wanted = openFromUrl();
+  const held = state.open;
+  if (sameRoute(wanted, held)) return;
+
+  if (held) {
+    state.open = null;
+    state.closeSheet?.();
+    if (state.closeSheet) {
+      state.open = held;
+      history.pushState(routeState(), '', routeUrl());
+      return;
+    }
+  }
+  if (wanted && !showRecord(wanted, { push: false })) {
+    notice('That record is no longer in the log.');
+    history.replaceState(routeState(), '', routeUrl());
+  }
 }
 
 function setView(view, { push = true } = {}) {
@@ -637,16 +804,6 @@ function renderLog({ rows }) {
   $('finds-gallery').hidden = state.mode !== 'finds';
   $('map-pane').hidden = state.mode !== 'map';
 
-  const picked = selectedSpecies();
-  const wantedNotFound = picked && !rows.some((r) => r.species?.id === picked.id);
-  $('finds-note').textContent = wantedNotFound
-    ? `You have not logged ${picked.commonName || picked.scientificName} yet.`
-    : !state.filters.types.length
-      ? 'No types selected — tick one to see your finds.'
-      : shown.length === rows.length
-        ? `${plural(rows.length, 'find')}, newest first.`
-        : `${shown.length} of ${rows.length} finds.`;
-
   if (state.mode === 'finds') renderGallery(shown, rows);
   else renderMap(shown, rows);
 
@@ -717,6 +874,9 @@ function renderFilters(rows) {
 /** One sentence about what is on screen. */
 function renderFindsVerdict(shown, rows) {
   const node = clear($('finds-verdict'));
+  // Said after the fact: the map leaves this empty when nothing is selected,
+  // and an empty paragraph still draws its own rule.
+  requestAnimationFrame(() => { node.hidden = !node.textContent.trim(); });
   if (!rows.length) {
     node.textContent = 'Nothing logged yet. A photo is enough to start — the species can wait.';
     return;
@@ -746,15 +906,12 @@ function renderFindsVerdict(shown, rows) {
   if (sum.unidentified) parts.push(`${plural(sum.unidentified, 'find')} still unidentified`);
   if (sum.uncertain) parts.push(`${plural(sum.uncertain, 'identification')} marked uncertain`);
   if (state.mode === 'map') {
-    const off = shown.length - sum.placed;
-    node.append(strongText(`${plural(sum.placed, 'pin')} on the map.`),
-      document.createTextNode(off ? ` ${off} without a location, not shown.` : ''));
     const picked = selectedSpecies();
     if (picked && state.inat.results.length) {
-      node.append(document.createTextNode(
-        ` ${plural(state.inat.results.length, 'record')} of it from other people, as triangles that fade with age.`));
+      node.append(strongText(
+        `${plural(state.inat.results.length, 'record')} of it from other people, as triangles that fade with age.`));
     } else if (!picked) {
-      node.append(document.createTextNode(' Pick a species to see where other people have found it.'));
+      node.append(document.createTextNode('Pick a species to see where other people have found it.'));
     }
     return;
   }
@@ -998,7 +1155,7 @@ function wireDropdown(wrap, button, menu) {
 function renderGallery(shown, rows) {
   const gallery = clear($('finds-gallery'));
   if (!shown.length) {
-    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find above.'));
+    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find below.'));
     return;
   }
   for (const row of shown) gallery.append(findCard(row));
@@ -1030,7 +1187,14 @@ function findCard(row) {
   const bits = [fmtDate(row.when)];
   if (row.hasPlace) bits.push(Model.formatCoord(row.lat, row.lon));
   else if (row.place) bits.push(row.place);
-  body.append(el('p', 'find-meta', bits.join(' · ')));
+  const high = findElevation(row);
+  // A tilde is the whole distinction on a card this size: measured where you
+  // stood, or read off the terrain under the coordinate. The record spells it
+  // out for anyone who wants to know which.
+  if (high) bits.push(high.source === 'photo' ? Model.formatElevation(high.metres) : `~${Model.formatElevation(high.metres)}`);
+  const meta = el('p', 'find-meta', bits.join(' · '));
+  if (high) meta.title = elevationNote(high);
+  body.append(meta);
 
   const marks = el('div', 'find-marks');
   if (Model.isChoice(row.species)) {
@@ -1229,7 +1393,8 @@ function renderMapLegend(shown) {
   for (const t of Model.TYPES) {
     const n = shown.filter((r) => r.type === t.id).length;
     const item = el('div', 'legend-item' + (n ? '' : ' is-zero'));
-    item.append(pinSwatch('mine', '', t.id), document.createTextNode(t.label), el('span', 'legend-value', String(n)));
+    if (t.id !== 'fungi') item.append(pinSwatch('mine', '', t.id));
+    item.append(document.createTextNode(t.label), el('span', 'legend-value', String(n)));
     legend.append(item);
   }
 
@@ -1881,8 +2046,18 @@ function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow =
 /**
  * Open the detail overlay. `build` fills it and may register a dirty flag; the
  * flag is what makes an accidental Escape ask before throwing away an edit.
+ *
+ * `route` names the record behind it — `{ kind: 'find' | 'species', id }` —
+ * and is what writes that record into the URL. A sheet with no stored record
+ * to point at (a species being created, somebody else's iNaturalist sighting)
+ * passes none, and opening it takes whatever the URL said back out: the
+ * address bar states what is on screen, including when that is nothing
+ * nameable.
+ *
+ * `push` is false only when the URL already says this — a deep link on load,
+ * or a back gesture — and pushing would loop against the history it came from.
  */
-function openSheet(build) {
+function openSheet(build, { route = null, push = true } = {}) {
   const scrim = $('scrim');
   const sheet = clear($('sheet'));
   const returnFocus = document.activeElement;
@@ -1895,9 +2070,20 @@ function openSheet(build) {
     state.sheetDirty = false;
     clear(sheet);
     document.body.style.overflow = '';
+    // Only if the URL still names *this* record: a sheet opened on top of this
+    // one has already taken the address bar over, and closing the one
+    // underneath must not claim it back.
+    if (route && sameRoute(state.open, route)) {
+      state.open = null;
+      history.pushState(routeState(), '', routeUrl());
+    }
     returnFocus?.focus?.();
   };
   state.closeSheet = close;
+
+  const held = state.open;
+  state.open = route;
+  if (push && !sameRoute(held, route)) history.pushState(routeState(), '', routeUrl());
 
   build(sheet, close);
   scrim.hidden = false;
@@ -2133,10 +2319,11 @@ function photoFacts(photo) {
 
 // --- the observation sheet --------------------------------------------------
 
-function openObservationSheet(id) {
+function openObservationSheet(id, { push = true } = {}) {
   const stored = state.observations.find((o) => o.id === id);
   if (!stored) return;
-  openSheet((sheet, close) => buildObservationSheet(sheet, stored, close));
+  openSheet((sheet, close) => buildObservationSheet(sheet, stored, close),
+    { route: { kind: 'find', id }, push });
 }
 
 function buildObservationSheet(sheet, stored, close) {
@@ -2213,7 +2400,8 @@ function buildObservationSheet(sheet, stored, close) {
       openSpeciesSheet(null, {
         kind: typePick.value,
         onCreated: (created) => {
-          openSheet((s2, c2) => buildObservationSheet(s2, { ...stored, speciesId: created ? created.id : previous }, c2));
+          openSheet((s2, c2) => buildObservationSheet(s2, { ...stored, speciesId: created ? created.id : previous }, c2),
+            { route: { kind: 'find', id: stored.id } });
         },
       });
       return;
@@ -2231,10 +2419,26 @@ function buildObservationSheet(sheet, stored, close) {
   );
 
   const rowB = el('div', 'entry-row');
+  // Derived, so it sits with the coordinates as a note rather than as a field:
+  // there is nothing here to edit, and a box you cannot type in invites you to
+  // try. Repainted if the terrain model answers while the sheet is still open.
+  const elevationHint = el('span', 'field-hint');
+  const paintElevation = () => {
+    const found = findElevation(row);
+    elevationHint.textContent = found ? elevationNote(found) : '';
+  };
+  paintElevation();
+  if (!elevationHint.textContent) state.ground.pending.add(paintElevation);
+
+  const elevationLine = el('div', 'derived-note');
+  elevationLine.append(elevationHint);
   rowB.append(
     field('Latitude', latPick, {}),
     field('Longitude', lonPick, {}),
     field('Place', placePick, { grow: true }),
+    // Full width, so it breaks the line after Place and reads as a footnote on
+    // the coordinates it was derived from rather than on the notes box below.
+    elevationLine,
     field('Notes', notesPick, { wide: true }),
   );
   form.append(rowA, rowB);
@@ -2373,10 +2577,13 @@ function coordValue(raw, limit) {
 
 // --- the identification sheet -----------------------------------------------
 
-function openIdentifySheet(id) {
+function openIdentifySheet(id, { push = true } = {}) {
   const stored = state.observations.find((o) => o.id === id);
   if (!stored) return;
-  openSheet((sheet, close) => buildIdentifySheet(sheet, stored, close));
+  // The same record as the sheet above, so the same link: which of the two
+  // sheets a find opens into is a fact about the find, not about the URL.
+  openSheet((sheet, close) => buildIdentifySheet(sheet, stored, close),
+    { route: { kind: 'find', id }, push });
 }
 
 /**
@@ -2856,9 +3063,6 @@ function renderGlossary({ rows }) {
     return true;
   });
 
-  $('glossary-note').textContent =
-    `${all.length} terms · ${all.length - undefinedCount} defined · ${unknownCount} still unclassified.`;
-
   const body = clear($('glossary-rows'));
   if (!shown.length) {
     const tr = el('tr');
@@ -2871,14 +3075,6 @@ function renderGlossary({ rows }) {
   for (const t of shown) body.append(glossaryRow(t));
   // scrollHeight only means anything once the rows are laid out.
   requestAnimationFrame(() => { for (const box of body.querySelectorAll('.glossary-def')) autosize(box); });
-
-  const verdict = clear($('glossary-verdict'));
-  if (unknownCount) {
-    verdict.append(strongText(`${plural(unknownCount, 'term')} the vocabulary does not recognise.`),
-      document.createTextNode(' They show dashed and grey wherever they are tagged. Set a category here and every use of the term follows.'));
-  } else {
-    verdict.append(strongText('Every term in use is classified.'));
-  }
 }
 
 /** Match a textarea's height to its content, up to a sane ceiling. */
@@ -3013,10 +3209,12 @@ function setTermDefinition(term, definition) {
 
 // --- the species sheet ------------------------------------------------------
 
-function openSpeciesSheet(id, { kind, onCreated, seed } = {}) {
+function openSpeciesSheet(id, { kind, onCreated, seed, push = true } = {}) {
   const stored = id ? state.species.find((s) => s.id === id) : null;
   if (id && !stored) return;
-  openSheet((sheet, close) => buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed }));
+  // A species being created has no id worth linking to yet.
+  openSheet((sheet, close) => buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed }),
+    { route: stored ? { kind: 'species', id } : null, push });
 }
 
 function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {}) {
@@ -3644,6 +3842,7 @@ function wire() {
     state.mode = modeFromUrl();
     state.speciesFilters.tag = tagFromUrl();
     setView(viewFromUrl(), { push: false });
+    syncOpenSheet();
   });
 
   obsTray = makeTray({
@@ -3712,6 +3911,13 @@ async function boot() {
     resetObsForm();
     // Normalise the URL on load so it always states the view, then render it.
     setView(viewFromUrl(), { push: false });
+    // Then honour a link that named a record — from a home-screen widget, or
+    // from the address bar of a tab left open on it.
+    const asked = openFromUrl();
+    if (asked && !showRecord(asked, { push: false })) {
+      notice('That record is no longer in the log.');
+      history.replaceState(routeState(), '', routeUrl());
+    }
   } catch (err) {
     notice(`Could not load: ${err.message}`);
   }

@@ -92,6 +92,7 @@ const SPECIES_PATH = path.join(DATA_DIR, 'species.json');
 const GLOSSARY_PATH = path.join(DATA_DIR, 'glossary.json');
 const PHOTO_DIR = path.join(STATE_DIR, 'photos');
 const TILE_DIR = path.join(STATE_DIR, 'tiles');
+const ELEVATION_DIR = path.join(STATE_DIR, 'elevation');
 
 const PORT = Number(process.env.PORT || 4175);
 
@@ -306,10 +307,10 @@ async function pruneOrphanPhotos() {
  */
 
 /** fetch with a timeout, so a dead upstream cannot pin a request open. */
-async function upstream(url, { accept } = {}) {
+async function upstream(url, { accept, timeout } = {}) {
   const res = await fetch(url, {
     headers: { 'User-Agent': USER_AGENT, Accept: accept || 'application/json' },
-    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeout || UPSTREAM_TIMEOUT_MS),
   });
   if (!res.ok) {
     const err = new Error(`upstream ${res.status}`);
@@ -377,6 +378,114 @@ async function serveTile(res, coords, template) {
   await fsp.mkdir(path.dirname(file), { recursive: true }).catch(() => {});
   await fsp.writeFile(file, body).catch(() => {});
   return send(body, 'upstream');
+}
+
+// --- ground elevation ---
+
+/*
+ * What the ground is doing under a find, when the photographs did not say.
+ *
+ * A phone usually writes GPSAltitude and that is the better number — it was
+ * measured where you stood. This is the fallback: the USGS 3DEP terrain model,
+ * which answers with the elevation of the ground at a coordinate. Free, no
+ * key, and US-only, which is a real limit worth knowing about rather than
+ * papering over.
+ *
+ * Note that the two are not the same measurement. GPSAltitude is where the
+ * camera was; this is where the ground is. On a slope they differ by more than
+ * either one's error bar, which is why the source travels with the number.
+ */
+const EPQS_URL = 'https://epqs.nationalmap.gov/v1/json';
+
+// 4 decimal places is about 11m, which is finer than the 10m model underneath
+// and far finer than a GPS fix under a canopy. Rounding is what makes the
+// cache worth having: two finds from the same log jam share an answer.
+const ELEVATION_PRECISION = 4;
+
+// A sanity range, not a claim about the terrain: services of this kind signal
+// "no data" with a sentinel value rather than an error, and a number far
+// outside anything the Earth does is the tell.
+const ELEVATION_MIN_M = -500;
+const ELEVATION_MAX_M = 9000;
+
+/*
+ * The other way it says "no data" is a flat 0.000000000, which it will return
+ * for a hole in the model with no error and no flag. A coordinate in the
+ * Olympic foothills came back that way while the photographs of the same find
+ * said 364m.
+ *
+ * Sea level is a real elevation and this is a coast, so nothing distinguishes
+ * the two by value. But a metre-resolution lidar raster does not put real
+ * ground at exactly zero — it puts it at 0.34, or -0.12 — so an exact zero is
+ * a good sentinel. Treating it as no-data costs a genuine tideline find its
+ * elevation, which it did not have before either; trusting it would print
+ * "~0 m" under a photograph taken well up a mountain.
+ */
+const isNoData = (value) => value === 0;
+
+/*
+ * EPQS is slow in a way the other upstreams are not: it queries a raster per
+ * point, and twenty seconds is an ordinary reply rather than a sick one. The
+ * nine-second budget the rest of the app uses is right for a tile the map is
+ * waiting on and wrong here, where nothing is waiting — the number arrives as
+ * a footnote on a card that is already drawn.
+ */
+const ELEVATION_TIMEOUT_MS = 30000;
+
+// Misses stay in memory and never reach the disk. Only a service that answered
+// is remembered: a coordinate it had no data for will still have none in an
+// hour, whereas a timeout says nothing about the coordinate at all, and
+// caching one would lock a find out of an answer it could have had.
+const elevationMisses = new Map();
+const ELEVATION_MISS_TTL_MS = 60 * 60 * 1000;
+
+function elevationKey(lat, lon) {
+  return `${lat.toFixed(ELEVATION_PRECISION)}_${lon.toFixed(ELEVATION_PRECISION)}`;
+}
+
+/**
+ * Ground elevation at a coordinate, from disk if it has ever been asked for.
+ *
+ * Cached one file per rounded coordinate, the way tiles are: terrain does not
+ * move, so a hit is good forever, and the file layout means no locking and no
+ * index to keep straight. Returns null when there is no answer to be had.
+ */
+async function groundElevation(lat, lon) {
+  const key = elevationKey(lat, lon);
+  const file = path.join(ELEVATION_DIR, `${key}.json`);
+
+  const cached = await fsp.readFile(file, 'utf8').then(JSON.parse).catch(() => null);
+  if (cached && Number.isFinite(cached.metres)) return { ...cached, cache: 'disk' };
+
+  const missed = elevationMisses.get(key);
+  if (missed && Date.now() - missed < ELEVATION_MISS_TTL_MS) return null;
+
+  const query = new URLSearchParams({ x: String(lon), y: String(lat), units: 'Meters', wkid: '4326' });
+  let metres = null;
+  let answered = false;
+  try {
+    const payload = await upstream(`${EPQS_URL}?${query}`, { timeout: ELEVATION_TIMEOUT_MS }).then((r) => r.json());
+    answered = true;
+    // v1 has answered with the value both as a number and as a string.
+    const value = Number(payload?.value);
+    if (Number.isFinite(value) && !isNoData(value) && value >= ELEVATION_MIN_M && value <= ELEVATION_MAX_M) metres = value;
+  } catch {
+    // An unreachable elevation service is not an error the log needs to hear
+    // about, and not a fact about this coordinate either.
+  }
+
+  if (metres === null) {
+    if (answered) {
+      elevationMisses.set(key, Date.now());
+      if (elevationMisses.size > 500) elevationMisses.delete(elevationMisses.keys().next().value);
+    }
+    return null;
+  }
+
+  const record = { metres: Math.round(metres), source: 'usgs-3dep', lat: Number(lat.toFixed(ELEVATION_PRECISION)), lon: Number(lon.toFixed(ELEVATION_PRECISION)) };
+  await fsp.mkdir(ELEVATION_DIR, { recursive: true }).catch(() => {});
+  await fsp.writeFile(file, JSON.stringify(record)).catch(() => {});
+  return { ...record, cache: 'upstream' };
 }
 
 // --- iNaturalist ---
@@ -451,6 +560,151 @@ function slimTaxon(t) {
   };
 }
 
+// --- widgets ----------------------------------------------------------------
+/*
+ * What a phone's home screen needs, already decided.
+ *
+ * A widget wakes on the system's schedule, draws once, and remembers nothing
+ * between refreshes. So the choosing happens here: pulling four hundred
+ * species down to a home screen in order to pick one of them would be doing it
+ * from the wrong end, and the phone is the end with the metered connection.
+ *
+ * Each answer carries a `link` — the query the browser understands, the same
+ * one the app itself puts in the address bar when that record is open. That is
+ * the whole contract between a widget and the app: a photograph, a caption,
+ * and where tapping it goes.
+ */
+
+/** One at random, or null from an empty list. */
+const pick = (list) => (list.length ? list[Math.floor(Math.random() * list.length)] : null);
+
+// A widget draws at a few hundred pixels. The stored preview is a plain JPEG
+// of at most 1000, which is both smaller over the wire and — for a HEIC from
+// an iPhone — the only copy anything but Safari can decode.
+const WIDGET_DISPLAYABLE = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
+
+/**
+ * A photograph from one record, at a size worth sending to a phone.
+ *
+ * Random rather than the cover shot: the cover is the one you have already
+ * seen, and a widget that shows the same frame every time is a picture, not a
+ * window into the log.
+ */
+function widgetPhoto(record) {
+  const usable = (record.photos || [])
+    .map((p) => (p.thumb ? { ...p, src: `photos/${p.thumb}` }
+      : WIDGET_DISPLAYABLE.has(p.mime) ? { ...p, src: `photos/${p.file}` } : null))
+    .filter(Boolean);
+  const photo = pick(usable);
+  if (!photo) return null;
+  return {
+    photo: photo.src,
+    // Somebody else's photograph carries a licence that asks to be credited,
+    // and a widget is as public a place as the app is.
+    credit: photo.attribution || null,
+  };
+}
+
+/** A random species that has an example photograph, and how many there were. */
+async function speciesWidget() {
+  const species = await readSpecies();
+  const candidates = species.map((s) => ({ record: s, shot: widgetPhoto(s) })).filter((c) => c.shot);
+  const chosen = pick(candidates);
+  if (!chosen) return { kind: 'species', of: 0, empty: true };
+
+  const s = chosen.record;
+  return {
+    kind: 'species',
+    of: candidates.length,
+    id: s.id,
+    name: s.commonName || s.scientificName || 'Unnamed',
+    scientificName: s.scientificName || '',
+    type: s.kind || null,
+    edibility: s.edibility || 'unknown',
+    ...chosen.shot,
+    link: `?view=species&species=${encodeURIComponent(s.id)}`,
+  };
+}
+
+/**
+ * A random find that has a photograph.
+ *
+ * The name is derived the way `Model.displayName` derives it — a dangling
+ * species id reads as unidentified, and a low-confidence call keeps its
+ * question mark. A widget must not quietly promote a guess to an answer.
+ */
+async function findWidget() {
+  const [observations, species] = await Promise.all([readObservations(), readSpecies()]);
+  const index = new Map(species.map((s) => [s.id, s]));
+  const candidates = observations.map((o) => ({ record: o, shot: widgetPhoto(o) })).filter((c) => c.shot);
+  const chosen = pick(candidates);
+  if (!chosen) return { kind: 'find', of: 0, empty: true };
+
+  const o = chosen.record;
+  const sp = o.speciesId ? index.get(o.speciesId) || null : null;
+  const base = sp ? (sp.commonName || sp.scientificName || 'Unidentified') : 'Unidentified';
+  return {
+    kind: 'find',
+    of: candidates.length,
+    id: o.id,
+    name: sp && o.confidence === 'low' ? `${base}?` : base,
+    scientificName: sp ? sp.scientificName || '' : '',
+    type: sp ? sp.kind : o.type,
+    edibility: sp ? sp.edibility || 'unknown' : 'unknown',
+    when: o.observedAt || null,
+    place: o.place || null,
+    ...chosen.shot,
+    link: `?view=log&find=${encodeURIComponent(o.id)}`,
+  };
+}
+
+/**
+ * Every find that carries a location, and where to draw them.
+ *
+ * Only your own records: the crowd-sourced pins are fetched for one species at
+ * a time in response to what is on screen, and a home screen has nothing on
+ * screen to respond to. The widget composes its own basemap out of `/tiles`,
+ * so the template goes with them — a widget pointed at a log with no tile
+ * source configured should draw the pins on nothing rather than fail.
+ */
+async function mapWidget() {
+  const [config, observations, species] = await Promise.all([
+    readConfig(), readObservations(), readSpecies(),
+  ]);
+  const index = new Map(species.map((s) => [s.id, s]));
+  const map = config.map || {};
+
+  const pins = observations
+    .filter((o) => Number.isFinite(o.lat) && Number.isFinite(o.lon))
+    .map((o) => {
+      const sp = o.speciesId ? index.get(o.speciesId) || null : null;
+      return {
+        id: o.id,
+        lat: o.lat,
+        lon: o.lon,
+        type: sp ? sp.kind : o.type,
+        // Fungi only, exactly as the map does it: edibility is the thing worth
+        // reading off a map at a glance, and only for the kingdom it decides.
+        edibility: (sp ? sp.kind : o.type) === 'fungi' ? (sp?.edibility || 'unknown') : '',
+      };
+    });
+
+  return {
+    kind: 'map',
+    of: pins.length,
+    tiles: map.tileUrl ? 'tiles/{z}/{x}/{y}.png' : null,
+    attribution: map.attribution || '',
+    minZoom: map.minZoom ?? 2,
+    maxZoom: map.maxZoom ?? 19,
+    default: map.default || { lat: 0, lon: 0, zoom: 2 },
+    // The kingdom colours are configurable; the widget carries the edibility
+    // palette itself, the way the stylesheet does.
+    types: config.theme?.types || {},
+    pins,
+    link: '?view=log&mode=map',
+  };
+}
+
 // --- collections ------------------------------------------------------------
 
 /**
@@ -501,6 +755,15 @@ const server = http.createServer(async (req, res) => {
         readConfig(), readObservations(), readSpecies(), readGlossary(),
       ]);
       return json(res, 200, { config, observations, species, glossary });
+    }
+
+    // What a home-screen widget draws, chosen here rather than on the phone.
+    const widgetMatch = pathname.match(/^\/api\/widget\/(\w+)$/);
+    if (widgetMatch && (req.method === 'GET' || req.method === 'HEAD')) {
+      const builders = { species: speciesWidget, find: findWidget, map: mapWidget };
+      const build = builders[widgetMatch[1]];
+      if (!build) return json(res, 404, { error: `no widget called ${widgetMatch[1]}` });
+      return json(res, 200, await build());
     }
 
     if (pathname === '/api/config' && req.method === 'PUT') {
@@ -571,6 +834,26 @@ const server = http.createServer(async (req, res) => {
                  body: { saved: true, version: merged.version, glossary: merged } };
       });
       return json(res, out.status, out.body);
+    }
+
+    // --- ground elevation ----------------------------------------------------
+    // Asked for one find at a time, and only for finds whose photographs
+    // carried no altitude of their own.
+
+    if (pathname === '/api/elevation' && req.method === 'GET') {
+      const config = await readConfig();
+      if (config.elevation?.enabled === false) return json(res, 200, { enabled: false, metres: null });
+
+      const lat = Number(url.searchParams.get('lat'));
+      const lon = Number(url.searchParams.get('lon'));
+      const sane = Number.isFinite(lat) && Number.isFinite(lon)
+        && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+      if (!sane) return json(res, 400, { error: 'a latitude and longitude are required' });
+
+      const found = await groundElevation(lat, lon);
+      // A coordinate off the model's grid is an ordinary answer, not a failure:
+      // the find simply has no elevation, and the page says nothing about it.
+      return json(res, 200, { enabled: true, metres: found ? found.metres : null, source: found ? found.source : null });
     }
 
     // --- iNaturalist ---------------------------------------------------------

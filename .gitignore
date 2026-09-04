@@ -11,6 +11,9 @@ data/species.json
 # Map tiles cached from OpenStreetMap. Regenerated on demand.
 tiles/
 
+# Ground elevations cached from the USGS terrain model. Re-fetched on demand.
+elevation/
+
 # Reference material, kept out of the repo for size and licensing.
 fungi_ebooks/
 /research/

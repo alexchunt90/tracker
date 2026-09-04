@@ -331,6 +331,10 @@ body {
 .entry-row input[type="number"] { font-family: var(--mono); max-width: 120px; }
 /* Coordinates are figures, and they line up better read as such. */
 .entry-row input.coord { font-family: var(--mono); max-width: 130px; }
+/* Derived rather than typed: the height a find was made at reads as a note
+   under the coordinates it came from. Full width, so it never squeezes a
+   field off the row. */
+.entry-row .derived-note { flex: 1 1 100%; margin-top: -4px; }
 .entry-row input:disabled, .entry-row select:disabled { color: var(--ink-faint); background: var(--paper); cursor: not-allowed; }
 .field-hint { font-family: var(--body); font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--ink-faint); }
 /* The hint sits under a field and must not stretch the flex row's baseline. */
@@ -348,6 +352,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .solid-button { background: var(--accent); color: #0a0a0b; border: 1px solid var(--accent); }
 .solid-button:hover:not(:disabled) { filter: brightness(1.12); }
 .solid-button:disabled { background: var(--rule); border-color: var(--rule); color: var(--ink-faint); cursor: not-allowed; }
+/* A button that keeps a one-glyph form for rows too narrow for its words. */
+.button-mark { display: none; }
+
 .ghost-button { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
 .ghost-button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .ghost-button:disabled { color: var(--ink-faint); cursor: not-allowed; }
@@ -401,9 +408,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 /* --- gallery / map toggle ------------------------------------------------ */
 /*
- * Two renderings of one set of finds, so this sits in the block head beside
- * the count rather than in the filter row — it changes how you look, not what
- * you are looking at.
+ * Two renderings of one set of finds. It leads the filter row beside the
+ * search, so the whole of what you can do to the log reads as one line.
  */
 .view-toggle {
   display: flex; flex: none; gap: 0;
@@ -429,6 +435,18 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   background: var(--card-sunk); color: var(--ink);
   border: 1px solid var(--rule); border-radius: var(--radius);
 }
+
+/* The finds row carries the search, the toggle and every filter, and is meant
+   to hold one line on a desktop screen — so the search takes a share of the
+   width rather than all of it, and reads from the left like everything after
+   it. The tighter gap is what buys the last filter its place on the line. */
+#finds-block .filter-row { gap: 8px 12px; }
+#finds-block .filter-search { flex: 0 1 220px; justify-content: flex-start; }
+#finds-block .filter-search input { max-width: none; }
+
+/* The library's three controls, likewise on one row: the search takes what is
+   left between the filter and the button. */
+#view-species .filter-row .filter-search { flex: 1 1 180px; }
 
 /* --- checkbox dropdown --------------------------------------------------- */
 
@@ -868,6 +886,9 @@ button.tag-text:hover { text-decoration: underline dotted; }
 /* The toggle carries both a mark and a word. Wide screens read the word; a
    phone keeps the mark and gives the width to the search box instead. */
 .view-toggle-mark { display: none; font-size: 13px; line-height: 1; }
+/* Four squares, drawn: the block glyphs dense enough to read as "gallery" are
+   also dense enough to turn to mush at 12px. */
+.view-toggle-mark svg { display: block; }
 .view-toggle-word { display: inline; }
 
 /* --- what a tag means ---------------------------------------------------- */
@@ -1393,28 +1414,23 @@ button.chosen-shot { border: 1px solid var(--rule); }
      all rather than only at 390px. */
   #view-species .ledger .sp-names { overflow-wrap: anywhere; }
 
-  /* --- Finds and Library headers ----------------------------------------
-     On a phone the toggle shrinks to its icons and the search box takes the
-     room that frees, so the two sit on one line instead of three. */
+  /* --- filter rows on a phone -------------------------------------------
+     Every one of these rows is a set of controls that would otherwise wrap
+     into a ragged two-and-one. On a phone they are laid on a grid instead, so
+     each control fills the width it is given rather than the width of its
+     longest word. */
   .view-toggle-word { display: none; }
-  .view-toggle-mark { display: inline; }
-  #finds-block .block-head,
-  #view-species .block-head { flex-wrap: nowrap; align-items: center; gap: 8px; }
-  #finds-block .block-head .filter-search,
-  #view-species .block-head .filter-search { flex: 1 1 auto; min-width: 0; }
-  #finds-block .block-head .eyebrow,
-  #view-species .block-head .eyebrow { flex: none; }
-  /* The find count would push the search off the row; it is repeated in the
-     verdict line under the gallery. */
-  #finds-block .block-head #finds-note { display: none; }
-  #view-species .block-head .solid-button { flex: none; white-space: nowrap; }
+  .view-toggle-mark { display: inline-flex; align-items: center; }
 
-  /* The three dropdowns share the row exactly rather than wrapping 2-and-1. */
+  /* Search and toggle across the top, the three dropdowns beneath, the
+     species picker across the foot. */
   #finds-block .filter-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
+  #finds-block .filter-row .filter-search { grid-column: 1 / 3; flex: 1 1 auto; min-width: 0; }
+  #finds-block .filter-row .view-toggle { grid-column: 3; justify-content: center; }
   #finds-block .filter-row .filter-set { min-width: 0; }
   #finds-block .filter-row .dropdown,
   #finds-block .filter-row .dropdown-button { width: 100%; }
@@ -1425,6 +1441,37 @@ button.chosen-shot { border: 1px solid var(--rule); }
   }
   #finds-block .filter-row .dropdown-button .count { flex: none; }
   #finds-block .filter-row #filter-species-wrap { grid-column: 1 / -1; }
+
+  /* The library keeps its three controls on one line by spending the button's
+     words on the search box, which is the control you actually aim at. */
+  #view-species .filter-row { flex-wrap: nowrap; gap: 6px; }
+  #view-species .filter-row .filter-set { min-width: 0; }
+  #view-species .filter-row .dropdown { min-width: 0; }
+  #view-species .filter-row .dropdown-button { max-width: 100%; padding-left: 8px; padding-right: 6px; gap: 4px; }
+  #view-species .filter-row .dropdown-label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  #view-species .filter-row .filter-search { flex: 1 1 auto; min-width: 0; }
+  #view-species .filter-row .filter-search input { max-width: none; }
+  #view-species .filter-row .solid-button { flex: none; padding: 8px 12px; }
+  .button-word { display: none; }
+  .button-mark { display: inline; }
+
+  /* The glossary's two dropdowns share the top row; the search takes the one
+     under it whole. */
+  #view-glossary .filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #view-glossary .filter-row .filter-set { min-width: 0; }
+  #view-glossary .filter-row .dropdown,
+  #view-glossary .filter-row .dropdown-button { width: 100%; }
+  #view-glossary .filter-row .dropdown-label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  #view-glossary .filter-row .filter-search { grid-column: 1 / -1; }
+  #view-glossary .filter-row .filter-search input { max-width: none; }
 
   /* --- the Glossary, stacked ---------------------------------------------
      Five columns in 390px gives the definition about 90px, which is a word

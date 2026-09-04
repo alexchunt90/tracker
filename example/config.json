@@ -26,6 +26,9 @@
       "zoom": 11
     }
   },
+  "elevation": {
+    "enabled": true
+  },
   "inaturalist": {
     "enabled": true,
     "perPage": 80

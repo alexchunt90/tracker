@@ -49,6 +49,42 @@
 <!-- ===================================================================== -->
 <main class="frame" id="view-log">
 
+  <!-- One set of finds, two ways of looking at them. The filters belong to the
+       data, not to either rendering, so they sit above the toggle. -->
+  <section class="block" id="finds-block">
+    <div class="filter-row">
+      <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
+      <div class="view-toggle" role="tablist" aria-label="How to show the finds">
+        <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true" title="Gallery">
+          <span class="view-toggle-mark" aria-hidden="true">
+            <svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor" aria-hidden="true">
+              <rect x="0" y="0" width="5" height="5" rx="1" /><rect x="7" y="0" width="5" height="5" rx="1" />
+              <rect x="0" y="7" width="5" height="5" rx="1" /><rect x="7" y="7" width="5" height="5" rx="1" />
+            </svg>
+          </span><span class="view-toggle-word">Gallery</span>
+        </button>
+        <button type="button" class="view-toggle-button" id="mode-map" role="tab" aria-selected="false" title="Map">
+          <span class="view-toggle-mark" aria-hidden="true">&#8982;</span><span class="view-toggle-word">Map</span>
+        </button>
+      </div>
+      <div class="filter-set" id="filter-type"></div>
+      <div class="filter-set" id="filter-status"></div>
+      <div class="filter-set" id="filter-extra"></div>
+      <label class="inline-pick" id="filter-species-wrap">Species
+        <select id="filter-species"></select>
+      </label>
+    </div>
+
+    <div class="gallery" id="finds-gallery"></div>
+
+    <div id="map-pane" hidden>
+      <div class="map-shell"><div id="map-canvas"></div></div>
+      <div class="legend" id="map-legend"></div>
+    </div>
+
+    <p class="verdict" id="finds-verdict"></p>
+  </section>
+
   <!-- Logging a find is one action, and it is not the thing you come here to
        look at. Collapsed to its call to action until you want it. -->
   <section class="block is-collapsible" id="entry-block">
@@ -93,54 +129,17 @@
     </div>
   </section>
 
-  <!-- One set of finds, two ways of looking at them. The filters belong to the
-       data, not to either rendering, so they sit above the toggle. -->
-  <section class="block" id="finds-block">
-    <div class="block-head">
-      <h2 class="eyebrow">Finds</h2>
-      <p class="block-note" id="finds-note"></p>
-      <div class="view-toggle" role="tablist" aria-label="How to show the finds">
-        <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true" title="Gallery">
-          <span class="view-toggle-mark" aria-hidden="true">&#9638;</span><span class="view-toggle-word">Gallery</span>
-        </button>
-        <button type="button" class="view-toggle-button" id="mode-map" role="tab" aria-selected="false" title="Map">
-          <span class="view-toggle-mark" aria-hidden="true">&#8982;</span><span class="view-toggle-word">Map</span>
-        </button>
-      </div>
-      <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
-    </div>
-
-    <div class="filter-row">
-      <div class="filter-set" id="filter-type"></div>
-      <div class="filter-set" id="filter-status"></div>
-      <div class="filter-set" id="filter-extra"></div>
-      <label class="inline-pick" id="filter-species-wrap">Species
-        <select id="filter-species"></select>
-      </label>
-    </div>
-
-    <div class="gallery" id="finds-gallery"></div>
-
-    <div id="map-pane" hidden>
-      <div class="map-shell"><div id="map-canvas"></div></div>
-      <div class="legend" id="map-legend"></div>
-    </div>
-
-    <p class="verdict" id="finds-verdict"></p>
-  </section>
-
 </main>
 
 <main class="frame" id="view-species" hidden>
 
   <section class="block">
-    <div class="block-head">
-      <h2 class="eyebrow">The library</h2>
-      <div class="filter-search"><input type="search" id="filter-sp-q" placeholder="Search species…" aria-label="Search species" /></div>
-      <button type="button" class="solid-button" id="species-new">New species</button>
-    </div>
     <div class="filter-row">
       <div class="filter-set" id="filter-sp-type"></div>
+      <div class="filter-search"><input type="search" id="filter-sp-q" placeholder="Search species…" aria-label="Search species" /></div>
+      <button type="button" class="solid-button" id="species-new" aria-label="New species">
+        <span class="button-word">New species</span><span class="button-mark" aria-hidden="true">+</span>
+      </button>
     </div>
     <div class="table-scroll">
       <table class="ledger">
@@ -166,10 +165,6 @@
 <main class="frame" id="view-glossary" hidden>
 
   <section class="block">
-    <div class="block-head">
-      <h2 class="eyebrow">The vocabulary</h2>
-      <p class="block-note" id="glossary-note"></p>
-    </div>
     <div class="filter-row">
       <div class="filter-set" id="glossary-filter-cat"></div>
       <div class="filter-set" id="glossary-filter-state"></div>
@@ -189,7 +184,6 @@
         <tbody id="glossary-rows"></tbody>
       </table>
     </div>
-    <p class="verdict" id="glossary-verdict"></p>
   </section>
 
 </main>

@@ -5,6 +5,7 @@
 # Your log and your photographs. State lives on a mounted volume.
 photos/
 tiles/
+elevation/
 data/
 state/
 config.json
@@ -26,3 +27,6 @@ node_modules/
 test/
 scripts/
 README.md
+
+# Phone home-screen widgets. They run in Scriptable on the phone, not here.
+widgets/

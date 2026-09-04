@@ -341,6 +341,35 @@ still in the right places.
 
 Delete `tiles/` to refresh the basemap.
 
+## Elevation
+
+How high a find was, on its card and in its record. Optional, on by default,
+and switched off with `elevation.enabled: false` in `config.json`.
+
+Two sources, and they are not the same measurement:
+
+- **The photographs**, when they carried a `GPSAltitude` — which phones usually
+  do. This is where *you* were standing, and it is the better number. Several
+  photographs of one find give their median, so a single bad fix in a burst
+  cannot drag the answer.
+- **The ground**, from the USGS 3DEP terrain model, when no photograph recorded
+  an altitude. This is the elevation of the ground at the coordinate, not a
+  measurement taken on the day, and it is written `~1419 m` on a card to say so.
+
+3DEP is **United States only** and has no key. Answers are cached to disk under
+`elevation/`, one file per coordinate rounded to four decimal places (about
+11m), because terrain does not move. The first lookup for a coordinate takes
+ten to twenty seconds — the service queries a raster per point — and every
+lookup after it is a disk read. Nothing waits on it: the card is already drawn
+and the number arrives afterwards.
+
+Where the model has a hole it answers `0.000000000` rather than an error. An
+exact zero is therefore treated as no data, which costs a genuine tideline find
+its elevation and is much the better trade — the alternative prints `~0 m`
+under a photograph taken well up a mountain.
+
+Delete `elevation/` to re-ask.
+
 ## iNaturalist
 
 Optional, on by default, and switched off with `inaturalist.enabled: false` in
@@ -365,6 +394,54 @@ what they ask for.
 If iNaturalist is unreachable the map says so quietly and carries on. Your own
 pins are unaffected.
 
+## Links, and widgets on a phone
+
+Every view already lived in the URL — `?view=`, `?mode=`, `?tag=`. Two more
+parameters put a single record there:
+
+```
+?find=vpxp66nq                    that observation, in its sheet
+?species=amanita-muscaria         that species, in its sheet
+```
+
+The app writes them itself. Open a find and the address bar says so; close it
+and the parameter goes. So the link a widget opens and the link you could copy
+out of a tab are the same string, and a back gesture closes the sheet rather
+than leaving the log. A link to a record that has since been deleted says so
+and leaves you on the view it named, rather than on the wrong thing.
+
+`widgets/` holds three [Scriptable](https://scriptable.app) scripts for an
+iPhone home screen:
+
+| | shows | tapping opens |
+| --- | --- | --- |
+| `field-notes-species.js` | an example photograph from the library | that species |
+| `field-notes-find.js` | a photograph from one of your finds | that find |
+| `field-notes-map.js` | your finds as pins on the basemap | the map view |
+
+Copy a file into Scriptable, add a widget of any size, choose the script, and
+put the address of your log — `http://192.168.0.60:4175` — in the widget's
+**Parameter** field. That is the only configuration; the fallback at the top of
+each file is for running the script by hand in the app.
+
+The server picks what to show, at `/api/widget/species`, `/api/widget/find` and
+`/api/widget/map`. A widget wakes on the system's schedule, draws once, and
+remembers nothing, so choosing on the phone would mean pulling four hundred
+species down a metered connection to throw all but one of them away. The
+answers are small and carry the `link` to open, which is the whole contract:
+a photograph, a caption, and where tapping it goes.
+
+The photograph sent is the stored preview — at most a thousand pixels, and a
+plain JPEG, which is also the only copy of an iPhone HEIC anything but Safari
+can decode. Photographs adopted from iNaturalist carry their attribution into
+the widget, because a home screen is as public a place as the app is.
+
+The map widget draws itself: Web Mercator, a fit to the pins, tiles from this
+server's own cache, and circles in the same colours the stylesheet gives them —
+filled for choice and deadly, hollow for the rest. It shows your own records
+only. The crowd-sourced pins are fetched in response to what is on screen, and
+a home screen has no screen to respond to.
+
 ## Layout
 
 ```
@@ -377,12 +454,14 @@ public/
   model.js           the log's rules. No DOM
   map.js             the slippy map. No dependency
   app.js             views and wiring
-config.json          theme, map source, iNaturalist switch
+config.json          theme, map source, iNaturalist and elevation switches
 data/
   observations.json  the finds
   species.json       the library
+widgets/             Scriptable scripts for an iPhone home screen
 photos/              uploads, named by a minted id
 tiles/               cached basemap
+elevation/           cached ground elevations, one file per coordinate
 ```
 
 ## Storage
