@@ -3446,6 +3446,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
     commonName: '', scientificName: '', habitat: '', notes: '',
     edibility: 'unknown', lookalikes: '',
     division: '', nutrition: 'unknown', characters: {}, formerNames: [], synonyms: [], photos: [],
+    excerpts: [],
     // A species adopted from somebody else's record arrives with its names
     // filled in; the identification is still yours to make.
     ...(seed || {}),
@@ -3602,6 +3603,20 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   const editor = sheetSection(sheet, creating ? 'New species' : 'The species');
   editor.append(form);
 
+  /*
+   * What the guides say, kept apart from what this library concludes.
+   *
+   * Every other field here is one answer arrived at by reading around;
+   * an excerpt is one book's account, whole and unedited, with the book named
+   * beside it. Reading a second guide adds a second excerpt — the two are
+   * allowed to disagree, and seeing that they do is worth more than a field
+   * that quietly took the newer answer.
+   */
+  const excerpts = excerptsEditor(record.excerpts, { defaultSource: record.source || '' });
+  sheetSection(sheet, 'Excerpts',
+    'What a guide says about this species, in its own words. **bold**, *italics*, and lines starting with - for a list.')
+    .append(excerpts.node);
+
   // --- example photographs
   const tray = makeTray({ existing: record.photos || [], onChange: markDirty, addBelow: true, note: 'Reference shots — what a good one looks like.' });
   /*
@@ -3663,6 +3678,8 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
       edibility: ediblePick.value,
       lookalikes: lookalikePick.value.trim(),
       photos: tray.photos(),
+      // Kept for every kind: plants and animals have guides too.
+      excerpts: excerpts.values(),
       // Fungal characters are only meaningful on a fungus. Clearing them on a
       // reclassification stops a plant carrying a stale "bruises blue".
       division: kindPick.value === 'fungi' ? divisionPick.value.trim() : '',
@@ -4003,6 +4020,147 @@ function readCharacters(fields) {
     if (value.na || value.tags.length) out[f.spec.id] = value;
   }
   return out;
+}
+
+/* --- excerpts ---------------------------------------------------------------
+ * What each guide says, in its own words. See Model.richText for the grammar.
+ */
+
+/** Marked-up runs, wrapped outwards so bold-inside-italic nests properly. */
+function appendSpans(node, spans) {
+  for (const span of spans) {
+    let leaf = document.createTextNode(span.text);
+    if (span.italic) { const em = el('em'); em.append(leaf); leaf = em; }
+    if (span.bold) { const strong = el('strong'); strong.append(leaf); leaf = strong; }
+    node.append(leaf);
+  }
+  return node;
+}
+
+/**
+ * Excerpt text as DOM.
+ *
+ * Built element by element from the parsed blocks, never from a string of
+ * markup: the text in an excerpt was copied out of somebody else's page, and
+ * nothing in it is ever allowed to become an element of this one.
+ */
+function richTextNodes(text) {
+  const frag = document.createDocumentFragment();
+  for (const block of Model.richText(text)) {
+    if (block.kind === 'list') {
+      const ul = el('ul', 'rich-list');
+      for (const item of block.items) ul.append(appendSpans(el('li'), item));
+      frag.append(ul);
+    } else {
+      frag.append(appendSpans(el('p'), block.spans));
+    }
+  }
+  return frag;
+}
+
+/**
+ * One card per guide: who said it, and what they said.
+ *
+ * Reading is the default state and editing is the exception, which is the
+ * other way round from the rest of the sheet. A guide entry is several hundred
+ * words that get written once by a scraping pass and then read many times
+ * against a specimen in hand — a wall of raw asterisks would be the wrong
+ * thing to show every one of those times.
+ */
+function excerptsEditor(initial, { defaultSource = '' } = {}) {
+  // Copied, not held by reference: cancelling the sheet has to leave the
+  // stored record exactly as it was.
+  const entries = Model.excerpts({ excerpts: initial }).map((e) => ({ ...e, editing: false }));
+
+  const wrap = el('div', 'excerpts');
+  const list = el('div', 'excerpt-list');
+
+  const card = (entry) => {
+    const node = el('article', 'excerpt');
+
+    // Generic placeholder even though the record names a guide: showing that
+    // name in grey in an empty box reads as a filled-in field.
+    const sourcePick = input('text', entry.source, { placeholder: 'Guide, edition, page' });
+    sourcePick.addEventListener('input', () => { entry.source = sourcePick.value; markDirty(); });
+
+    const head = el('div', 'excerpt-head');
+    const row = el('div', 'entry-row');
+    row.append(field('Source', sourcePick, { grow: true }));
+    head.append(row);
+
+    const toggle = el('button', 'ghost-button', 'Edit text');
+    toggle.type = 'button';
+    const remove = el('button', 'link-button', 'Remove');
+    remove.type = 'button';
+    remove.addEventListener('click', () => {
+      // A scraped guide entry is expensive to get back, so losing one to a
+      // mis-click has to take a deliberate second answer.
+      if (entry.text.trim() && !confirm(`Remove the excerpt from ${entry.source.trim() || 'this source'}?`)) return;
+      entries.splice(entries.indexOf(entry), 1);
+      draw();
+      markDirty();
+    });
+    const buttons = el('div', 'excerpt-actions');
+    buttons.append(toggle, remove);
+    head.append(buttons);
+
+    const body = el('div', 'excerpt-body');
+    const drawBody = () => {
+      clear(body);
+      toggle.textContent = entry.editing ? 'Done' : 'Edit text';
+      if (entry.editing) {
+        const area = el('textarea', 'excerpt-text');
+        area.value = entry.text;
+        area.setAttribute('rows', '12');
+        area.setAttribute('placeholder', 'Paste the guide’s account. **bold**, *italics*, and lines starting with - for a list.');
+        area.addEventListener('input', () => { entry.text = area.value; markDirty(); });
+        body.append(area);
+        area.focus();
+      } else if (!entry.text.trim()) {
+        body.append(el('p', 'muted', 'Nothing recorded yet.'));
+      } else {
+        body.append(richTextNodes(entry.text));
+      }
+    };
+    toggle.addEventListener('click', () => { entry.editing = !entry.editing; drawBody(); });
+    drawBody();
+
+    node.append(head, body);
+    return node;
+  };
+
+  const draw = () => {
+    clear(list);
+    if (!entries.length) {
+      list.append(el('p', 'muted', 'Nothing from a guide yet.'));
+      return;
+    }
+    for (const entry of entries) list.append(card(entry));
+  };
+
+  const add = el('button', 'ghost-button', 'Add an excerpt');
+  add.type = 'button';
+  add.addEventListener('click', () => {
+    // Seeded with the guide this record came from: the first excerpt on a
+    // species is almost always from it, and the second is the interesting one.
+    entries.push({ source: defaultSource, text: '', editing: true });
+    draw();
+    markDirty();
+  });
+
+  const foot = el('div', 'excerpt-foot');
+  foot.append(add);
+  wrap.append(list, foot);
+  draw();
+
+  return {
+    node: wrap,
+    // Blank cards are dropped rather than stored: an excerpt with neither a
+    // source nor any text is a card somebody opened and thought better of.
+    values: () => entries
+      .map((e) => ({ source: e.source.trim(), text: e.text.trim() }))
+      .filter((e) => e.source || e.text),
+  };
 }
 
 /** Chips with a × each, plus a box to add another. */

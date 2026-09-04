@@ -26,7 +26,8 @@ const PUBLIC_DIR = path.join(ROOT, 'public');
 const ENV_PATH = path.join(ROOT, '.env');
 
 // --- .env -------------------------------------------------------------------
-// A missing .env is fine; the real environment always wins.
+// Node 18 has no --env-file. A missing .env is fine; the real environment
+// always wins.
 
 function loadEnv(file) {
   let raw;
@@ -58,33 +59,6 @@ loadEnv(ENV_PATH);
 // running from a checkout. Point STATE_DIR at a mounted volume to containerise
 // — and note it must be a *directory*: saves write a temp file and rename over
 // the target, which fails against a bind-mounted file.
-// --- .env -------------------------------------------------------------------
-// Node 18 has no --env-file. A missing .env is fine; the real environment wins.
-function loadEnv(file) {
-  let raw;
-  try {
-    raw = fs.readFileSync(file, 'utf8');
-  } catch (err) {
-    if (err.code === 'ENOENT') return;
-    throw err;
-  }
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    if (!key || key in process.env) continue;
-    let value = trimmed.slice(eq + 1).trim();
-    const quote = value[0];
-    if ((quote === '"' || quote === "'") && value.endsWith(quote) && value.length > 1) {
-      value = value.slice(1, -1);
-    }
-    process.env[key] = value;
-  }
-}
-loadEnv(path.join(ROOT, '.env'));
-
 const STATE_DIR = process.env.STATE_DIR ? path.resolve(process.env.STATE_DIR) : ROOT;
 const CONFIG_PATH = path.join(STATE_DIR, 'config.json');
 const DATA_DIR = path.join(STATE_DIR, 'data');

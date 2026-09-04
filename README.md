@@ -120,7 +120,8 @@ what the organism is supposed to be. The record sheet shows them as **What you
 saw** and **The species**, one above the other, which is the comparison.
 
 **Species** — the organism, not the encounter. Common and scientific name,
-habitat, example photographs, edibility, lookalikes.
+habitat, example photographs, edibility, lookalikes, and the guides' own words
+under [Excerpts](#excerpts).
 
 Three kinds of name, kept apart because the difference matters when looking a
 species up:
@@ -161,8 +162,9 @@ offered and left meaninglessly unticked.
 Each holds **tags**, not prose. Prose could not be queried: a record reading
 "neither gills nor pores" contains the word *pores*, so searching for pores
 returned the one mushroom that most definitely has none. A tag is a thing the
-species either has or does not — which is what a key asks, and what a search
-should answer.
+species either has or does not — which is what a key asks, and what the tag
+filter answers. Clicking a tag anywhere filters the library to it, matching on
+canonical forms, so `false gills` finds a species recorded as `ridges`.
 
 Type and press Enter; commas split a pasted list; Backspace on an empty box
 takes the last tag back.
@@ -224,6 +226,26 @@ Older records are read forward on load: free text splits on its commas into
 tags, and the `gills` / `stipe` tri-state that preceded it becomes tags or an
 explicit absence. Superseded keys are dropped the next time the species is saved.
 
+## The search box
+
+The box above the species library matches **names, and nothing else**: the
+common name, the scientific name, the synonyms, and the former names. It is
+also the only thing the box does — a name is what people type into a field
+sitting above a list of names.
+
+It used to match habitat, division, lookalikes, edibility, nutrition and every
+character tag as well, and that breadth was the problem rather than the
+feature. Two thirds of the library names a lookalike, so `chanterelle` returned
+every species that warns about one, with the chanterelles themselves somewhere
+in the middle of the pile. `oak` came back with everything recorded as growing
+near one.
+
+Characters did not lose their way in; they got a better one. Clicking a tag
+filters the library to it, and that filter matches on canonical forms — so
+`false gills` finds a species recorded as `ridges`, which the text search never
+did. The two are complementary and can be combined: filter to `hydnoid`, then
+type a name.
+
 ## The Glossary
 
 Every term the log knows, what it means, what it is classified as, and which
@@ -261,6 +283,68 @@ distinction is the whole point of the second name.
 
 Measurements are left out. "3–10 cm" is a value, not a word to define, and they
 would bury the terms that are.
+
+## Excerpts
+
+Every other field on a species is *this library's* answer — one habitat, one
+edibility, one line of lookalikes, arrived at by reading around and deciding.
+An excerpt is the opposite: one guide's account, kept whole and unedited, with
+the guide named beside it.
+
+```json
+"excerpts": [
+  {
+    "source": "Mushrooms of the Pacific Northwest (2009), Trudell & Ammirati",
+    "text": "Cap 1-3 cm, **hemispheric** becoming plane, *viscid* when moist.\n\nTold apart from *Panaeolus foenisecii* by:\n- a **rust-brown** spore print"
+  }
+]
+```
+
+Reading a second book adds a second excerpt rather than overwriting the first,
+so two guides that disagree are visibly two guides disagreeing instead of a
+field that quietly took the newer answer. `source` is the natural key: one
+excerpt per guide, and a scraping pass that revisits a book should replace the
+excerpt carrying that source rather than appending a near-duplicate. Nothing
+enforces it — a duplicate source is untidy, not corrupt.
+
+`notes` is still yours. The distinction is the point: notes are what you
+concluded, an excerpt is what you read.
+
+### The markup
+
+A field guide's prose is italics, bold and the occasional bulleted list, and
+nothing else, so that is the whole grammar:
+
+| Written | Reads as |
+| --- | --- |
+| `*viscid*` | *viscid* |
+| `**stout**` | **stout** |
+| `***no***` | ***no*** |
+| a line starting `- `, `* ` or `• ` | a bullet |
+| a blank line | the end of a paragraph or list |
+
+Deliberately not HTML. This text is going to be written by scrapers reading
+other people's pages, and a stored fragment of someone else's markup is a
+stored fragment of someone else's markup. `Model.richText` parses it to blocks
+and runs, and the sheet builds those node by node — nothing in an excerpt can
+become an element.
+
+It is also **total**: there is no such thing as invalid excerpt text. An
+unpaired asterisk is an asterisk, `5 * 3 µm` is a measurement rather than the
+start of an italic phrase, and a paragraph opening on *a scientific name* is
+not a bullet. A parser that could reject its input would be a parser that could
+lose a page it had already fetched. `test/excerpts.test.js` holds those cases.
+
+Inside a paragraph, single newlines are joined with a space. Scraped text is
+hard-wrapped at whatever width the page was, and honouring those breaks would
+rag every paragraph in the library — which also means a bullet is one line, and
+a wrapped one continues as prose.
+
+Excerpts are **not** searched by the species search box — see
+[The search box](#the-search-box), which matches names only. A book's paragraph
+explaining that the chanterelle has no pores is exactly the kind of text that
+made a search for `pores` return it. Giving them a scope of their own is a
+small change if the library ever holds enough excerpts to want one.
 
 ## Photographs carry their own metadata
 

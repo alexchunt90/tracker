@@ -598,13 +598,6 @@ const Model = (() => {
   }
 
   /**
-   * Everything about a species that a search box should match.
-   *
-   * Tags only — the wording for an absence is deliberately left out. It was
-   * the old prose that made a search for "pores" return the chanterelle, whose
-   * record says it has none of them.
-   */
-  /**
    * Does this species record the given term under any character?
    *
    * Compared as canonical forms, so a search for "false gills" finds the
@@ -618,16 +611,163 @@ const Model = (() => {
       character(sp, spec.id).tags.some((t) => termGroup(t.text) === want));
   }
 
+  /**
+   * What the species search box matches: names, and nothing else.
+   *
+   * It used to match habitat, division, lookalikes, edibility, nutrition and
+   * every character tag as well, and the breadth was the problem rather than
+   * the feature. Two thirds of the library names a lookalike, so searching
+   * `chanterelle` returned every species that warns about one with the
+   * chanterelles themselves somewhere in the middle of the pile; `oak` came
+   * back with everything recorded as growing near one. A box sitting above a
+   * list of names is a box people type names into.
+   *
+   * All three kinds of name are matched — see speciesNames — because records
+   * exist under all three, and a species findable only by the name this
+   * library happens to prefer is a species that cannot be found.
+   *
+   * Characters did not lose their way in; they got a better one. The tag
+   * filter matches them through speciesHasTag, on canonical forms, so `false
+   * gills` finds a species recorded as `ridges` — which this never did.
+   */
   function speciesText(sp) {
-    const tags = FUNGI_CHARACTERS.flatMap((spec) => character(sp, spec.id).tags.map((t) => t.text));
-    return [
-      sp.commonName, sp.scientificName, sp.habitat, sp.division, sp.lookalikes,
-      ...(sp.synonyms || []),
-      edibility(sp.edibility).label,
-      sp.nutrition && sp.nutrition !== 'unknown' ? nutrition(sp.nutrition).label : null,
-      ...tags,
-      ...(sp.formerNames || []),
-    ].filter(Boolean).join(' ').toLowerCase();
+    return [sp.commonName, ...speciesNames(sp)].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  /* ==========================================================================
+   * Excerpts — what the guides say, in their own words.
+   *
+   * Every other field on a species is *this library's* answer: one habitat,
+   * one edibility, one line of lookalikes, arrived at by reading around and
+   * deciding. An excerpt is the opposite. It is one guide's account, kept
+   * whole and unedited, with the guide named beside it — so a later pass over
+   * a second book adds a second excerpt rather than overwriting the first, and
+   * two guides that disagree are visibly two guides disagreeing rather than a
+   * field that quietly changed.
+   *
+   * `source` is the natural key: one excerpt per guide. A scraping pass that
+   * revisits a book should replace the excerpt carrying that source rather
+   * than appending a near-duplicate. Nothing enforces it — a duplicate source
+   * is untidy, not corrupt — but that is the intended shape.
+   *
+   * `notes` is still yours. The distinction is the point: notes are what you
+   * concluded, an excerpt is what you read.
+   * ========================================================================== */
+
+  /** One excerpt, with both halves guaranteed to be strings. */
+  const readExcerpt = (raw) => ({
+    source: String(raw?.source ?? '').trim(),
+    // Scraped text arrives with whatever line endings the source had, and a
+    // stray \r would survive into the middle of a rendered paragraph.
+    text: String(raw?.text ?? '').replace(/\r\n?/g, '\n').trim(),
+  });
+
+  /**
+   * Every excerpt on a species. Absent means none — a species predating this
+   * field is not a species with an empty guide entry, and both read the same.
+   */
+  function excerpts(sp) {
+    const list = Array.isArray(sp?.excerpts) ? sp.excerpts : [];
+    return list.map(readExcerpt).filter((e) => e.source || e.text);
+  }
+
+  /*
+   * The markup an excerpt is written in.
+   *
+   * A field guide's prose is italics, bold and the occasional bulleted list,
+   * and nothing else — so that is the whole grammar. Deliberately not HTML:
+   * this text is going to be written by scrapers reading other people's pages,
+   * and a stored fragment of someone else's markup is a stored fragment of
+   * someone else's markup. Parsing to a structure the renderer walks node by
+   * node means nothing in an excerpt can ever become an element.
+   *
+   * It is also total. There is no such thing as invalid excerpt text: an
+   * unpaired asterisk is an asterisk. A parser that could reject its input
+   * would be a parser that could lose a book's worth of scraped text.
+   */
+
+  // A leading -, * or • starts a bullet. The space is required, so a paragraph
+  // opening on *an italic phrase* is not mistaken for a list.
+  const BULLET = /^\s*[-*•]\s+(.*)$/;
+
+  /*
+   * Longest marker first, or ***both*** parses as bold of "*both".
+   *
+   * Two guards, and each is a real mushroom description rather than a
+   * hypothetical. `(?=\S)` — an opener is followed by a non-space — is what
+   * stops "spores 5 * 3 µm, basidia 30 * 8 µm" italicising the middle of the
+   * sentence. The `(?!\*)` pair — a single marker is a single marker — is what
+   * lets *Amanita **muscaria** var. flavivolvata* close on its own final
+   * asterisk instead of on the first one of the bold pair inside it.
+   *
+   * Written without lookbehind on purpose: this runs on a phone, and a Safari
+   * old enough to lack it would fail to parse this file at all rather than
+   * merely render an excerpt oddly.
+   */
+  const EMPHASIS = /\*\*\*(?=\S)([\s\S]*?[^*\s])\*\*\*|\*\*(?=\S)([\s\S]*?[^*\s])\*\*|\*(?!\*)(?=\S)([\s\S]*?[^*\s])\*(?!\*)/;
+
+  /** One line of text as marked-up runs: `{ text, bold, italic }`. */
+  function spansOf(text, marks = { bold: false, italic: false }) {
+    const out = [];
+    let rest = String(text ?? '');
+    while (rest) {
+      const m = rest.match(EMPHASIS);
+      if (!m) { out.push({ ...marks, text: rest }); break; }
+      if (m.index) out.push({ ...marks, text: rest.slice(0, m.index) });
+      const inner = m[1] ?? m[2] ?? m[3];
+      const added = m[1] != null ? { bold: true, italic: true }
+        : m[2] != null ? { bold: true }
+        : { italic: true };
+      // Recursive, so *italic with **bold** inside* keeps both marks.
+      out.push(...spansOf(inner, { ...marks, ...added }));
+      rest = rest.slice(m.index + m[0].length);
+    }
+    return out.filter((s) => s.text);
+  }
+
+  /**
+   * Excerpt text as blocks a renderer can walk:
+   *
+   *   { kind: 'paragraph', spans }
+   *   { kind: 'list', items: [spans] }
+   *
+   * A blank line ends a block. Inside a paragraph, single newlines are joined
+   * with a space — scraped text is hard-wrapped at whatever width the page
+   * was, and honouring those breaks would rag every paragraph in the library.
+   * A bullet is therefore one line; a wrapped one continues as prose.
+   */
+  function richText(text) {
+    const lines = String(text ?? '').replace(/\r\n?/g, '\n').split('\n');
+    const blocks = [];
+    let para = [];
+    let items = null;
+
+    const flushPara = () => {
+      if (!para.length) return;
+      blocks.push({ kind: 'paragraph', spans: spansOf(para.join(' ')) });
+      para = [];
+    };
+    const flushList = () => {
+      if (!items) return;
+      blocks.push({ kind: 'list', items });
+      items = null;
+    };
+
+    for (const line of lines) {
+      const bullet = line.match(BULLET);
+      if (bullet) {
+        flushPara();
+        (items ||= []).push(spansOf(bullet[1].trim()));
+        continue;
+      }
+      if (!line.trim()) { flushPara(); flushList(); continue; }
+      flushList();
+      para.push(line.trim());
+    }
+    flushPara();
+    flushList();
+
+    return blocks.filter((b) => (b.kind === 'list' ? b.items.length : b.spans.length));
   }
 
   /*
@@ -994,6 +1134,7 @@ const Model = (() => {
     summary, latestOf, lifeList,
     filter, sortByDate,
     fungiTraits, speciesNames, formatCoord, mapLink, bounds,
+    excerpts, richText,
     photoElevation, recordedElevation, formatElevation,
   };
 })();

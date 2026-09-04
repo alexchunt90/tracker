@@ -706,6 +706,54 @@ fieldset.trait-set legend {
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--fungi);
 }
 
+/* --- excerpts ------------------------------------------------------------ */
+/*
+ * A guide's own account, set as prose rather than as a form field. It is the
+ * one place in the record where several hundred words are meant to be *read*,
+ * so it gets a reading measure and a rule down the side marking it as quoted
+ * rather than concluded.
+ */
+
+.excerpt-list { display: flex; flex-direction: column; gap: 12px; }
+
+.excerpt {
+  background: var(--card-sunk);
+  border: 1px solid var(--rule-soft);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--radius);
+  padding: 12px 14px 14px;
+  min-width: 0;
+}
+
+.excerpt-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.excerpt-head .entry-row { flex: 1 1 220px; margin: 0; }
+.excerpt-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+/* Sits beside a full-height button, so it needs the same optical baseline. */
+.excerpt-actions .link-button { font-size: 12.5px; padding: 8px 0; }
+
+.excerpt-body { margin-top: 10px; }
+/* 68 characters or so: the excerpt is the only running prose in the app, and
+   a paragraph set to the full width of a desktop sheet is unreadable. */
+.excerpt-body p { margin: 0 0 9px; max-width: 68ch; font-size: 14px; line-height: 1.55; color: var(--ink); }
+.excerpt-body p:last-child, .excerpt-body ul:last-child { margin-bottom: 0; }
+.excerpt-body em { font-style: italic; }
+.excerpt-body strong { font-weight: 600; color: var(--ink); }
+.excerpt-body .rich-list { margin: 0 0 9px; padding-left: 18px; max-width: 68ch; }
+.excerpt-body .rich-list li { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 3px; }
+
+/* Editing shows the markup as typed. Monospaced, because the asterisks are
+   the point while it is open, and taller than a form field because what goes
+   in here is a page of a book rather than a line of one. */
+.excerpt-text {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 200px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.5;
+  padding: 8px 10px;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--paper); color: var(--ink);
+}
+
+.excerpt-foot { margin-top: 12px; }
+
 /* --- edibility ----------------------------------------------------------- */
 /*
  * The one place in the app that deliberately breaks the restrained palette.
