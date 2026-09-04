@@ -266,11 +266,21 @@ const Model = (() => {
     'eccentric', 'lateral', 'central', 'sessile', 'rooting',
     // growth habit
     'solitary', 'scattered', 'gregarious', 'clustered', 'caespitose', 'troops', 'tufted', 'fairy ring',
+    // where the fruit body sits relative to the ground. Hypogeous is the
+    // marked case — a mushroom you have to dig for, and the reason the
+    // truffles never turn up in a search of what is visible.
+    'hypogeous', 'epigeous', 'partially emergent',
     // flesh and texture
     'fleshy', 'leathery', 'corky', 'gelatinous', 'tough', 'soft',
+    'rubbery', 'elastic', 'fragile',
+    // surface, in the wet-to-dry order the keys use
+    'glutinous', 'greasy', 'shiny',
+    // stature and gill width — 'broad' is width, not the spacing that
+    // crowded/close/distant already cover
+    'slender', 'broad',
     // staining
     'bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow',
-    'bruises green', 'bruises purple', 'bruises orange',
+    'bruises green', 'bruises purple', 'bruises orange', 'bruises pink',
     'unchanging', 'slowly', 'immediately',
     // scent and taste
     'mild', 'bitter', 'acrid', 'peppery', 'farinaceous', 'mealy', 'anise', 'almond', 'radish',
@@ -420,21 +430,22 @@ const Model = (() => {
     { id: 'body', label: 'Fruit body', absent: 'No fruit body', alwaysPresent: true,
       vocab: ['agaricoid', 'gilled', 'boletoid', 'bracket', 'polypore', 'crust', 'resupinate',
         'cup', 'club', 'coral', 'fan', 'puffball', 'earthstar', 'earthball', 'stinkhorn',
+        'pleurotoid', 'collybioid',
         'truffle', 'jelly', 'toothed', 'morel', 'false morel', 'saddle', 'trumpet',
         'nidulariaceous', "bird's nest"] },
     { id: 'cap', label: 'Cap', absent: 'No distinct cap',
-      vocab: ['cap', 'bracket', 'crust', 'convex', 'plane', 'depressed', 'umbonate', 'campanulate', 'conical', 'viscid', 'dry', 'velvety', 'scaly', 'zonate', 'striate', 'hygrophanous', 'inrolled', 'wavy', 'split'] },
+      vocab: ['cap', 'bracket', 'crust', 'convex', 'plane', 'depressed', 'umbonate', 'campanulate', 'conical', 'glutinous', 'viscid', 'greasy', 'dry', 'shiny', 'velvety', 'scaly', 'zonate', 'striate', 'hygrophanous', 'inrolled', 'wavy', 'split'] },
     { id: 'hymenium', label: 'Gills / pores', absent: 'Neither gills nor pores',
-      vocab: ['gills', 'false gills', 'pores', 'teeth', 'ridges', 'folds', 'tubes', 'gleba', 'maze-like', 'smooth', 'adnate', 'adnexed', 'decurrent', 'free', 'sinuate', 'crowded', 'close', 'distant', 'forking', 'waxy'] },
+      vocab: ['gills', 'false gills', 'pores', 'teeth', 'ridges', 'folds', 'tubes', 'gleba', 'maze-like', 'smooth', 'adnate', 'adnexed', 'decurrent', 'free', 'sinuate', 'crowded', 'close', 'distant', 'broad', 'forking', 'waxy'] },
     { id: 'stipe', label: 'Stipe', absent: 'Sessile — no stipe',
-      vocab: ['stipe', 'ring', 'annulus', 'volva', 'cortina', 'basal bulb', 'scabers', 'reticulation', 'equal', 'tapering', 'clavate', 'bulbous', 'hollow', 'stuffed', 'solid', 'fibrous', 'eccentric', 'lateral', 'sessile'] },
+      vocab: ['stipe', 'ring', 'annulus', 'volva', 'cortina', 'basal bulb', 'scabers', 'reticulation', 'equal', 'tapering', 'clavate', 'bulbous', 'hollow', 'stuffed', 'solid', 'fibrous', 'fragile', 'slender', 'eccentric', 'lateral', 'sessile'] },
     { id: 'sporePrint', label: 'Spore colour', absent: 'No print obtainable',
       vocab: ['white', 'cream', 'buff', 'pink', 'ochre', 'rust', 'cinnamon', 'brown', 'dark-brown', 'purple', 'black', 'yellow'] },
     { id: 'scent', label: 'Scent / taste', absent: 'Nothing distinctive', colourAs: 'descriptor',
       vocab: ['mild', 'bitter', 'acrid', 'peppery', 'farinaceous', 'anise', 'almond', 'radish', 'phenolic', 'sweet', 'fruity', 'apricot', 'fishy', 'garlic', 'rancid', 'earthy', 'nutty'] },
     { id: 'staining', label: 'Staining', absent: 'Does not stain',
       vocab: ['bruises blue', 'bruises brown', 'bruises red', 'bruises black', 'bruises yellow',
-        'bruises green', 'bruises purple', 'bruises orange',
+        'bruises green', 'bruises purple', 'bruises orange', 'bruises pink',
         'unchanging', 'slowly', 'immediately', 'latex'] },
     { id: 'substrate', label: 'Substrate', absent: 'No consistent substrate',
       vocab: ['soil', 'duff', 'leaf litter', 'moss', 'wood', 'dead wood', 'dead hardwood', 'rotten wood', 'stump', 'log', 'fallen branches', 'living tree', 'buried wood', 'woodchips', 'dung', 'burn site', 'grass', 'fungus', 'keratin'] },
@@ -449,7 +460,8 @@ const Model = (() => {
      * Always present: a mushroom grows somehow, so there is no N/A to tick.
      */
     { id: 'habit', label: 'Growth habit', absent: 'No consistent habit', alwaysPresent: true,
-      vocab: ['solitary', 'scattered', 'gregarious', 'clustered', 'caespitose', 'troops', 'tufted', 'fairy ring'] },
+      vocab: ['solitary', 'scattered', 'gregarious', 'clustered', 'caespitose', 'troops', 'tufted', 'fairy ring',
+        'hypogeous', 'partially emergent', 'epigeous'] },
   ];
 
   /** Suggestions for one character: its own vocabulary, then every colour. */
@@ -649,6 +661,10 @@ const Model = (() => {
     nidulariaceous: 'nidulariaceous', "bird's nest": 'nidulariaceous', 'birds nest': 'nidulariaceous',
     stinkhorn: 'stinkhorn',
     truffle: 'truffle',
+    // Stipe placement as a whole-body form, the way the guide uses them:
+    // pleurotoid is the oyster build, collybioid the slim central stipe.
+    pleurotoid: 'pleurotoid', oyster: 'pleurotoid',
+    collybioid: 'collybioid',
   };
   const bodyGroup = (text) => BODY_GROUPS[normalizeTag(text)] || null;
 

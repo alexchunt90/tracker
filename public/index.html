@@ -100,9 +100,14 @@
       <h2 class="eyebrow">Finds</h2>
       <p class="block-note" id="finds-note"></p>
       <div class="view-toggle" role="tablist" aria-label="How to show the finds">
-        <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true">Gallery</button>
-        <button type="button" class="view-toggle-button" id="mode-map" role="tab" aria-selected="false">Map</button>
+        <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true" title="Gallery">
+          <span class="view-toggle-mark" aria-hidden="true">&#9638;</span><span class="view-toggle-word">Gallery</span>
+        </button>
+        <button type="button" class="view-toggle-button" id="mode-map" role="tab" aria-selected="false" title="Map">
+          <span class="view-toggle-mark" aria-hidden="true">&#8982;</span><span class="view-toggle-word">Map</span>
+        </button>
       </div>
+      <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
     </div>
 
     <div class="filter-row">
@@ -112,7 +117,6 @@
       <label class="inline-pick" id="filter-species-wrap">Species
         <select id="filter-species"></select>
       </label>
-      <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
     </div>
 
     <div class="gallery" id="finds-gallery"></div>
@@ -132,12 +136,11 @@
   <section class="block">
     <div class="block-head">
       <h2 class="eyebrow">The library</h2>
-      <p class="block-note">A species can be written up before it is ever found — a record with no finds behind it is a note, not a sighting.</p>
+      <div class="filter-search"><input type="search" id="filter-sp-q" placeholder="Search species…" aria-label="Search species" /></div>
       <button type="button" class="solid-button" id="species-new">New species</button>
     </div>
     <div class="filter-row">
       <div class="filter-set" id="filter-sp-type"></div>
-      <div class="filter-search"><input type="search" id="filter-sp-q" placeholder="Search species…" aria-label="Search species" /></div>
     </div>
     <div class="table-scroll">
       <table class="ledger">

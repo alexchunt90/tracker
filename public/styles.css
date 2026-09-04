@@ -865,6 +865,11 @@ button.tag-text:hover { text-decoration: underline dotted; }
  * stays reachable. Sized in vh: on a phone a fixed pixel height either wastes
  * the screen or fills it.
  */
+/* The toggle carries both a mark and a word. Wide screens read the word; a
+   phone keeps the mark and gives the width to the search box instead. */
+.view-toggle-mark { display: none; font-size: 13px; line-height: 1; }
+.view-toggle-word { display: inline; }
+
 /* --- what a tag means ---------------------------------------------------- */
 /* Above sheets, below the full-size photograph. Never takes a click: the chip
    underneath may carry a remove button. */
@@ -1387,6 +1392,39 @@ button.chosen-shot { border: 1px solid var(--rule); }
      than its longest one. Letting it break is what makes this fit a phone at
      all rather than only at 390px. */
   #view-species .ledger .sp-names { overflow-wrap: anywhere; }
+
+  /* --- Finds and Library headers ----------------------------------------
+     On a phone the toggle shrinks to its icons and the search box takes the
+     room that frees, so the two sit on one line instead of three. */
+  .view-toggle-word { display: none; }
+  .view-toggle-mark { display: inline; }
+  #finds-block .block-head,
+  #view-species .block-head { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  #finds-block .block-head .filter-search,
+  #view-species .block-head .filter-search { flex: 1 1 auto; min-width: 0; }
+  #finds-block .block-head .eyebrow,
+  #view-species .block-head .eyebrow { flex: none; }
+  /* The find count would push the search off the row; it is repeated in the
+     verdict line under the gallery. */
+  #finds-block .block-head #finds-note { display: none; }
+  #view-species .block-head .solid-button { flex: none; white-space: nowrap; }
+
+  /* The three dropdowns share the row exactly rather than wrapping 2-and-1. */
+  #finds-block .filter-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #finds-block .filter-row .filter-set { min-width: 0; }
+  #finds-block .filter-row .dropdown,
+  #finds-block .filter-row .dropdown-button { width: 100%; }
+  #finds-block .filter-row .dropdown-button { padding-left: 8px; padding-right: 6px; gap: 4px; }
+  /* The label gives way before the count does — the number is the useful part. */
+  #finds-block .filter-row .dropdown-label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  #finds-block .filter-row .dropdown-button .count { flex: none; }
+  #finds-block .filter-row #filter-species-wrap { grid-column: 1 / -1; }
 
   /* --- the Glossary, stacked ---------------------------------------------
      Five columns in 390px gives the definition about 90px, which is a word

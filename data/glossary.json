@@ -1,5 +1,5 @@
 {
-  "version": 20,
+  "version": 23,
   "terms": {
     "acrid": {
       "definition": "with a sharp biting taste, hot and peppery",
@@ -37,7 +37,8 @@
     },
     "annulus": {
       "definition": "a skirt-like ring",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "sameAs": "ring"
     },
     "apricot": {
       "definition": ""
@@ -156,7 +157,8 @@
       "source": "written for this log"
     },
     "broad": {
-      "definition": ""
+      "definition": "Of gills, wide from edge to stipe. A width, not the spacing that crowded, close and distant describe.",
+      "source": "written for this log"
     },
     "broadleaf": {
       "definition": ""
@@ -520,7 +522,8 @@
       "definition": ""
     },
     "elastic": {
-      "definition": ""
+      "definition": "Stretching before it breaks.",
+      "source": "written for this log"
     },
     "elongated": {
       "definition": ""
@@ -627,7 +630,8 @@
       "source": "written for this log"
     },
     "fragile": {
-      "definition": ""
+      "definition": "Easily broken or crumbling; of a stipe or a ring that does not survive handling.",
+      "source": "written for this log"
     },
     "free": {
       "definition": "describes gills that are not at all attached to the stipe along their height",
@@ -1334,7 +1338,8 @@
       "definition": ""
     },
     "shiny": {
-      "definition": ""
+      "definition": "Glossy or lustrous when dry.",
+      "source": "written for this log"
     },
     "shore pine": {
       "definition": ""
@@ -1353,7 +1358,8 @@
       "definition": ""
     },
     "slender": {
-      "definition": ""
+      "definition": "Thin and narrow in stature, for the size of the cap.",
+      "source": "written for this log"
     },
     "slimy": {
       "definition": ""
@@ -1707,6 +1713,42 @@
     "angular": {
       "category": "descriptor",
       "definition": "describes pores that end in angles, as opposed to rounded pores"
+    },
+    "glutinous": {
+      "definition": "Slimy to the touch, wetter than viscid — the top of the viscid–slimy scale.",
+      "source": "written for this log"
+    },
+    "greasy": {
+      "definition": "Faintly oily to the touch, without being properly viscid.",
+      "source": "written for this log"
+    },
+    "rubbery": {
+      "definition": "Springy and yielding, returning to shape — firmer than soft, not as stiff as tough.",
+      "source": "written for this log"
+    },
+    "bruises pink": {
+      "definition": "Bruises or cuts turn pink.",
+      "source": "written for this log"
+    },
+    "pleurotoid": {
+      "definition": "Built like an oyster mushroom: a shelving cap with the stipe off to one side or absent.",
+      "source": "written for this log"
+    },
+    "collybioid": {
+      "definition": "Built like a Collybia: a modest cap on a slim, central, cartilaginous stipe.",
+      "source": "written for this log"
+    },
+    "hypogeous": {
+      "definition": "Fruiting underground, so it has to be dug for — the truffles and their relatives.",
+      "source": "written for this log"
+    },
+    "epigeous": {
+      "definition": "Fruiting above ground, in the ordinary way. The opposite of hypogeous.",
+      "source": "written for this log"
+    },
+    "partially emergent": {
+      "definition": "Fruiting mostly below ground with the top breaking the surface.",
+      "source": "written for this log"
     }
   }
 }

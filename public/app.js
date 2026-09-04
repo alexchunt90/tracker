@@ -1809,7 +1809,7 @@ function tagSuggestions(spec, query, taken) {
  * The entry form passes in the nodes already present in the markup; the sheets
  * let it build its own.
  */
-function makeTray({ zone, fileInput, strip, existing, onChange, note } = {}) {
+function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow = false } = {}) {
   const owned = !zone;
   if (owned) {
     zone = el('div', 'dropzone');
@@ -1863,7 +1863,10 @@ function makeTray({ zone, fileInput, strip, existing, onChange, note } = {}) {
   draw();
 
   const node = owned ? el('div') : null;
-  if (node) node.append(zone, fileInput, strip);
+  // On a species the photographs are the point of the section and the
+  // dropzone is a footnote, so the reference shots come first and "Add
+  // photos" sits under them.
+  if (node) node.append(...(addBelow ? [strip, fileInput, zone] : [zone, fileInput, strip]));
 
   return {
     node,
@@ -3180,21 +3183,27 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   editor.append(form);
 
   // --- example photographs
-  const tray = makeTray({ existing: record.photos || [], onChange: markDirty, note: 'Reference shots — what a good one looks like.' });
-  sheetSection(sheet, 'Example photographs', 'Kept on the species, separate from any one find.').append(tray.node);
-
-  // --- finds of this species
+  const tray = makeTray({ existing: record.photos || [], onChange: markDirty, addBelow: true, note: 'Reference shots — what a good one looks like.' });
+  /*
+   * Your own finds first, then the reference shots.
+   *
+   * When you have met the species, your photographs of it are the ones worth
+   * seeing; the borrowed reference shots are what you check against. The
+   * section is omitted entirely rather than showing an empty state — most of
+   * the library has never been found, and 400 records each announcing that
+   * they have not is noise.
+   */
   if (!creating) {
     const mine = Model.sortByDate(Model.viewAll(state.observations, state.species).filter((r) => r.species?.id === record.id));
-    const section = sheetSection(sheet, 'Finds', mine.length ? `${plural(mine.length, 'observation')} of this species.` : null);
-    if (!mine.length) {
-      section.append(el('div', 'empty-state', 'Written up, but not yet met in the field.'));
-    } else {
+    if (mine.length) {
+      const section = sheetSection(sheet, 'Finds', `${plural(mine.length, 'observation')} of this species.`);
       const gallery = el('div', 'gallery');
       for (const row of mine) gallery.append(findCard(row));
       section.append(gallery);
     }
   }
+
+  sheetSection(sheet, 'Example photographs', 'Kept on the species, separate from any one find.').append(tray.node);
 
   // --- actions
   const actions = el('div', 'form-actions');
