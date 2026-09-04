@@ -14,6 +14,10 @@ tiles/
 # Ground elevations cached from the USGS terrain model. Re-fetched on demand.
 elevation/
 
+# Weekly rainfall cached from Open-Meteo. One file per lattice cell, rewritten
+# when the date rolls over.
+rain/
+
 # Reference material, kept out of the repo for size and licensing.
 fungi_ebooks/
 /research/

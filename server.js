@@ -19,6 +19,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
+const { RAIN_MAX_CELLS, rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -93,6 +94,7 @@ const GLOSSARY_PATH = path.join(DATA_DIR, 'glossary.json');
 const PHOTO_DIR = path.join(STATE_DIR, 'photos');
 const TILE_DIR = path.join(STATE_DIR, 'tiles');
 const ELEVATION_DIR = path.join(STATE_DIR, 'elevation');
+const RAIN_DIR = path.join(STATE_DIR, 'rain');
 
 const PORT = Number(process.env.PORT || 4175);
 
@@ -489,6 +491,152 @@ async function groundElevation(lat, lon) {
   return { ...record, cache: 'upstream' };
 }
 
+// --- recent rainfall ---
+
+/*
+ * Where it has already rained, which is a different question from where it is
+ * going to.
+ *
+ * Every free weather API answers the second one, because a forecast is what
+ * most callers want. A forager wants the first: a fungus fruits days after the
+ * water arrives, so the useful map is of ground that is already wet. Open-Meteo
+ * will answer backwards — `past_days` fills in observed days on the same
+ * endpoint that serves forecasts — and it does it without a key, which is what
+ * makes it usable from a server that is otherwise nobody's customer.
+ *
+ * The data is reanalysis, not a rain gauge in that clearing. Over a week and at
+ * this grid spacing that is the right resolution anyway: the answer being
+ * looked for is "which drainage got soaked", not "how wet is this log".
+ */
+const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
+
+// Open-Meteo takes comma-separated coordinates, so a screenful is three or
+// four requests rather than three hundred. The limit is politeness, not a
+// documented cap.
+const RAIN_BATCH = 100;
+
+const RAIN_DEFAULT_DAYS = 7;
+const RAIN_MAX_DAYS = 92;
+
+/** The server's own local date, which is the day the cached window belongs to. */
+function today() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+/*
+ * The window is whole days ending yesterday, never including today.
+ *
+ * Today is half-measured and revises upward all afternoon, so including it
+ * would make the same cell answer differently before and after dinner and make
+ * every cached cell stale the moment it was written. Ending at midnight gives a
+ * window that is fixed until the date rolls over, which is what makes a
+ * one-file-per-cell cache worth having at all.
+ */
+async function rainCell(point, days) {
+  const file = path.join(RAIN_DIR, `${rainKey(point.lat, point.lon)}.json`);
+  const cached = await fsp.readFile(file, 'utf8').then(JSON.parse).catch(() => null);
+  if (cached && cached.on === today() && cached.days === days && Number.isFinite(cached.inches)) {
+    return { ...point, inches: cached.inches, from: cached.from, to: cached.to };
+  }
+  return null;
+}
+
+/** Ask Open-Meteo about a batch of points at once, and write each one down. */
+async function fetchRainBatch(points, days) {
+  const query = new URLSearchParams({
+    latitude: points.map((p) => p.lat).join(','),
+    longitude: points.map((p) => p.lon).join(','),
+    daily: 'precipitation_sum',
+    past_days: String(days),
+    // Complete days only. See the note above rainCell.
+    forecast_days: '0',
+    // Per-point local days: a day boundary in the Cascades is not a day
+    // boundary in Maine, and the totals should follow the ground.
+    timezone: 'auto',
+    precipitation_unit: 'inch',
+  });
+
+  const payload = await upstream(`${OPEN_METEO_URL}?${query}`).then((r) => r.json());
+  // One location comes back as an object, several as an array. Normalising is
+  // cheaper than a special case at every use.
+  const series = Array.isArray(payload) ? payload : [payload];
+
+  const out = [];
+  const stamp = today();
+  for (let i = 0; i < points.length; i++) {
+    const daily = series[i]?.daily;
+    const totals = daily?.precipitation_sum;
+    if (!Array.isArray(totals) || !totals.length) continue;
+
+    // A null in the series is a day the model had nothing for, which is not the
+    // same as a dry day. Summing it as zero would quietly under-report a week.
+    if (totals.some((v) => v === null || v === undefined)) continue;
+    const inches = Number(totals.reduce((sum, v) => sum + Number(v), 0).toFixed(2));
+    if (!Number.isFinite(inches)) continue;
+
+    const dates = daily.time || [];
+    const cell = { ...points[i], inches, from: dates[0] || null, to: dates[dates.length - 1] || null };
+    out.push(cell);
+    await fsp.writeFile(path.join(RAIN_DIR, `${rainKey(cell.lat, cell.lon)}.json`),
+      JSON.stringify({ on: stamp, days, inches, from: cell.from, to: cell.to })).catch(() => {});
+  }
+  return out;
+}
+
+/**
+ * Rainfall totals over the last whole `days`, on a lattice covering `box`.
+ *
+ * Returns whatever it has: a batch that fails contributes nothing and the rest
+ * of the map still draws. A rain layer with a hole in it is more use than no
+ * rain layer, and the hole is visible as one.
+ */
+async function recentRainfall(box, days) {
+  const spacing = rainSpacing(box);
+  // Nothing to draw and nothing wrong: the viewport is simply wider than this
+  // many samples can describe, and the caller says so rather than shading it.
+  if (spacing === null) return { spacing: 0, cells: [], tooWide: true, problem: null };
+
+  const points = latticePoints(box, spacing);
+  if (!points.length) return { spacing, cells: [], problem: null };
+
+  await fsp.mkdir(RAIN_DIR, { recursive: true }).catch(() => {});
+
+  const cells = [];
+  const wanted = [];
+  for (const point of points) {
+    const hit = await rainCell(point, days);
+    if (hit) cells.push(hit); else wanted.push(point);
+  }
+
+  // Concurrently, and independently: the batches do not need each other, and a
+  // screenful of fresh ground is six sequential round trips if they wait in
+  // line. One that fails takes only its own points down with it — the rest of
+  // the map still draws, with a hole where that batch would have been.
+  const batches = [];
+  for (let i = 0; i < wanted.length; i += RAIN_BATCH) {
+    batches.push(wanted.slice(i, i + RAIN_BATCH));
+  }
+  const settled = await Promise.allSettled(batches.map((batch) => fetchRainBatch(batch, days)));
+
+  let failed = 0;
+  let reason = '';
+  for (const outcome of settled) {
+    if (outcome.status === 'fulfilled') cells.push(...outcome.value);
+    else { failed++; reason = outcome.reason?.message || 'unknown error'; }
+  }
+
+  // Said only when something is actually missing from the picture. A total
+  // failure and a partial one read differently on a map, so they say so
+  // differently.
+  const problem = !failed ? null
+    : failed === settled.length ? `rainfall data unavailable: ${reason}`
+    : 'Part of this view could not be checked for rainfall.';
+
+  return { spacing, cells, problem };
+}
+
 // --- iNaturalist ---
 
 const INAT_BASE = 'https://api.inaturalist.org/v1';
@@ -855,6 +1003,50 @@ const server = http.createServer(async (req, res) => {
       // A coordinate off the model's grid is an ordinary answer, not a failure:
       // the find simply has no elevation, and the page says nothing about it.
       return json(res, 200, { enabled: true, metres: found ? found.metres : null, source: found ? found.source : null });
+    }
+
+    // --- recent rainfall -----------------------------------------------------
+    // Asked for a whole viewport at once, not per find: the question it answers
+    // is where to go next, and that is a question about ground you have not
+    // been to yet.
+
+    if (pathname === '/api/rain' && req.method === 'GET') {
+      const config = await readConfig();
+      if (config.rain?.enabled === false) return json(res, 200, { enabled: false, cells: [] });
+
+      // Read as strings first. `Number(null)` is 0, not NaN, so a request with
+      // no box at all would otherwise pass the finiteness check as a point in
+      // the Gulf of Guinea and be answered rather than corrected.
+      const raw = ['swlat', 'swlng', 'nelat', 'nelng'].map((k) => url.searchParams.get(k));
+      if (raw.some((v) => v === null || v.trim() === '')) return json(res, 400, { error: 'a bounding box is required' });
+      const box = raw.map(Number);
+      if (!box.every(Number.isFinite)) return json(res, 400, { error: 'a bounding box is required' });
+      const [swlat, swlng, nelat, nelng] = box;
+      if (swlat > nelat || swlat < -90 || nelat > 90) return json(res, 400, { error: 'that bounding box is upside down' });
+
+      // A viewport that has wrapped the date line arrives as a box wider than
+      // the world. Nothing sensible can be sampled from it, and the honest
+      // answer is that this is the wrong zoom to ask the question at.
+      if (nelng - swlng > 180) {
+        return json(res, 200, { enabled: true, cells: [], tooWide: true });
+      }
+
+      const days = Math.min(RAIN_MAX_DAYS, Math.max(1, Number(config.rain?.days) || RAIN_DEFAULT_DAYS));
+      const { spacing, cells, tooWide, problem } = await recentRainfall({ swlat, swlng, nelat, nelng }, days);
+      if (tooWide) return json(res, 200, { enabled: true, cells: [], tooWide: true });
+
+      return json(res, 200, {
+        enabled: true,
+        days,
+        spacing,
+        unit: 'inch',
+        // The window every cell shares, taken off the cells themselves rather
+        // than computed here: Open-Meteo decides which local days those are.
+        from: cells[0]?.from || null,
+        to: cells[0]?.to || null,
+        cells: cells.map((c) => ({ lat: c.lat, lon: c.lon, inches: c.inches })),
+        problem,
+      });
     }
 
     // --- iNaturalist ---------------------------------------------------------

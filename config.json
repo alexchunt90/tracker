@@ -29,6 +29,10 @@
   "elevation": {
     "enabled": true
   },
+  "rain": {
+    "enabled": true,
+    "days": 7
+  },
   "inaturalist": {
     "enabled": true,
     "perPage": 80

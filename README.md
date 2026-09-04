@@ -370,6 +370,59 @@ under a photograph taken well up a mountain.
 
 Delete `elevation/` to re-ask.
 
+## Recent rainfall
+
+Where it has already rained, drawn under the pins. The umbrella button on the
+map turns it on; it is off until asked for, because most sessions are about a
+find you already have. Optional, and switched off entirely with
+`rain.enabled: false` in `config.json`.
+
+This is the one layer that is not about the log. The log knows where you have
+already been; this answers where to go next, which for fungi is mostly a
+question about water — they fruit days behind the rain, so ground that was
+soaked last week is the signal.
+
+Nearly every free weather API is **forward** looking, because a forecast is
+what most callers want. This uses [Open-Meteo](https://open-meteo.com)'s
+`past_days`, which fills observed days in on the same endpoint that serves
+forecasts. No key, no signup, and it will answer in inches. Their data is
+CC-BY, which the credit line under the map carries.
+
+**The window is whole days ending yesterday** — seven of them by default, set
+with `rain.days`. Today is deliberately excluded: it is half-measured and
+revises upward all afternoon, so including it would make the same ground answer
+differently before and after dinner.
+
+**Samples snap to a fixed global lattice** rather than to the viewport, at one
+of five spacings from 0.05° to 0.8°. Panning otherwise produces a different
+bounding box every few pixels and a cache keyed on the box would miss on every
+one of them; snapped, the same ground answers with the same coordinates however
+you got there, so a pan re-reads what is already on disk and asks upstream only
+about the strip that just came into view. Each spacing is twice the one below
+it, so the coarse lattices are subsets of the fine ones and zooming out re-uses
+every other cell.
+
+The finest spacing that covers the screen in under six hundred points wins.
+**When even the coarsest one cannot cover it, the layer draws nothing and says
+"zoom in to sample this area"** rather than shading the part it could reach —
+a half-sampled map is indistinguishable from a map of genuinely dry ground, and
+that is the one way this layer could actively mislead. `test/rain.test.js`
+holds that invariant, because it is a failure with nothing to see.
+
+The wash is composited onto the tiles with `screen`, so it tints rather than
+covers: over a uniformly wet region a translucent overlay meets itself and
+becomes a flat blue rectangle with the roads and ridgelines gone, and a map you
+cannot navigate is no use for deciding where to walk. The bands run blue to
+pale cyan, clear of the greens, ambers and reds the edibility tiers own — a
+wash in those colours would read as a claim about what is growing there.
+
+This is reanalysis, not a rain gauge in that clearing, and the blur says so:
+the smear is about as wide as one cell, so the picture cannot be read to a
+precision the model does not have.
+
+Answers are cached under `rain/`, one file per lattice cell, and re-fetched
+when the date rolls over. Delete `rain/` to re-ask.
+
 ## iNaturalist
 
 Optional, on by default, and switched off with `inaturalist.enabled: false` in
