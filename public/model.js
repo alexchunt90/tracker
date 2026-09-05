@@ -583,6 +583,11 @@ const Model = (() => {
    * files under Tricholoma magnivelare and iNaturalist under T. murrillianum.
    * `formerNames` are names it has been retired from. All three are worth
    * searching, because records exist under all three.
+   *
+   * `relatives` is deliberately absent. Those are other species mentioned in
+   * this one's entry, not other names for this one, and folding them in would
+   * make a search for a relative return this record and the iNaturalist lookup
+   * return a different fungus's observations.
    */
   function speciesNames(sp) {
     const seen = new Set();

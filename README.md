@@ -139,6 +139,15 @@ Searching only the guide's name finds a single record in the whole region;
 searching both finds several hundred. All three fields are searched, and
 iNaturalist unions the results.
 
+**Closely related** is the one list that is not a name. A guide's entry is
+rarely about a single fungus: it names the rest of the genus in a closing
+sentence, or raises a neighbour only to tell it apart. Those species were
+homeless — not synonyms, not former names, and the single **Lookalikes** line
+is for what a specimen could be *mistaken* for, which is a narrower claim than
+being mentioned alongside. They are recorded here and, unlike the three names
+above, are never searched: a relative is a different organism, and unioning it
+into the lookup would return somebody else's observations under this record.
+
 ## Fungal characters
 
 Shown only for fungi: subkingdom/division, former scientific names, how it

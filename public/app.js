@@ -3761,7 +3761,8 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
     id: uid(), version: 0, kind: kind || state.config?.nature?.defaultType || 'fungi',
     commonName: '', scientificName: '', habitat: '', notes: '',
     edibility: 'unknown', lookalikes: '',
-    division: '', nutrition: 'unknown', characters: {}, formerNames: [], synonyms: [], photos: [],
+    division: '', nutrition: 'unknown', characters: {}, formerNames: [], synonyms: [], relatives: [],
+    photos: [],
     excerpts: [],
     // A species adopted from somebody else's record arrives with its names
     // filled in; the identification is still yours to make.
@@ -3880,6 +3881,28 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   synonymWrap.style.marginTop = '10px';
   traits.append(synonymWrap);
 
+  /*
+   * Other species, not other names — the opposite of the two lists above.
+   *
+   * A guide's entry is rarely about one fungus. It names the rest of the genus
+   * in a closing sentence, or raises a neighbour only to tell it apart, and
+   * those species had nowhere to live: they are not synonyms, they are not
+   * former names, and the single lookalikes line is for what a specimen could
+   * be mistaken for rather than for everything mentioned in passing.
+   *
+   * Deliberately not part of speciesNames, so none of these names is searched.
+   * A relative is a different organism; unioning it into the iNaturalist
+   * lookup would quietly return somebody else's observations under this record.
+   */
+  const relatives = nameListEditor(record.relatives || [], 'A species named alongside this one');
+  const relativeWrap = el('div');
+  relativeWrap.append(el('span', 'field-label', 'Closely related'), relatives.node);
+  relativeWrap.append(el('p', 'field-hint',
+    'Another species the guides mention under this one \u2014 a different organism, '
+    + 'not another name for it. Not searched.'));
+  relativeWrap.style.marginTop = '10px';
+  traits.append(relativeWrap);
+
   const syncKind = () => { traits.hidden = kindPick.value !== 'fungi'; };
   kindPick.addEventListener('change', syncKind);
   syncKind();
@@ -3977,6 +4000,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
       characters: kindPick.value === 'fungi' ? readCharacters(characterFields) : {},
       formerNames: kindPick.value === 'fungi' ? former.values() : [],
       synonyms: kindPick.value === 'fungi' ? synonyms.values() : [],
+      relatives: kindPick.value === 'fungi' ? relatives.values() : [],
     };
     // The two tri-states the characters replaced. Dropped on save so a
     // migrated record cannot carry two competing answers about its gills.
