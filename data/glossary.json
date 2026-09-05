@@ -1,5 +1,5 @@
 {
-  "version": 37,
+  "version": 39,
   "terms": {
     "acrid": {
       "definition": "with a sharp biting taste, hot and peppery",
@@ -1234,9 +1234,6 @@
     "radially streaked": {
       "definition": ""
     },
-    "radially wrinkled": {
-      "definition": ""
-    },
     "radish": {
       "definition": ""
     },
@@ -1629,6 +1626,10 @@
     "veil": {
       "definition": "A layer of tissue covering part of the young fruit body, often leaving traces as it tears.",
       "source": "written for this log"
+    },
+    "veil remants": {
+      "added": true,
+      "category": "descriptor"
     },
     "velvety": {
       "definition": "Covered in a dense short pile, like velvet.",
