@@ -3051,7 +3051,7 @@ function buildIdentifySheet(sheet, stored, close) {
   let fields = [];
   if (canTag) {
     const charSection = sheetSection(sheet, 'What you can see',
-      'Tag the specimen in front of you. Every tag narrows the list below.');
+      'Tag the specimen in front of you. Every tag narrows the list below. A number is a size in centimetres.');
     const grid = el('div', 'characters');
     fields = Model.FUNGI_CHARACTERS.map((spec) => {
       const f = tagField(spec, Model.character(draftObs, spec.id), () => { collect(); redraw(); });
@@ -3297,7 +3297,10 @@ function buildIdentifySheet(sheet, stored, close) {
 
     // The recorded characters, with the ones your tags agreed on marked. The
     // rest are what to go and look at again before committing.
-    const agreed = new Set((match?.matched || []).map((h) => `${h.character.id}:${Model.termGroup(h.tag.text)}`));
+    // A measure that fitted marks the species' range chip, which carries no
+    // single term to key on — so it is keyed on the category instead.
+    const agreedKey = (id, tag) => `${id}:${tag.category === 'measure' ? 'measure' : Model.termGroup(tag.text)}`;
+    const agreed = new Set((match?.matched || []).map((h) => agreedKey(h.character.id, h.tag)));
     const traits = Model.fungiTraits(sp);
     if (traits.length) {
       const list = el('dl', 'facts chosen-traits');
@@ -3309,7 +3312,7 @@ function buildIdentifySheet(sheet, stored, close) {
           const chips = el('div', 'tag-list is-static');
           for (const tag of trait.tags) {
             const chip = tagChip(tag);
-            if (agreed.has(`${trait.id}:${Model.termGroup(tag.text)}`)) chip.classList.add('is-agreed');
+            if (agreed.has(agreedKey(trait.id, tag))) chip.classList.add('is-agreed');
             chips.append(chip);
           }
           dd.append(chips);
@@ -3386,6 +3389,11 @@ function buildIdentifySheet(sheet, stored, close) {
 
 // --- the glossary -----------------------------------------------------------
 
+// The categories a *word* can be given. A measure is a number, recognised by
+// its shape; assigning the category to a word would make a tag that reads as
+// a size and is not one.
+const WORD_CATEGORIES = Model.TAG_CATEGORIES.filter((c) => c.id !== 'measure');
+
 /**
  * Every term the log knows, what it means, and what it is classified as.
  *
@@ -3456,7 +3464,7 @@ function renderGlossary({ rows }) {
       { id: 'all', label: 'All categories', count: all.length },
       // Each category carries the colour its tags are drawn in, so the list
       // reads the way the tags do.
-      ...Model.TAG_CATEGORIES.map((c) => ({
+      ...WORD_CATEGORIES.map((c) => ({
         id: c.id,
         label: c.label,
         count: all.filter((t) => t.category === c.id).length,
@@ -3542,7 +3550,7 @@ function renderGlossaryAdd(all) {
   const wrap = clear($('glossary-add'));
   const box = input('text', '', { placeholder: 'Add a term\u2026', class: 'glossary-add-term' });
   box.setAttribute('aria-label', 'New glossary term');
-  const pick = select(Model.TAG_CATEGORIES, 'note');
+  const pick = select(WORD_CATEGORIES, 'note');
   pick.setAttribute('aria-label', 'Category for the new term');
   const go = el('button', 'solid-button', 'Add');
   go.type = 'button';
@@ -3579,7 +3587,7 @@ function glossaryRow(t) {
 
   // The category, settable here and nowhere else.
   const catCell = el('td', 'nowrap gl-cat');
-  const pick = select(Model.TAG_CATEGORIES, t.category);
+  const pick = select(WORD_CATEGORIES, t.category);
   pick.addEventListener('change', () => setTermCategory(t.term, pick.value));
   catCell.append(pick);
   tr.append(catCell);
@@ -3862,7 +3870,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   traits.append(traitRow);
 
   traits.append(el('p', 'character-note',
-    'Type a tag and press Enter. No tags means not recorded; tick N/A when the species genuinely has no such structure. Tags colour themselves by what they are — a term\u2019s category is set in the Glossary.'));
+    'Type a tag and press Enter. No tags means not recorded; tick N/A when the species genuinely has no such structure. Tags colour themselves by what they are — a term\u2019s category is set in the Glossary. A number is a size in centimetres: 3–10 cm records the smallest and largest, a lone 8 cm is a ceiling.'));
 
   const grid = el('div', 'characters');
   const characterFields = Model.FUNGI_CHARACTERS.map((spec) => {
@@ -4083,6 +4091,20 @@ function showTagTip(chip, tag) {
   const tip = clear(tagTipElement());
   tip.append(el('div', 'tag-tip-term', key));
 
+  // A measure has no glossary entry to look up and never will — it is a
+  // number, not a word — so the tip says what the number means instead of
+  // reporting it undefined.
+  if (tag.category === 'measure') {
+    tip.append(el('p', 'tag-tip-def', tag.range
+      ? (tag.range.min === null
+        ? 'The largest size recorded for this species, in centimetres.'
+        : 'The smallest and largest sizes recorded for this species, in centimetres.')
+      : 'A size, in whole centimetres.'));
+    tip.append(el('p', 'tag-tip-cat', Model.tagCategory(tag.category).label));
+    placeTip(tip, chip.getBoundingClientRect());
+    return;
+  }
+
   const definition = (entry?.definition || '').trim();
   if (definition) {
     tip.append(el('p', 'tag-tip-def', definition));
@@ -4212,7 +4234,9 @@ function tagField(spec, value, onChange) {
   const suggestions = el('div', 'tag-suggest');
   suggestions.hidden = true;
 
-  const box = input('text', '', { placeholder: 'Add a tag…', autocomplete: 'off' });
+  // The characters a guide gives a size for say so, since a number is the one
+  // kind of tag the suggestions cannot show.
+  const box = input('text', '', { placeholder: spec.measured ? 'Add a tag, or a size in cm…' : 'Add a tag…', autocomplete: 'off' });
 
   const changed = () => { draw(); if (!suggestions.hidden) drawSuggestions(); onChange?.(); };
 
@@ -4234,8 +4258,15 @@ function tagField(spec, value, onChange) {
     for (const part of raw.split(',')) {
       const text = part.trim();
       if (!text) continue;
-      if (tags.some((t) => Model.normalizeTag(t.text) === Model.normalizeTag(text))) continue;
-      tags.push(Model.readTag(text, spec));
+      // A size becomes a measure — "3–10 cm" becomes two of them — and a
+      // size the app will not hold is refused out loud rather than filed as
+      // a note that looks like a tag.
+      const { tags: read, error } = Model.tagsFrom(text, spec);
+      if (error) { notice(error); continue; }
+      for (const tag of read) {
+        if (tags.some((t) => Model.normalizeTag(t.text) === Model.normalizeTag(tag.text))) continue;
+        tags.push(tag);
+      }
     }
     changed();
     box.focus();
@@ -4259,6 +4290,23 @@ function tagField(spec, value, onChange) {
   function drawSuggestions() {
     const groups = tagSuggestions(spec, box.value, tags);
     clear(suggestions);
+    // A number is a size. There is nothing to suggest for one — every whole
+    // centimetre is valid — so the popover shows what Enter will record
+    // instead: the chip it becomes, or the reason it will be refused.
+    const measure = Model.parseMeasure(box.value);
+    if (measure) {
+      if (measure.error) {
+        suggestions.append(el('p', 'tag-suggest-empty', measure.error));
+        return;
+      }
+      const row = el('div', 'tag-suggest-group');
+      row.append(el('span', 'tag-suggest-label', spec.measured ? 'Size — press Enter' : 'Size — press Enter (usually recorded under Fruit body, Cap or Stipe)'));
+      const chips = el('div', 'tag-list is-static');
+      for (const cm of measure.values) chips.append(tagChip({ text: Model.measureText(cm), category: 'measure' }, { tip: false }));
+      row.append(chips);
+      suggestions.append(row);
+      return;
+    }
     if (!groups.length) {
       suggestions.append(el('p', 'tag-suggest-empty',
         box.value.trim() ? 'No known term matches — press Enter to add it anyway.' : 'Nothing to suggest.'));

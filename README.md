@@ -189,7 +189,7 @@ a colour word and an attachment term never look like the same kind of claim:
 | **colour**     | a swatch of itself | egg-yellow, olive, pale yellow        |
 | **descriptor** | blue              | decurrent, adnate, crowded, viscid, bitter |
 | **habitat**    | green             | soil, duff, dead hardwood, Douglas fir |
-| **measure**    | mono grey         | 3–10 cm, 3–5 per mm                   |
+| **measure**    | mono grey         | 8 cm, 3–10 cm                         |
 | **note**       | dashed grey       | anything the vocabulary does not know |
 
 The category is **guessed** from a built-in mycological vocabulary and can be
@@ -208,6 +208,38 @@ in the vocabulary visible. That is the only way the vocabulary gets better.
 
 The word lists are plain arrays at the top of `public/model.js` — `FORMS`,
 `DESCRIPTORS`, `HABITATS` and `COLOURS`. Add to them as the log grows.
+
+### Measures
+
+Size is a tag like any other, and unlike every other. Like the others because
+it lives under a character — the cap is 20 cm the way the cap is convex — and
+is recorded on a find and on a species alike. Unlike them because it is a
+number, and a number has no vocabulary: **every whole centimetre under 200 is
+a valid tag**, so a measure is recognised by its shape rather than looked up.
+It is kept out of the Glossary and out of the suggestions, which would
+otherwise offer two hundred near-identical rows.
+
+Type a number into any character and it becomes a measure: `20`, `20 cm`,
+`3–10 cm`, `up to 20 cm`, `5 mm` and `1.5 m` all parse, and all land in whole
+centimetres (anything under a centimetre rounds up to one — a fungus with a
+size has a size). A size the app will not hold is refused with a reason rather
+than filed as a note. Fruit body, Cap and Stipe are the characters guides give
+a size for, and their fields say so; spore measurements are microns, a pair,
+and never a measure — `8–11 × 5–6 µm` stays a dashed note.
+
+**On a find, a measure is what you measured.** On a species it is a range:
+the smallest and largest measures tagged are the bounds, and a lone one is a
+ceiling, which is how a guide's "cap to 8 cm" reads. Typing `3–10 cm` into a
+species gives it both ends as two tags, removable one at a time; every reading
+surface folds them back into a single `3–10 cm` chip.
+
+The ranking compares a size **by number, never by spelling**: a specimen at
+8 cm agrees with a species recorded 3–10 cm though no tag on the species says
+"8 cm". Outside the range it merely fails to score, like any tag the species
+does not have — a guide's range is typical, not a wall, and a cap two
+centimetres over it is not a different organism. Sizes written before this
+existed (`up to 20 cm`, `3–10 cm` as one tag) are read forward into the same
+tags typing them today would give.
 
 A colour tag paints the colour it names. The text stays neutral: some of these
 are near-black, and a "black" tag written in black would be unreadable.
@@ -304,8 +336,9 @@ What it does **not** do is merge things that merely sound similar: `gills` and
 `false gills` stay distinct, because they are different structures and the
 distinction is the whole point of the second name.
 
-Measurements are left out. "3–10 cm" is a value, not a word to define, and they
-would bury the terms that are.
+Measurements are left out. "10 cm" is a value, not a word to define, and two
+hundred of them would bury the terms that are. Nor can a word be given the
+measure category here — a measure is a number, recognised by its shape.
 
 ## Excerpts
 

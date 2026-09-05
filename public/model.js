@@ -196,7 +196,7 @@ const Model = (() => {
     { id: 'colour', label: 'Colour', hint: 'Shown with a swatch of the colour named.' },
     { id: 'descriptor', label: 'Descriptor', hint: 'A quality — adnate, viscid, crowded, bitter.' },
     { id: 'habitat', label: 'Habitat', hint: 'What it grows on or with — a tree, wood, soil, dung.' },
-    { id: 'measure', label: 'Measure', hint: 'A size or a count.' },
+    { id: 'measure', label: 'Measure', hint: 'A size, in whole centimetres — 20 cm.' },
     { id: 'note', label: 'Note', hint: 'Anything the vocabulary does not know.' },
   ];
   const tagCategory = (id) => TAG_CATEGORIES.find((c) => c.id === id) || TAG_CATEGORIES[TAG_CATEGORIES.length - 1];
@@ -380,7 +380,7 @@ const Model = (() => {
       const last = words[words.length - 1];
       // "pale yellow", "dark olive" — a colour with something in front of it.
       if (COLOURS[last] && words.slice(0, -1).every((w) => COLOUR_MODIFIERS.has(w) || COLOURS[w])) found = 'colour';
-      else if (/\d/.test(key)) found = 'measure';
+      else if (parseMeasure(key)?.values.length) found = 'measure';
       else found = 'note';
     }
 
@@ -409,6 +409,106 @@ const Model = (() => {
     return COLOURS[words[words.length - 1]] || null;
   }
 
+  // --- measures -------------------------------------------------------------
+
+  /*
+   * Size is a tag like any other, and unlike every other.
+   *
+   * Like the others because it lives under a character — the cap is 20 cm the
+   * way the cap is convex — and is recorded on a find and on a species alike.
+   * Unlike them because it is a number, and a number has no vocabulary: every
+   * whole centimetre is a valid tag, so listing them would put two hundred
+   * near-identical rows in the Glossary and offer them all in every popover.
+   * A measure is therefore recognised by its shape rather than looked up, and
+   * is kept out of the Glossary and the suggestions altogether.
+   *
+   * One unit, whole centimetres, under two metres. Guides give cap and stipe
+   * in centimetres, finds get measured against a hand or a knife, and the
+   * numbers have never needed more precision than that. Anything under a
+   * centimetre rounds up to one rather than down to nothing, since a fungus
+   * with a size has a size.
+   *
+   * On a find a measure is what you measured. On a species it is a range:
+   * the smallest and largest measure tagged are the bounds, and a lone one is
+   * a ceiling — which is how a guide's "cap to 8 cm" reads, and is what the
+   * one-number tags written before this existed meant.
+   *
+   * Spore sizes are not measures. They are microns, they are a pair, and
+   * nobody in the field has a microscope; "8–11 × 5–6 µm" does not parse and
+   * stays a note.
+   */
+  const MEASURE_MAX_CM = 200;
+
+  // "20", "20 cm", "20cm", "3-10 cm", "3–10 cm", "3 to 10 cm", "up to 20 cm",
+  // "2.5 cm", "5 mm", "1.5 m". The whole string, or it is not a measure.
+  const MEASURE = /^(?:up to|to|under|≤|<=)?\s*(\d+(?:[.,]\d+)?)\s*(?:(?:-|–|—|to)\s*(\d+(?:[.,]\d+)?))?\s*(cm|mm|m)?\.?$/;
+
+  /**
+   * The whole centimetres a piece of text names, or null when it names none.
+   *
+   * A range is two values, a single figure is one. Out of range is an answer
+   * too — `{ values: [], error }` — so the field can say why it refused rather
+   * than quietly filing "250 cm" as a note.
+   */
+  function parseMeasure(text) {
+    const m = normalizeTag(text).match(MEASURE);
+    if (!m) return null;
+    const unit = m[3] || 'cm';
+    const scale = unit === 'mm' ? 0.1 : unit === 'm' ? 100 : 1;
+    const values = [m[1], m[2]].filter(Boolean)
+      .map((v) => Math.max(1, Math.round(Number(v.replace(',', '.')) * scale)));
+    if (values.some((v) => v >= MEASURE_MAX_CM)) {
+      return { values: [], error: `Sizes are whole centimetres under ${MEASURE_MAX_CM} cm.` };
+    }
+    // Sorted, so "10–3 cm" is the same range as "3–10 cm"; deduplicated, so
+    // "5–5 cm" is one tag.
+    return { values: [...new Set(values)].sort((a, b) => a - b), error: null };
+  }
+
+  /** How a measure is written, everywhere. */
+  const measureText = (cm) => `${cm} cm`;
+
+  /** The centimetres a measure tag holds, or null for any other tag. */
+  function measureOf(text) {
+    const parsed = parseMeasure(text);
+    return parsed && parsed.values.length === 1 ? parsed.values[0] : null;
+  }
+
+  /**
+   * What a set of tags says about size, as a range.
+   *
+   * Two or more measures: the smallest and the largest, whatever else was
+   * tagged between them. One measure: a ceiling — "cap to 8 cm" — with no
+   * floor. None: null, which is "size not recorded" and matches nothing.
+   */
+  function measureRange(tags) {
+    const cms = (tags || []).map((t) => measureOf(t.text)).filter((v) => v !== null);
+    if (!cms.length) return null;
+    const max = Math.max(...cms);
+    const min = cms.length > 1 ? Math.min(...cms) : null;
+    const text = min === null ? `to ${measureText(max)}` : min === max ? measureText(max) : `${min}–${measureText(max)}`;
+    return { min, max, text };
+  }
+
+  /** Does a measured specimen fit a recorded range? Inclusive at both ends. */
+  const withinRange = (cm, range) =>
+    !!range && cm <= range.max && (range.min === null || cm >= range.min);
+
+  /**
+   * Tags as a reading surface shows them: the measures folded into one chip
+   * that reads as the range, ahead of the words the way a guide leads with
+   * the size. For species only — a find's two measures are two specimens,
+   * not a range, and stay as they were tagged.
+   */
+  function displayTags(tags) {
+    const range = measureRange(tags);
+    if (!range) return tags;
+    return [
+      { text: range.text, category: 'measure', range },
+      ...tags.filter((t) => measureOf(t.text) === null),
+    ];
+  }
+
   // --- fungal characters ----------------------------------------------------
 
   /*
@@ -430,17 +530,17 @@ const Model = (() => {
      * specimen it has a fruit body, so the N/A tick is suppressed rather than
      * offered and left meaninglessly unticked.
      */
-    { id: 'body', label: 'Fruit body', absent: 'No fruit body', alwaysPresent: true,
+    { id: 'body', label: 'Fruit body', absent: 'No fruit body', alwaysPresent: true, measured: true,
       vocab: ['agaricoid', 'gilled', 'boletoid', 'bracket', 'polypore', 'crust', 'resupinate',
         'cup', 'club', 'coral', 'fan', 'puffball', 'earthstar', 'earthball', 'stinkhorn',
         'pleurotoid', 'collybioid',
         'truffle', 'jelly', 'toothed', 'morel', 'false morel', 'saddle', 'trumpet',
         'nidulariaceous', "bird's nest"] },
-    { id: 'cap', label: 'Cap', absent: 'No distinct cap',
+    { id: 'cap', label: 'Cap', absent: 'No distinct cap', measured: true,
       vocab: ['cap', 'bracket', 'crust', 'convex', 'plane', 'depressed', 'umbonate', 'campanulate', 'conical', 'glutinous', 'viscid', 'greasy', 'dry', 'shiny', 'velvety', 'scaly', 'zonate', 'striate', 'hygrophanous', 'inrolled', 'wavy', 'split'] },
     { id: 'hymenium', label: 'Gills / pores', absent: 'Neither gills nor pores',
       vocab: ['gills', 'false gills', 'pores', 'teeth', 'ridges', 'folds', 'tubes', 'gleba', 'maze-like', 'smooth', 'adnate', 'adnexed', 'decurrent', 'free', 'sinuate', 'crowded', 'close', 'distant', 'broad', 'forking', 'waxy'] },
-    { id: 'stipe', label: 'Stipe', absent: 'Sessile — no stipe',
+    { id: 'stipe', label: 'Stipe', absent: 'Sessile — no stipe', measured: true,
       vocab: ['stipe', 'ring', 'annulus', 'volva', 'cortina', 'basal bulb', 'scabers', 'reticulation', 'equal', 'tapering', 'clavate', 'bulbous', 'hollow', 'stuffed', 'solid', 'fibrous', 'fragile', 'slender', 'eccentric', 'lateral', 'sessile'] },
     { id: 'sporePrint', label: 'Spore colour', absent: 'No print obtainable',
       vocab: ['white', 'cream', 'buff', 'pink', 'ochre', 'rust', 'cinnamon', 'brown', 'dark-brown', 'purple', 'black', 'yellow'] },
@@ -489,13 +589,53 @@ const Model = (() => {
   ];
   const nutrition = (id) => NUTRITION.find((n) => n.id === (id || 'unknown')) || NUTRITION[0];
 
-  /** A stored tag, in the shape the views want. */
-  const readTag = (raw, spec) => {
-    if (typeof raw === 'string') return { text: raw.trim(), category: classifyTag(raw, spec) };
-    const text = String(raw?.text || '').trim();
+  /**
+   * A stored tag, in the shape the views want. Usually one; a measure can be
+   * two, which is why this returns a list.
+   *
+   * Measures are read forward here. "up to 20 cm" and "3–10 cm" were written
+   * as single tags before a measure was a number, and they become "20 cm" and
+   * the pair "3 cm", "10 cm" on the way in — the same tags typing them today
+   * would produce, so the stored spelling never matters again. A parsed
+   * measure is a measure whatever category was stored beside it: the category
+   * is a fact about the shape of the text, not a choice.
+   */
+  const readTags = (raw, spec) => {
+    const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim();
+    if (!text) return [];
+    // A size past the limit, stored before there was one, stays a note rather
+    // than disappearing: a tag that vanishes on read is a tag nobody can fix.
+    const measure = parseMeasure(text);
+    if (measure?.values.length) return measure.values.map((cm) => ({ text: measureText(cm), category: 'measure' }));
     // A stored category is honoured even when the vocabulary disagrees: it was
     // set by hand, and the vocabulary is only ever a guess.
-    return { text, category: raw?.category || classifyTag(text, spec) };
+    const category = (typeof raw === 'object' && raw?.category) || classifyTag(text, spec);
+    return [{ text, category }];
+  };
+  const readTag = (raw, spec) => readTags(raw, spec)[0] || { text: '', category: 'note' };
+
+  /**
+   * What typing something into a tag field produces.
+   *
+   * One tag, usually. A range typed as one — "3–10 cm" — is its two ends, and
+   * a size the app will not hold comes back as no tags and a reason, so the
+   * field can say so instead of filing it as a note.
+   */
+  function tagsFrom(text, spec) {
+    const measure = parseMeasure(text);
+    if (measure?.error) return { tags: [], error: measure.error };
+    return { tags: readTags(text, spec), error: null };
+  }
+
+  /** Tags with a measure already recorded, so a pasted list cannot double one. */
+  const dedupeTags = (tags) => {
+    const seen = new Set();
+    return tags.filter((t) => {
+      const key = normalizeTag(t.text);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   };
 
   const characterSpec = (id) => FUNGI_CHARACTERS.find((c) => c.id === id) || null;
@@ -516,12 +656,12 @@ const Model = (() => {
 
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
       if (raw.na) return { na: true, tags: [], state: 'absent' };
-      const tags = (Array.isArray(raw.tags) ? raw.tags : splitToTags(raw.text)).map((t) => readTag(t, spec)).filter((t) => t.text);
+      const tags = dedupeTags((Array.isArray(raw.tags) ? raw.tags : splitToTags(raw.text)).flatMap((t) => readTags(t, spec)));
       return { na: false, tags, state: tags.length ? 'recorded' : 'unrecorded' };
     }
     // Free text, from before the characters were tagged, or hand-edited in.
     if (typeof raw === 'string' || Array.isArray(raw)) {
-      const tags = (Array.isArray(raw) ? raw : splitToTags(raw)).map((t) => readTag(t, spec)).filter((t) => t.text);
+      const tags = dedupeTags((Array.isArray(raw) ? raw : splitToTags(raw)).flatMap((t) => readTags(t, spec)));
       return { na: false, tags, state: tags.length ? 'recorded' : 'unrecorded' };
     }
     // Older still: two tri-states, before there were characters at all.
@@ -542,7 +682,7 @@ const Model = (() => {
   function characterValue(sp, spec) {
     const c = character(sp, spec.id);
     if (c.state === 'absent') return spec.absent;
-    return c.tags.map((t) => t.text).join(', ');
+    return displayTags(c.tags).map((t) => t.text).join(', ');
   }
 
   /** Everything said about a fungus, for a summary. Silent on what is unsaid. */
@@ -552,13 +692,15 @@ const Model = (() => {
     for (const spec of FUNGI_CHARACTERS) {
       const c = character(sp, spec.id);
       if (c.state === 'unrecorded') continue;
+      // A species' measures read as one range chip; see displayTags.
+      const tags = displayTags(c.tags);
       out.push({
         // The character this came from, so a caller can line the row up
         // against a tag recorded under the same one.
         id: spec.id,
         label: spec.label,
-        value: c.state === 'absent' ? spec.absent : c.tags.map((t) => t.text).join(', '),
-        tags: c.tags,
+        value: c.state === 'absent' ? spec.absent : tags.map((t) => t.text).join(', '),
+        tags,
         absent: c.state === 'absent',
       });
     }
@@ -610,6 +752,12 @@ const Model = (() => {
    * else, and a filter that disagreed with the matcher would be a trap.
    */
   function speciesHasTag(sp, term) {
+    // A measure is matched by range, not by spelling: "8 cm" finds every
+    // species whose recorded size takes in eight centimetres.
+    const cm = measureOf(term);
+    if (cm !== null) {
+      return FUNGI_CHARACTERS.some((spec) => withinRange(cm, measureRange(character(sp, spec.id).tags)));
+    }
     const want = new Set(queryGroups(term));
     if (!want.size) return false;
     return FUNGI_CHARACTERS.some((spec) =>
@@ -968,8 +1116,19 @@ const Model = (() => {
       // species whose cap is recorded as `bruises brown`, which says the
       // colour was not there until the cap was handled.
       const have = new Set(known.tags.map((t) => termGroup(t.text)));
+      // A size is compared as a number against the species' range, never as a
+      // word: a specimen at 8 cm agrees with a species recorded 3–10 cm even
+      // though no tag on the species says "8 cm". Outside the range it fails
+      // to score, like any other tag the species does not have — a guide's
+      // range is typical, not a wall, and a cap two centimetres over it is
+      // not a different organism.
+      const range = measureRange(known.tags);
       for (const tag of seen) {
-        if (have.has(termGroup(tag.text))) matched.push({ character: spec, tag });
+        const cm = measureOf(tag.text);
+        if (cm !== null) {
+          if (withinRange(cm, range)) matched.push({ character: spec, tag, range });
+          else unmatched += 1;
+        } else if (have.has(termGroup(tag.text))) matched.push({ character: spec, tag });
         else unmatched += 1;
       }
     }
@@ -1170,7 +1329,8 @@ const Model = (() => {
     findEdibility, edibilityCounts, ageOpacity,
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,
-    classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, characterSpec,
+    classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, readTags, tagsFrom, characterSpec,
+    MEASURE_MAX_CM, parseMeasure, measureText, measureOf, measureRange, withinRange, displayTags,
     bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup, queryGroups,
     byId, view, viewAll, displayName,
     summary, latestOf, lifeList,
