@@ -610,10 +610,10 @@ const Model = (() => {
    * else, and a filter that disagreed with the matcher would be a trap.
    */
   function speciesHasTag(sp, term) {
-    const want = termGroup(normalizeTag(term || ''));
-    if (!want) return false;
+    const want = new Set(queryGroups(term));
+    if (!want.size) return false;
     return FUNGI_CHARACTERS.some((spec) =>
-      character(sp, spec.id).tags.some((t) => termGroup(t.text) === want));
+      character(sp, spec.id).tags.some((t) => want.has(termGroup(t.text))));
   }
 
   /**
@@ -865,6 +865,36 @@ const Model = (() => {
   }
 
   /**
+   * Every group that satisfies a search for this term — the term's own, plus
+   * the narrower ones it covers.
+   *
+   * One direction only, and that is the whole point. `bruises blue` is a
+   * narrower claim than `blue`: it says the colour arrived when the flesh was
+   * cut. So a search for `blue` should turn up the species that bruise it,
+   * while a search for `bruises blue` should not turn up every blue cap.
+   * Folding the two into one group — the obvious fix — would have done both,
+   * and would also have made a search for `bruises white` return the milk-caps
+   * whose latex is merely white.
+   *
+   * The staining character was where this bit. Seventeen species record a bare
+   * colour there and nine `bruises` terms exist beside them, and until now the
+   * two could not find each other: `blue` matched none of the eighteen species
+   * recorded as bruising blue.
+   *
+   * Derived from DESCRIPTORS rather than kept as a second table, so a
+   * `bruises white` added there is found by a search for `white` with no
+   * further edit here.
+   */
+  function queryGroups(text) {
+    const key = normalizeTag(text);
+    if (!key) return [];
+    const groups = [termGroup(key)];
+    const bruised = `bruises ${key}`;
+    if (DESCRIPTORS.has(bruised)) groups.push(termGroup(bruised));
+    return groups;
+  }
+
+  /**
    * Does an observed body form rule this species out?
    *
    * Only when both sides name a form the table knows, and the two sets of
@@ -930,6 +960,13 @@ const Model = (() => {
       compared += 1;
       // Canonical forms, so `ridges` on the specimen matches `false gills` in
       // the library rather than counting as a miss.
+      //
+      // Deliberately NOT the widening speciesHasTag uses. There, `blue` is a
+      // net cast wide and `bruises blue` is a fair catch. Here the two sides
+      // are asserting agreement, and a bare colour does not agree with a
+      // bruise: a specimen whose cap you tagged `brown` is not confirmed by a
+      // species whose cap is recorded as `bruises brown`, which says the
+      // colour was not there until the cap was handled.
       const have = new Set(known.tags.map((t) => termGroup(t.text)));
       for (const tag of seen) {
         if (have.has(termGroup(tag.text))) matched.push({ character: spec, tag });
@@ -1134,7 +1171,7 @@ const Model = (() => {
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,
     classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, characterSpec,
-    bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup,
+    bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup, queryGroups,
     byId, view, viewAll, displayName,
     summary, latestOf, lifeList,
     filter, sortByDate,

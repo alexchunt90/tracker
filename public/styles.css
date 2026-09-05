@@ -268,6 +268,9 @@ body {
 .sp-names { display: block; min-width: 0; }
 .sp-name { line-height: 1.25; }
 .sp-sci { display: block; margin-top: 1px; font-size: 12.5px; }
+/* Marks a species you have found. Carries the accent rather than a fixed
+   green so it stays the page's own colour when the accent is retuned. */
+.sp-found { margin-left: 6px; color: var(--accent); font-weight: 600; }
 
 /* --- type badge ---------------------------------------------------------- */
 
@@ -1366,7 +1369,6 @@ button.chosen-shot { border: 1px solid var(--rule); }
   border: 1px solid var(--rule); border-radius: var(--radius);
 }
 .glossary-def:placeholder-shown { color: var(--ink-faint); font-style: italic; }
-.glossary-source { margin: 3px 0 0; font-size: 11px; color: var(--ink-faint); }
 
 .glossary-same {
   width: 100%; margin-top: 5px;
@@ -1376,11 +1378,6 @@ button.chosen-shot { border: 1px solid var(--rule); }
 }
 .glossary-same::placeholder { color: var(--ink-faint); font-style: italic; }
 
-.glossary-set-by-hand {
-  display: block; margin-top: 3px;
-  font-family: var(--display); font-size: 9.5px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--accent);
-}
 /* Wraps, so a long character list cannot widen the column it sits in. */
 .glossary-chars {
   display: block; font-family: var(--body); font-size: 11px; color: var(--ink-faint);

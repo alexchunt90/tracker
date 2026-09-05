@@ -2186,7 +2186,7 @@ function renderSpeciesTable(life) {
   }
 
   for (const sp of sorted) {
-    const tr = el('tr', 'is-clickable' + (sp.seen ? '' : ' is-muted'));
+    const tr = el('tr', 'is-clickable');
     tr.append(cell(speciesThumb(sp), 'nowrap'));
     /*
      * Both names in one cell, the way a find card shows them: the name you
@@ -2198,7 +2198,26 @@ function renderSpeciesTable(life) {
      * "Unnamed" is not a name column.
      */
     const names = el('div', 'sp-names');
-    names.append(el('div', 'sp-name', sp.displayName));
+    const nameLine = el('div', 'sp-name');
+    nameLine.append(document.createTextNode(sp.displayName));
+    /*
+     * A tick for a species you have actually met.
+     *
+     * The row used to say this by grinding every unmet species down to
+     * --ink-faint, which is most of the library: four hundred names dimmed to
+     * mark the dozen that are not. So the mark now goes on the exception, and
+     * the names are all equally readable.
+     *
+     * It also survives the phone, where the Finds column is one of the three
+     * dropped as `is-wide` — the tick is then the only thing that says you
+     * have found this.
+     */
+    if (sp.seen) {
+      const tick = el('span', 'sp-found', '\u2713');
+      tick.title = `${sp.count} find${sp.count === 1 ? '' : 's'}`;
+      nameLine.append(tick);
+    }
+    names.append(nameLine);
     const under = sciLine(sp.displayName, sp.scientificName, 'sp-sci sci');
     if (under) names.append(under);
     tr.append(cell(names));
@@ -3411,8 +3430,6 @@ function glossaryRows(rows) {
     return {
       term,
       definition: entry.definition || '',
-      source: entry.source || '',
-      override: entry.category || '',
       category: Model.classifyTag(term, null),
       guessed: Model.guessCategory(term, null),
       sameAs: entry.sameAs || '',
@@ -3565,11 +3582,6 @@ function glossaryRow(t) {
   const pick = select(Model.TAG_CATEGORIES, t.category);
   pick.addEventListener('change', () => setTermCategory(t.term, pick.value));
   catCell.append(pick);
-  if (t.override) {
-    const mark = el('span', 'glossary-set-by-hand', 'set by hand');
-    mark.title = 'Overrides what the vocabulary would guess. Choose the guessed category again to clear it.';
-    catCell.append(mark);
-  }
   tr.append(catCell);
 
   // The definition, edited in place.
@@ -3583,7 +3595,6 @@ function glossaryRow(t) {
   // have to scroll a one-line box to read is not much better than none.
   box.addEventListener('input', () => autosize(box));
   defCell.append(box);
-  if (t.source) defCell.append(el('p', 'glossary-source', t.source));
   tr.append(defCell);
 
   const synCell = el('td', 'gl-same');
