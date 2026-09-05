@@ -54,11 +54,11 @@
   --gap: 20px;
   --radius: 3px;
 
-  /* One height for every control that shares a filter row, so the row reads as
-     a line rather than as three things that happen to sit next to each other.
-     Held as a token because the search box and the new-species button derive
-     their height differently — one from a 14px field, one from a 12px display
-     face — and matching them by eye drifts the moment either changes. */
+  /* One height for every control that shares a filter row, so a row reads as a
+     line rather than as things that happen to sit next to each other. Held as
+     a token because each of them derives its height differently — a 14px
+     field, a 12px display-face button, an 11px dropdown — and matching them by
+     eye drifts the moment any one of them changes. */
   --control-h: 31px;
   --wide: 1240px;
 
@@ -343,6 +343,18 @@ body {
    the one that can afford to truncate: its name is set in full at the head of
    the sheet, twice over. */
 #sheet .entry-row label.grow { flex: 1 1 130px; }
+/*
+ * What the find is, when, and where in figures — one line.
+ *
+ * The two word-and-menu controls take the slack and the coordinates keep their
+ * own width: nine characters stretched across a quarter of a desktop screen
+ * reads as a mistake. The bases matter as much as the growth — they are what
+ * makes a narrow screen break this two and two rather than three and one.
+ */
+.entry-row.is-lead label.fill { flex: 1 1 160px; min-width: 0; }
+.entry-row.is-lead label.fill input,
+.entry-row.is-lead label.fill select { width: 100%; max-width: none; }
+.entry-row.is-lead label.pin { flex: 0 1 auto; min-width: 0; }
 .entry-row input, .entry-row select, .entry-row textarea {
   font-family: var(--body); font-size: 14px; padding: 6px 8px;
   border: 1px solid var(--rule); border-radius: var(--radius);
@@ -430,12 +442,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
  */
 .view-toggle {
   display: flex; flex: none; gap: 0;
+  height: var(--control-h);
   border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden;
 }
 .view-toggle-button {
   font-family: var(--display); font-size: 11px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 6px 14px; cursor: pointer;
+  padding: 0 9px; cursor: pointer;
   background: transparent; color: var(--ink-soft); border: none;
 }
 .view-toggle-button + .view-toggle-button { border-left: 1px solid var(--rule); }
@@ -458,7 +471,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
    width rather than all of it, and reads from the left like everything after
    it. The tighter gap is what buys the last filter its place on the line. */
 #finds-block .filter-row { gap: 8px 12px; }
-#finds-block .filter-search { flex: 0 1 220px; justify-content: flex-start; }
+/* No box of its own on a wide screen: the search and the toggle are direct
+   flex children of the row, exactly as if this element were not here. */
+.finds-lead { display: contents; }
+/* The search grows and everything after it is carried along to the right. It
+   is the only control here you aim at rather than pick from, so it is the one
+   worth the width. */
+#finds-block .filter-search { flex: 1 1 220px; justify-content: flex-start; }
 #finds-block .filter-search input { max-width: none; }
 
 /* The library's three controls, likewise on one row: the search takes what is
@@ -471,10 +490,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .dropdown { position: relative; }
 
+/* Sized by the shared control height, not by its own font and padding. An
+   11px display face with 5px above and below lands four pixels short of the
+   14px fields it shares every filter row with — close enough to read as a
+   mistake rather than as a difference. */
 .dropdown-button {
   display: flex; align-items: center; gap: 7px;
+  height: var(--control-h);
   font-family: var(--display); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 5px 11px; cursor: pointer; border-radius: var(--radius);
+  padding: 0 11px; cursor: pointer; border-radius: var(--radius);
   background: var(--card-sunk); color: var(--ink-soft); border: 1px solid var(--rule);
 }
 .dropdown-button:hover { color: var(--ink); border-color: var(--accent-dim); }
@@ -502,6 +526,124 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .dropdown-option .count { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
 .dropdown-option-label { white-space: nowrap; }
 .dropdown-option.is-on .dropdown-option-label { color: var(--accent); }
+
+/* --- the glossary composer ------------------------------------------------ */
+/*
+ * Adding a term is the other direction from how most of this vocabulary
+ * arrives: usually you tag a species and the word turns up here wanting a
+ * definition. This is for a word read in a guide before you have met the thing
+ * it describes.
+ */
+/*
+ * Finding a term and adding one: two jobs, one rule between them.
+ *
+ * The rule is a single element in both layouts — a divider lying across the
+ * gap here, stood up into a bar when there is room for the two groups side by
+ * side. Two rules to keep in step would be two rules to get out of step.
+ *
+ * Stacked is the default rather than the exception. Laid out as a wrapping
+ * row, the groups break apart well before the rule does, and the rule is left
+ * standing at the end of the first line pointing at nothing.
+ */
+.glossary-controls { margin-bottom: 14px; }
+.glossary-controls .filter-row { margin-bottom: 10px; }
+.glossary-rule { height: 1px; margin-bottom: 10px; background: var(--accent); }
+
+.glossary-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.glossary-add-term {
+  flex: 1 1 220px; max-width: 320px; min-width: 0; height: var(--control-h); padding: 0 9px;
+  font-family: var(--body); font-size: 14px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.glossary-add select {
+  flex: none; height: var(--control-h); padding: 0 7px;
+  font-family: var(--body); font-size: 13px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.glossary-add .solid-button { flex: none; height: var(--control-h); padding-top: 0; padding-bottom: 0; }
+
+/* The delete column carries no heading — a word above a column of crosses
+   would be louder than the crosses. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.ledger td.gl-kill { text-align: right; }
+
+/* --- the species panel --------------------------------------------------- */
+/*
+ * A picker for four hundred species cannot be a list of four hundred species.
+ * Two short lists and a search box instead: what you are hunting, what you
+ * have been finding, and a way to type past both.
+ */
+.dropdown-button.is-picked { color: var(--accent); border-color: var(--accent-dim); }
+
+.species-menu {
+  /* Last control on the row, so it hangs from its right edge: anchored left it
+     opens off the side of the card. */
+  left: auto; right: 0;
+  min-width: 268px; max-width: 320px;
+  padding: 6px; gap: 0;
+}
+
+.species-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+
+.species-clear {
+  flex: none; padding: 5px 9px;
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--card-sunk); color: var(--ink-soft);
+  border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer;
+}
+.species-clear:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+.species-search {
+  flex: 1 1 auto; min-width: 0; padding: 5px 8px;
+  font-family: var(--body); font-size: 13px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
+/* The lists scroll, the search box does not: a query typed against a list that
+   has scrolled away is a query you cannot see the effect of. */
+.species-body { max-height: 46vh; overflow-y: auto; display: grid; gap: 2px; }
+
+.species-section + .species-section { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--rule-soft); }
+.species-section-head {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 3px 7px 4px;
+  font-family: var(--display); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.species-section-note { font-size: 10px; color: var(--ink-faint); opacity: 0.75; }
+
+.species-row {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 4px 7px; border: none; border-radius: var(--radius);
+  background: none; color: inherit; font: inherit; cursor: pointer;
+}
+.species-row:hover { background: var(--card-sunk); }
+.species-row.is-on .species-name { color: var(--accent); }
+.species-row .count { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+
+/* The edibility tier, as the dot the map draws it with. A picker for foraging
+   should not make you open a record to find out what a thing is. */
+.species-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; border: 1px solid currentColor; }
+.species-dot.is-plain { border-color: var(--rule); }
+.species-dot.is-choice { color: var(--gain); background: var(--gain); }
+.species-dot.is-edible { color: var(--gain); }
+.species-dot.is-inedible { color: var(--ink-soft); }
+.species-dot.is-dubious { color: var(--caution); }
+.species-dot.is-toxic { color: var(--warn); }
+.species-dot.is-deadly { color: var(--warn); background: var(--warn); }
+
+.species-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.species-name { font-size: 13.5px; color: var(--ink); }
+.species-sci { font-size: 11.5px; color: var(--ink-faint); }
+.species-names > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.species-empty { margin: 0; padding: 8px 7px; font-size: 12.5px; color: var(--ink-faint); }
 
 .dropdown-all {
   margin-top: 3px; padding: 5px 7px;
@@ -790,13 +932,6 @@ fieldset.trait-set legend {
 
 /* A standing note under the edibility control. Not a scare banner — a
    reminder that this file is a personal record, not an authority. */
-.edible-caution {
-  margin: 8px 0 0; padding: 8px 11px;
-  font-size: 12.5px; color: var(--ink-soft);
-  background: var(--card-sunk); border-left: 2px solid var(--warn); border-radius: var(--radius);
-}
-.edible-caution.is-dubious { border-left-color: var(--caution); }
-
 /* --- fungal characters --------------------------------------------------- */
 
 .character-note {
@@ -1462,33 +1597,7 @@ button.chosen-shot { border: 1px solid var(--rule); }
   align-self: flex-start;
 }
 
-/* An inline dropdown that sits in a filter row with the pills. */
-.inline-pick {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--display); font-size: 11px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink-soft);
-}
-.inline-pick select {
-  font-family: var(--body); font-size: 13px; letter-spacing: 0; text-transform: none;
-  padding: 5px 8px; max-width: 240px;
-  background: var(--card-sunk); color: var(--ink);
-  border: 1px solid var(--rule); border-radius: var(--radius);
-}
 
-/* Matches on a name looked up from iNaturalist, offered rather than applied. */
-.lookup-results { display: grid; gap: 6px; margin-top: 10px; }
-.lookup-hit {
-  display: flex; align-items: center; gap: 10px; text-align: left;
-  padding: 7px 9px; cursor: pointer;
-  background: var(--card-sunk); color: inherit; font: inherit;
-  border: 1px solid var(--rule); border-radius: var(--radius);
-}
-.lookup-hit:hover { border-color: var(--accent-dim); }
-.lookup-hit img { width: 38px; height: 38px; object-fit: cover; border-radius: var(--radius); flex: none; }
-.lookup-hit .no-preview { width: 38px; height: 38px; display: grid; place-items: center; flex: none; opacity: 0.4; }
-.lookup-hit-name { font-weight: 600; font-size: 14px; }
-.lookup-hit-sci { font-size: 12.5px; color: var(--ink-faint); font-style: italic; }
-.lookup-hit-count { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
 
 /* --- wide screens -------------------------------------------------------- */
 
@@ -1497,6 +1606,25 @@ button.chosen-shot { border: 1px solid var(--rule); }
   /* Every block here is either a full-width chart, a form with a dropzone, or
      a gallery. None of them read well in a half column. */
   .frame > .block, .banner { grid-column: 1 / -1; }
+}
+
+/* Where the glossary's two control groups each hold their own line with the
+   rule standing between them. Measured, not guessed: below this one group or
+   the other breaks internally, which looks worse than stacking them cleanly —
+   at 1040px the filter group keeps its line only by folding the Add button
+   onto a second one. */
+@media (min-width: 1140px) {
+  .glossary-controls { display: flex; align-items: center; gap: 14px; }
+  /* The filter group takes the larger share: it holds three controls to the
+     other's three, but two of them are wide labelled dropdowns, and it is the
+     one that breaks its own line first when squeezed. */
+  .glossary-controls .filter-row { flex: 1 1 500px; margin-bottom: 0; }
+  .glossary-controls .glossary-add { flex: 1 1 320px; }
+  /* The search takes the whole of what the dropdowns leave. The 260px ceiling
+     the other filter rows use would park it against the rule with a hole in
+     front of it, and there is nothing else on this row to fill the hole. */
+  .glossary-controls .filter-search input { max-width: none; }
+  .glossary-rule { flex: none; align-self: stretch; width: 1px; height: auto; min-height: 24px; margin-bottom: 0; }
 }
 
 /* --- narrow screens ------------------------------------------------------ */
@@ -1552,8 +1680,15 @@ button.chosen-shot { border: 1px solid var(--rule); }
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
-  #finds-block .filter-row .filter-search { grid-column: 1 / 3; flex: 1 1 auto; min-width: 0; }
-  #finds-block .filter-row .view-toggle { grid-column: 3; justify-content: center; }
+  /* The pair take a row of their own and split it by need rather than by
+     thirds: the toggle is two icons wide and no wider, and the search has the
+     rest. A grid track would stretch the toggle to a third of the screen and
+     leave it sitting in its own dead space. */
+  #finds-block .filter-row .finds-lead {
+    display: flex; grid-column: 1 / -1; gap: 6px; align-items: center;
+  }
+  #finds-block .filter-row .filter-search { flex: 1 1 auto; min-width: 0; }
+  #finds-block .filter-row .view-toggle { flex: none; }
   #finds-block .filter-row .filter-set { min-width: 0; }
   #finds-block .filter-row .dropdown,
   #finds-block .filter-row .dropdown-button { width: 100%; }
@@ -1606,9 +1741,15 @@ button.chosen-shot { border: 1px solid var(--rule); }
   #view-glossary .ledger thead { display: none; }
   #view-glossary .ledger,
   #view-glossary .ledger tbody { display: block; }
+  /* Where the controls end and the vocabulary starts. On a phone the rows are
+     stacked cards rather than a table, so without a rule the first entry reads
+     as one more thing in the filter row. */
+  #view-glossary .table-scroll { border-top: 1px solid var(--accent); padding-top: 4px; }
+  #view-glossary .glossary-add-term { flex: 1 1 100%; max-width: none; }
+  #view-glossary .glossary-add select { flex: 1 1 auto; }
   #view-glossary .ledger tr {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 8px 10px;
     padding: 12px 0;
@@ -1624,6 +1765,7 @@ button.chosen-shot { border: 1px solid var(--rule); }
   #view-glossary .ledger td.gl-term  { grid-row: 1; grid-column: 1; }
   #view-glossary .ledger td.gl-cat   { grid-row: 1; grid-column: 2; }
   #view-glossary .ledger td.gl-uses  { grid-row: 1; grid-column: 3; text-align: right; white-space: nowrap; }
+  #view-glossary .ledger td.gl-kill  { grid-row: 1; grid-column: 4; }
   #view-glossary .ledger td.gl-def   { grid-row: 2; grid-column: 1 / -1; }
   #view-glossary .ledger td.gl-same  { grid-row: 3; grid-column: 1 / -1; }
   /* The character list under the count would stretch the top row; it is the
@@ -1642,8 +1784,18 @@ button.chosen-shot { border: 1px solid var(--rule); }
   .map { height: clamp(300px, 52vh, 460px); }
   .map-selection { flex-direction: column; }
   .map-selection-shot { width: 100%; height: 160px; }
-  .inline-pick { width: 100%; }
-  .inline-pick select { flex: 1 1 auto; max-width: none; }
+
+  /*
+   * Two and two on a phone, each pair splitting the row.
+   *
+   * The basis does the breaking, and it has to clear a narrow bar at both
+   * ends: small enough that two fit a 301px card (2x110 + gap), large enough
+   * that three cannot. At 160px the row broke one, two, one — the widths were
+   * right and the arithmetic was not.
+   */
+  .entry-row.is-lead label.fill,
+  .entry-row.is-lead label.pin { flex: 1 1 110px; }
+  .entry-row.is-lead label.pin input.coord { width: 100%; max-width: none; }
 
   /* Latitude, longitude and altitude are three short figures that read as one
      statement, so on a phone they share a row rather than taking three. The

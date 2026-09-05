@@ -37,7 +37,7 @@ const state = {
   glossaryFilters: { category: 'all', state: 'all', q: '' },
   // Other people's records are fetched only for one species at a time, so
   // `speciesId` says whose they are and a stale set can be recognised.
-  inat: { results: [], loading: false, problem: null, box: null, speciesId: null, taxa: new Map() },
+  inat: { results: [], loading: false, problem: null, box: null, speciesId: null, taxa: new Map(), recentOnly: false },
   // Ground elevation for the finds whose photographs carried none, keyed by
   // rounded coordinate. A key present with a null value is a coordinate the
   // terrain model had no answer for — remembered so it is asked once, not on
@@ -264,7 +264,13 @@ function askGround(lat, lon, key) {
     }
     state.ground.running = false;
     if (!learned) return;
-    if (state.view === 'log') render();
+    /*
+     * Never over the top of an open menu. render() rebuilds the filter row,
+     * which would shut a dropdown — and throw away a half-typed species search
+     * — because a terrain reading happened to land. Nothing is lost by
+     * waiting: the answers are held, and the next render paints them.
+     */
+    if (state.view === 'log' && !document.querySelector('.dropdown-menu:not([hidden])')) render();
     // A sheet open over the top of the log draws itself once and is not part
     // of render(), so it asks to be told instead.
     for (const relay of state.ground.pending) relay();
@@ -650,10 +656,7 @@ function adoptMetadata(photos) {
   const dated = photos.filter((p) => p.takenAt).sort((a, b) => a.takenAt.localeCompare(b.takenAt))[0];
   const placed = photos.find((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
 
-  if (dated && !$('obs-when').value) {
-    $('obs-when').value = dated.takenAt;
-    $('obs-when-hint').textContent = 'From the photo.';
-  }
+  if (dated && !$('obs-when').value) $('obs-when').value = dated.takenAt;
   if (placed && !$('obs-lat').value && !$('obs-lon').value) {
     $('obs-lat').value = placed.lat;
     $('obs-lon').value = placed.lon;
@@ -826,47 +829,182 @@ function renderFilters(rows) {
 
   const extra = clear($('filter-extra'));
   extra.append(edibilityDropdown(Model.edibilityCounts(rows), refresh));
-  /*
-   * What the picker offers: species you have found, and the choice edibles.
-   *
-   * Found species filter your own finds. A choice edible you have not found
-   * yet filters nothing — it is there to ask iNaturalist where other people
-   * are finding it, which is the question worth asking about a species you
-   * want and do not have. Grouped, so the two kinds are not confused.
-   */
-  const picker = $('filter-species');
-  const held = state.filters.speciesId;
-  clear(picker);
-  picker.append(new Option('Any species', ''));
+  const set = clear($('filter-species-wrap'));
+  const panel = speciesPanel(rows);
+  if (panel) set.append(panel);
+  $('filter-species-wrap').hidden = !panel;
+}
 
+// --- the species picker -----------------------------------------------------
+
+// How many of the species you have actually met to list. Enough to cover a
+// season's regulars without turning the panel into the library, which is a
+// tab away and better at being the library.
+const SPECIES_RECENT = 5;
+
+const speciesLabel = (sp) => sp.commonName || sp.scientificName || 'Unnamed';
+
+/**
+ * The species filter, as a panel rather than a select.
+ *
+ * A native picker of four hundred species sorted alphabetically answers the
+ * wrong question. Two things are actually being asked here: "where do people
+ * find the thing I want" — which is the choice edibles, whether or not you
+ * have ever found one — and "show me that one again", which is almost always
+ * something met recently. Everything else is reachable by typing.
+ *
+ * Both lists obey the filters above: offering a fungus while the view is
+ * filtered to Flora would produce a picker whose every choice empties the page.
+ */
+function speciesPanel(rows) {
   const seen = new Map();
   for (const r of rows) if (r.species) seen.set(r.species.id, (seen.get(r.species.id) || 0) + 1);
 
-  // The type filter narrows this too. Offering a fungus while the view is
-  // filtered to Flora would produce a picker whose every choice empties the
-  // page.
-  const ofType = (sp) => state.filters.types.includes(sp.kind);
-  const found = state.species.filter((sp) => seen.has(sp.id) && ofType(sp));
-  const wanted = state.species.filter((sp) => Model.isChoice(sp) && !seen.has(sp.id) && ofType(sp));
-  const label = (sp) => sp.commonName || sp.scientificName || 'Unnamed';
-  const byName = (a, b) => label(a).localeCompare(label(b));
-
-  if (found.length) {
-    const group = document.createElement('optgroup');
-    group.label = 'Found';
-    for (const sp of [...found].sort(byName)) group.append(new Option(`${label(sp)} (${seen.get(sp.id)})`, sp.id));
-    picker.append(group);
-  }
-  if (wanted.length) {
-    const group = document.createElement('optgroup');
-    group.label = 'Choice edibles, not yet found';
-    for (const sp of [...wanted].sort(byName)) group.append(new Option(label(sp), sp.id));
-    picker.append(group);
+  // Most recently met first, by the date of the find rather than the order it
+  // was entered: a photograph imported late is still an old find.
+  const metAt = new Map();
+  for (const r of rows) {
+    if (!r.species || !r.when) continue;
+    const held = metAt.get(r.species.id);
+    if (!held || r.when > held) metAt.set(r.species.id, r.when);
   }
 
-  picker.value = held;
-  if (picker.selectedIndex === -1) { picker.value = ''; state.filters.speciesId = ''; }
-  $('filter-species-wrap').hidden = !found.length && !wanted.length;
+  const allowed = (sp) => state.filters.types.includes(sp.kind)
+    && (!state.filters.edibility || state.filters.edibility.includes(sp.edibility || 'unknown'));
+
+  const choice = state.species.filter((sp) => Model.isChoice(sp) && allowed(sp))
+    .sort((a, b) => speciesLabel(a).localeCompare(speciesLabel(b)));
+  const met = state.species.filter((sp) => seen.has(sp.id) && allowed(sp))
+    .sort((a, b) => (metAt.get(b.id) || '').localeCompare(metAt.get(a.id) || ''));
+
+  const picked = selectedSpecies();
+  // A selection the filters have since excluded would otherwise be unclearable
+  // from a panel that no longer lists it.
+  if (picked && !allowed(picked)) { state.filters.speciesId = ''; }
+  if (!choice.length && !met.length) return null;
+
+  const wrap = el('div', 'dropdown');
+  const button = el('button', 'dropdown-button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'true');
+  button.setAttribute('aria-expanded', 'false');
+  const held = selectedSpecies();
+  button.append(el('span', 'dropdown-label', held ? speciesLabel(held) : 'Any species'));
+  if (held && seen.has(held.id)) button.append(el('span', 'count', String(seen.get(held.id))));
+  button.append(el('span', 'dropdown-caret', '\u25be'));
+  if (held) button.classList.add('is-picked');
+  wrap.append(button);
+
+  const menu = el('div', 'dropdown-menu species-menu');
+  menu.hidden = true;
+  wrap.append(menu);
+  const close = wireDropdown(wrap, button, menu);
+
+  const pick = (id) => {
+    state.filters.speciesId = id;
+    close();
+    // Picking a species is what asks iNaturalist anything at all.
+    loadInat();
+    render();
+  };
+
+  const search = input('search', '', { placeholder: 'Search species\u2026', class: 'species-search' });
+  search.setAttribute('aria-label', 'Search species');
+
+  /*
+   * Clearing is an action, not a species, so it is a button beside the search
+   * rather than a row in the list pretending to be one more thing you could
+   * pick. It appears only when there is something to clear.
+   */
+  const head = el('div', 'species-head');
+  head.append(search);
+  if (held) {
+    const clear = el('button', 'species-clear', 'Clear');
+    clear.type = 'button';
+    clear.title = `Stop filtering by ${speciesLabel(held)}`;
+    clear.addEventListener('click', () => pick(''));
+    head.append(clear);
+  }
+
+  const body = el('div', 'species-body');
+  menu.append(head, body);
+
+  /** One species, as a row you can click. */
+  const row = (sp) => {
+    const one = el('button', 'species-row' + (held && held.id === sp.id ? ' is-on' : ''));
+    one.type = 'button';
+    if (sp.kind === 'fungi' && sp.edibility && sp.edibility !== 'unknown') {
+      one.append(el('span', `species-dot is-${sp.edibility}`));
+    } else {
+      one.append(el('span', 'species-dot is-plain'));
+    }
+    const names = el('span', 'species-names');
+    names.append(el('span', 'species-name', speciesLabel(sp)));
+    if (sp.scientificName && sp.scientificName !== speciesLabel(sp)) {
+      names.append(el('span', 'species-sci sci', sp.scientificName));
+    }
+    one.append(names);
+    const n = seen.get(sp.id);
+    one.append(el('span', 'count', n ? String(n) : ''));
+    one.addEventListener('click', () => pick(sp.id));
+    return one;
+  };
+
+  const section = (title, list, note) => {
+    if (!list.length) return null;
+    const box = el('div', 'species-section');
+    const head = el('div', 'species-section-head', title);
+    if (note) head.append(el('span', 'species-section-note', note));
+    box.append(head);
+    for (const sp of list) box.append(row(sp));
+    return box;
+  };
+
+  const draw = () => {
+    const q = search.value.trim().toLowerCase();
+    const matches = (sp) => !q
+      || speciesLabel(sp).toLowerCase().includes(q)
+      || (sp.scientificName || '').toLowerCase().includes(q);
+
+    clear(body);
+    /*
+     * Typing turns the lower list into a search of the whole library rather
+     * than of the five: the box is there precisely for the species that is not
+     * one of them. The choice edibles stay listed in full, filtered the same
+     * way, because they are a short list you are meant to be able to read.
+     */
+    const top = choice.filter(matches);
+    const lower = q ? state.species.filter((sp) => allowed(sp) && matches(sp) && !Model.isChoice(sp))
+      : met.slice(0, SPECIES_RECENT);
+
+    const parts = [
+      section('Choice edibles', top),
+      section(q ? 'Everything else' : 'Recently met', q ? lower.slice(0, 20) : lower),
+    ].filter(Boolean);
+
+    if (!parts.length) {
+      body.append(el('p', 'species-empty', q ? 'No species matches.' : 'Nothing to offer under these filters.'));
+      return;
+    }
+    for (const part of parts) body.append(part);
+  };
+
+  search.addEventListener('input', draw);
+  // Enter on a single match picks it, so a search need not end in a click.
+  search.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    const only = body.querySelectorAll('.species-row');
+    if (only.length === 1) only[0].click();
+  });
+  button.addEventListener('click', () => {
+    if (menu.hidden) return;
+    search.value = '';
+    draw();
+    search.focus();
+  });
+  draw();
+  return wrap;
 }
 
 /** One sentence about what is on screen. */
@@ -887,10 +1025,11 @@ function renderFindsVerdict(shown, rows) {
   if (picked && !rows.some((r) => r.species?.id === picked.id)) {
     const name = picked.commonName || picked.scientificName;
     if (state.mode === 'map') {
+      const others = inatShown().length;
       node.append(
-        strongText(state.inat.results.length
-          ? `${plural(state.inat.results.length, 'record')} of ${name} from other people.`
-          : `No records of ${name} from other people in view.`),
+        strongText(others
+          ? `${plural(others, 'record')} of ${name} from other people${inatWindow()}.`
+          : `No records of ${name} from other people in view${inatWindow()}.`),
         document.createTextNode(' None of your own — pan or zoom out to widen the search.'));
     } else {
       node.append(strongText(`You have not found ${name} yet.`),
@@ -905,9 +1044,9 @@ function renderFindsVerdict(shown, rows) {
   if (sum.uncertain) parts.push(`${plural(sum.uncertain, 'identification')} marked uncertain`);
   if (state.mode === 'map') {
     const picked = selectedSpecies();
-    if (picked && state.inat.results.length) {
+    if (picked && inatShown().length) {
       node.append(strongText(
-        `${plural(state.inat.results.length, 'record')} of it from other people, as triangles that fade with age.`));
+        `${plural(inatShown().length, 'record')} of it from other people${inatWindow()}, as triangles that fade with age.`));
     } else if (!picked) {
       node.append(document.createTextNode('Pick a species to see where other people have found it.'));
     }
@@ -1314,7 +1453,7 @@ function loadRain() {
     // moved on can be recognised and dropped.
     const asked = box;
     state.rain.loading = true;
-    renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+    renderMapLegend(minePlaced(derive().rows));
 
     const query = new URLSearchParams({
       swlat: box.swlat.toFixed(4), swlng: box.swlng.toFixed(4),
@@ -1338,7 +1477,7 @@ function loadRain() {
     } finally {
       state.rain.loading = false;
       drawRainLayer();
-      renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+      renderMapLegend(minePlaced(derive().rows));
     }
   }, 500);
 }
@@ -1371,7 +1510,7 @@ function toggleRain() {
     state.rain.problem = null;
   }
   drawRainLayer();
-  renderMapLegend(derive().rows.filter((r) => r.hasPlace));
+  renderMapLegend(minePlaced(derive().rows));
 }
 
 /** What the rain layer is saying, in the legend, when it is on. */
@@ -1508,6 +1647,47 @@ function ownPins(rows) {
   }));
 }
 
+// A month, which is the span over which "has anyone found one lately" is a
+// question with a useful answer. Shorter and a quiet week reads as none;
+// longer and last autumn crowds out this week.
+const INAT_RECENT_DAYS = 31;
+
+/** Whether a date string falls inside the recency window. */
+function withinRecent(date) {
+  const at = Date.parse(`${String(date || '').slice(0, 10)}T12:00`);
+  // An undated record cannot be shown to be recent, so it is not.
+  return Number.isFinite(at) && at >= Date.now() - INAT_RECENT_DAYS * 86400000;
+}
+
+/** Other people's records, narrowed to the past month when that is asked for. */
+function inatShown() {
+  if (!state.inat.recentOnly) return state.inat.results;
+  return state.inat.results.filter((o) => withinRecent(o.observedOn));
+}
+
+/**
+ * Your own finds, under the same window.
+ *
+ * The button asks "what is happening lately", and a map that answered it for
+ * other people's records while still showing six years of your own would be
+ * answering half the question — the recent iNaturalist pins would be scattered
+ * across your whole history, which is the pile they were meant to come out of.
+ *
+ * Map only, deliberately: the toggle lives on the map, and a filter that went
+ * on quietly narrowing the gallery from a control you cannot see there is a
+ * filter you would eventually lose a find to.
+ */
+const minePlaced = (rows) =>
+  rows.filter((r) => r.hasPlace && (!state.inat.recentOnly || withinRecent(r.when)));
+
+/** The clause that says the count has been narrowed, or nothing when it has not. */
+const inatWindow = () => (state.inat.recentOnly ? ' in the past month' : '');
+
+function toggleInatRecent() {
+  state.inat.recentOnly = !state.inat.recentOnly;
+  render();
+}
+
 function inatPins(results, edibility) {
   return results.map((o) => ({
     id: o.id,
@@ -1534,7 +1714,7 @@ function inatPins(results, edibility) {
  * record already has a good one.
  */
 function renderMap(shown, rows) {
-  const placed = shown.filter((r) => r.hasPlace);
+  const placed = minePlaced(shown);
 
   if (!mapView) {
     const config = state.config?.map || {};
@@ -1558,6 +1738,7 @@ function renderMap(shown, rows) {
         loadRain();
       },
       onRainToggle: () => toggleRain(),
+      onRecentToggle: () => toggleInatRecent(),
       onHover: (pin, marker) => {
         clearTimeout(pinTipTimer);
         if (!pin) return hidePinTip();
@@ -1573,7 +1754,8 @@ function renderMap(shown, rows) {
   }
 
   const picked = selectedSpecies();
-  mapView.setPins([...ownPins(placed), ...inatPins(state.inat.results, picked?.edibility || 'unknown')]);
+  mapView.setPins([...ownPins(placed), ...inatPins(inatShown(), picked?.edibility || 'unknown')]);
+  mapView.setRecentActive(state.inat.recentOnly);
   drawRainLayer();
   // A tile layer drawn while the pane was hidden measured a zero-width box.
   requestAnimationFrame(() => mapView.redraw());
@@ -1627,8 +1809,10 @@ function renderMapLegend(shown) {
     const name = picked.commonName || picked.scientificName;
     item.append(pinSwatch('inat', picked.kind === 'fungi' ? picked.edibility || 'unknown' : '', picked.kind),
       document.createTextNode(
-        state.inat.loading ? `Looking up ${name} on iNaturalist\u2026` : `Triangles: ${name} found by others, research grade`),
-      el('span', 'legend-value', String(state.inat.results.length)));
+        state.inat.loading
+          ? `Looking up ${name} on iNaturalist\u2026`
+          : `Triangles: ${name} found by others, research grade${state.inat.recentOnly ? ', past month' : ''}`),
+      el('span', 'legend-value', String(inatShown().length)));
     legend.append(item);
   }
 
@@ -1835,7 +2019,6 @@ function resetObsForm() {
   obsTray?.clear();
   $('obs-type').value = state.config?.nature?.defaultType || 'fungi';
   for (const id of ['obs-when', 'obs-lat', 'obs-lon', 'obs-place', 'obs-notes']) $(id).value = '';
-  $('obs-when-hint').textContent = ' ';
   syncObsForm();
 }
 
@@ -2350,6 +2533,9 @@ function sheetSection(sheet, eyebrow, note) {
  * Built once and reused: opening it twice should not stack two overlays.
  */
 let lightbox = null;
+
+/** Whether the full-size photograph is up over everything else. */
+const lightboxOpen = () => !!lightbox && !lightbox.node.hidden;
 
 function openLightbox(photos, startAt = 0) {
   const list = (photos || []).filter((p) => fullSrc(p) || thumbSrc(p));
@@ -3285,24 +3471,85 @@ function renderGlossary({ rows }) {
     return true;
   });
 
+  renderGlossaryAdd(all);
+
   const body = clear($('glossary-rows'));
   if (!shown.length) {
     const tr = el('tr');
     const td = el('td');
-    td.colSpan = 5;
+    td.colSpan = 6;
     td.append(el('div', 'empty-state', 'No terms match.'));
     tr.append(td);
     body.append(tr);
   }
   for (const t of shown) body.append(glossaryRow(t));
   // scrollHeight only means anything once the rows are laid out.
-  requestAnimationFrame(() => { for (const box of body.querySelectorAll('.glossary-def')) autosize(box); });
+  requestAnimationFrame(() => autosizeAll(body.querySelectorAll('.glossary-def')));
 }
 
 /** Match a textarea's height to its content, up to a sane ceiling. */
 function autosize(box) {
   box.style.height = 'auto';
   box.style.height = `${Math.min(box.scrollHeight, 160)}px`;
+}
+
+/**
+ * The same thing for a whole column of them, in three passes rather than one.
+ *
+ * Done one box at a time, each `scrollHeight` read lands between two writes and
+ * forces the browser to lay the entire page out again to answer it. Five
+ * hundred boxes is five hundred full layouts — 1.4 seconds on the glossary,
+ * every time it renders, which is once per keystroke in its search field.
+ *
+ * Writing all the heights, then reading all of them, then writing all of them
+ * costs one layout instead. The measured heights have to be collected before
+ * any of them is written back, or the writes start invalidating the reads
+ * again and the batching buys nothing.
+ */
+function autosizeAll(boxes) {
+  const list = [...boxes];
+  for (const box of list) box.style.height = 'auto';
+  const heights = list.map((box) => Math.min(box.scrollHeight, 160));
+  list.forEach((box, i) => { box.style.height = `${heights[i]}px`; });
+}
+
+/**
+ * The one-line composer above the table.
+ *
+ * Always open rather than behind a button: it is one field and a menu, and a
+ * disclosure triangle would cost more room than it saved. The category is
+ * offered because most terms have an obvious one, but it is only stored when
+ * it disagrees with what the vocabulary would guess anyway.
+ */
+function renderGlossaryAdd(all) {
+  const wrap = clear($('glossary-add'));
+  const box = input('text', '', { placeholder: 'Add a term\u2026', class: 'glossary-add-term' });
+  box.setAttribute('aria-label', 'New glossary term');
+  const pick = select(Model.TAG_CATEGORIES, 'note');
+  pick.setAttribute('aria-label', 'Category for the new term');
+  const go = el('button', 'solid-button', 'Add');
+  go.type = 'button';
+
+  const commit = () => {
+    const term = Model.normalizeTag(box.value);
+    if (!term) return;
+    // Already there, whether defined here or arrived from a tag. Say so and
+    // put it on screen rather than silently writing over it.
+    if (all.some((t) => t.term === term)) {
+      notice(`“${term}” is already in the glossary.`);
+      state.glossaryFilters.q = term;
+      $('glossary-q').value = term;
+      box.value = '';
+      render();
+      return;
+    }
+    box.value = '';
+    addTerm(term, pick.value);
+  };
+  go.addEventListener('click', commit);
+  box.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); commit(); } });
+
+  wrap.append(box, pick, go);
 }
 
 function glossaryRow(t) {
@@ -3366,6 +3613,17 @@ function glossaryRow(t) {
   if (t.characters.length) useCell.append(el('span', 'glossary-chars', t.characters.join(', ')));
   tr.append(useCell);
 
+  const killCell = el('td', 'nowrap gl-kill');
+  const kill = el('button', 'link-button', '\u00d7');
+  kill.type = 'button';
+  kill.title = t.uses
+    ? `Clear what is recorded about “${t.term}” — it stays listed while anything is tagged with it`
+    : `Remove “${t.term}” from the glossary`;
+  kill.setAttribute('aria-label', kill.title);
+  kill.addEventListener('click', () => deleteTerm(t));
+  killCell.append(kill);
+  tr.append(killCell);
+
   return tr;
 }
 
@@ -3391,6 +3649,21 @@ async function saveGlossary(terms) {
 }
 
 /**
+ * Drop an entry that has stopped saying anything.
+ *
+ * The map is a set of overrides on a vocabulary that already classifies most
+ * words on its own, so an entry with nothing in it is noise. `added` is the
+ * exception: a term typed in here has no tag anywhere pointing at it, and
+ * pruning it would delete the row the moment you set its category to the one
+ * the vocabulary already guessed.
+ */
+function pruneTerm(terms, term) {
+  const entry = terms[term];
+  if (!entry) return;
+  if (!entry.category && !entry.definition && !entry.sameAs && !entry.added) delete terms[term];
+}
+
+/**
  * Choosing the category the vocabulary would have guessed clears the override
  * rather than pinning it. Storing a redundant override would freeze the term
  * against a later change to the word lists, which is the opposite of useful.
@@ -3401,7 +3674,7 @@ function setTermCategory(term, category) {
   if (category === Model.guessCategory(term, null)) delete entry.category;
   else entry.category = category;
   terms[term] = entry;
-  if (!entry.category && !entry.definition) delete terms[term];
+  pruneTerm(terms, term);
   saveGlossary(terms);
 }
 
@@ -3418,7 +3691,7 @@ function setTermSameAs(term, sameAs) {
   if (!target || target === Model.normalizeTag(term)) delete entry.sameAs;
   else entry.sameAs = target;
   terms[term] = entry;
-  if (!entry.category && !entry.definition && !entry.sameAs) delete terms[term];
+  pruneTerm(terms, term);
   saveGlossary(terms);
 }
 
@@ -3426,6 +3699,49 @@ function setTermDefinition(term, definition) {
   const terms = { ...state.glossary.terms };
   terms[term] = { ...(terms[term] || {}), definition: definition.trim() };
   if (!terms[term].definition) delete terms[term].definition;
+  pruneTerm(terms, term);
+  saveGlossary(terms);
+}
+
+/**
+ * A term nothing is tagged with yet.
+ *
+ * Most of this vocabulary arrives the other way round — you tag a species and
+ * the word appears here wanting a definition. This is for the other direction:
+ * a word read in a guide, written down before you have met the thing it
+ * describes. It is marked `added` so it survives having nothing said about it.
+ */
+function addTerm(text, category) {
+  const term = Model.normalizeTag(text);
+  if (!term) return false;
+  const terms = { ...state.glossary.terms };
+  const entry = { ...(terms[term] || {}), added: true };
+  // A redundant override is not stored, for the same reason it is not stored
+  // when set from a row: it would freeze the term against the word lists.
+  if (category && category !== Model.guessCategory(term, null)) entry.category = category;
+  terms[term] = entry;
+  saveGlossary(terms);
+  return true;
+}
+
+/**
+ * Forget what has been recorded about a term.
+ *
+ * A term in use cannot be removed from the list — it is there because
+ * something is tagged with it, and the list is a reading of the tags. What can
+ * go is everything this glossary added to it, which puts it back to being an
+ * unclassified word waiting for a definition. Only a term nothing points at
+ * disappears outright.
+ */
+function deleteTerm(t) {
+  const held = state.glossary.terms[t.term];
+  if (!held && !t.uses) return;
+  const question = t.uses
+    ? `“${t.term}” is tagged on ${plural(t.uses, 'record')}, so it will stay in the list. Clear its definition and category?`
+    : `Remove “${t.term}” from the glossary?`;
+  if (!confirm(question)) return;
+  const terms = { ...state.glossary.terms };
+  delete terms[t.term];
   saveGlossary(terms);
 }
 
@@ -3452,23 +3768,35 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
     ...(seed || {}),
   };
 
-  const head = sheetHead(sheet, record.commonName || (creating ? 'New species' : 'Unnamed'), record.scientificName, close, { unknown: !record.commonName });
+  /*
+   * A species with no vernacular name is not unnamed — it is called by its
+   * binomial, which is what a key calls it and what most of this library has.
+   * Only a record with neither name has nothing to be titled by.
+   */
+  const headName = (common, sci) => common || sci || (creating ? 'New species' : 'Unnamed');
+  const head = sheetHead(sheet, headName(record.commonName, record.scientificName), record.scientificName, close,
+    { unknown: !record.commonName && !record.scientificName });
 
   const form = el('form');
   watchEdits(form);
 
-  const commonPick = input('text', record.commonName, { placeholder: 'Golden chanterelle' });
+  const commonPick = input('text', record.commonName, { placeholder: '—' });
   const scientificPick = input('text', record.scientificName, { placeholder: 'Cantharellus formosus' });
   const kindPick = select(Model.TYPES, record.kind);
   const habitatPick = input('text', record.habitat, { placeholder: 'Douglas fir duff, mossy slopes' });
-  const notesPick = el('textarea');
-  notesPick.value = record.notes || '';
 
-  commonPick.addEventListener('input', () => {
-    head.title.textContent = commonPick.value || 'Unnamed';
-    head.title.classList.toggle('is-unknown', !commonPick.value);
-  });
-  scientificPick.addEventListener('input', () => { head.sub.textContent = scientificPick.value; });
+  const paintHead = () => {
+    const common = commonPick.value.trim();
+    const sci = scientificPick.value.trim();
+    const name = headName(common, sci);
+    head.title.textContent = name;
+    head.title.classList.toggle('is-unknown', !common && !sci);
+    // Never printed twice: a binomial standing in as the title is not repeated
+    // underneath itself.
+    head.sub.textContent = sci && sci !== name ? sci : '';
+  };
+  commonPick.addEventListener('input', paintHead);
+  scientificPick.addEventListener('input', paintHead);
 
   const rowA = el('div', 'entry-row');
   rowA.append(
@@ -3477,78 +3805,35 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
     field('Type', kindPick, {}),
   );
   const ediblePick = select(Model.EDIBILITY, record.edibility || 'unknown');
-  const lookalikePick = input('text', record.lookalikes || '', { placeholder: 'False chanterelle; Jack-o’-lantern' });
+  /*
+   * Lookalikes take the long box that Notes used to have.
+   *
+   * A free-form note about a species is what the excerpts already are, only
+   * without a book named beside it. What is worth writing at length here is
+   * the one thing a line of text was too short for: what this can be mistaken
+   * for, and how to tell them apart.
+   */
+  const lookalikePick = el('textarea');
+  lookalikePick.value = record.lookalikes || '';
+  lookalikePick.placeholder = 'False chanterelle; Jack-o’-lantern — and how to tell them apart.';
 
   const rowB = el('div', 'entry-row');
   rowB.append(
     field('Habitat', habitatPick, { grow: true }),
     field('Edibility', ediblePick, {}),
-    field('Lookalikes', lookalikePick, { grow: true }),
-    field('Notes', notesPick, { wide: true }),
+    field('Lookalikes', lookalikePick, { wide: true }),
   );
   form.append(rowA, rowB);
 
-  // Shown only once something has been claimed about eating it. A caution
-  // under every species would be noise; under this one it is the point.
-  const caution = el('p', 'edible-caution');
-  const syncCaution = () => {
-    const meta = Model.edibility(ediblePick.value);
-    caution.hidden = meta.id === 'unknown';
-    caution.classList.toggle('is-dubious', meta.id === 'dubious');
-    if (meta.id === 'dubious') {
-      caution.textContent = 'Eaten by some people and not tolerated by others. Record who reports what, and what the reaction was — that disagreement is the whole content of this rating.';
-    } else if (meta.id === 'choice' || meta.id === 'edible') {
-      caution.textContent = 'Your own note, not an authority. Confirm against a key and a second source before eating anything — and record the lookalikes.';
-    } else {
-      caution.textContent = 'Recorded as not for eating. Worth writing down what it can be mistaken for.';
-    }
-  };
-  ediblePick.addEventListener('change', syncCaution);
-  syncCaution();
-  form.append(caution);
-
-  // --- look the name up
-  // iNaturalist knows the accepted name and the common one; typing both by
-  // hand is how a library ends up with three spellings of the same fungus.
-  // Kept so the map can later ask iNaturalist for this exact taxon.
-  let pickedTaxonId = record.inatTaxonId ?? null;
-
-  const lookupRow = el('div', 'entry-row');
-  const lookupBox = input('text', '', { placeholder: 'A name, or part of one' });
-  const lookupGo = el('button', 'ghost-button', 'Look up');
-  lookupGo.type = 'button';
-  const lookupOut = el('div', 'lookup-results');
-
-  const runLookup = async () => {
-    const q = lookupBox.value.trim() || commonPick.value.trim() || scientificPick.value.trim();
-    if (!q) return;
-    clear(lookupOut).append(el('p', 'muted', 'Searching iNaturalist…'));
-    try {
-      const iconic = { fungi: 'Fungi', flora: 'Plantae', fauna: 'Animalia' }[kindPick.value];
-      const payload = await request(`api/inat/taxa?q=${encodeURIComponent(q)}${iconic ? `&iconic=${iconic}` : ''}`, 'GET');
-      clear(lookupOut);
-      if (payload.problem) { lookupOut.append(el('p', 'muted', payload.problem)); return; }
-      if (!payload.results.length) { lookupOut.append(el('p', 'muted', 'Nothing found.')); return; }
-      for (const hit of payload.results) lookupOut.append(lookupHit(hit, () => {
-        // Offered, never applied on its own: the names go in, and everything
-        // else about the species stays yours.
-        if (hit.commonName) { commonPick.value = hit.commonName; commonPick.dispatchEvent(new Event('input')); }
-        if (hit.scientificName) { scientificPick.value = hit.scientificName; scientificPick.dispatchEvent(new Event('input')); }
-        if (hit.type) { kindPick.value = hit.type; syncKind(); }
-        // Held in the editor, not written onto the stored record: cancelling
-        // the sheet has to leave the species exactly as it was.
-        pickedTaxonId = hit.id;
-        markDirty();
-        clear(lookupOut);
-      }));
-    } catch (err) {
-      clear(lookupOut).append(el('p', 'muted', `Lookup failed: ${err.message}`));
-    }
-  };
-  lookupGo.addEventListener('click', runLookup);
-  lookupBox.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); runLookup(); } });
-  lookupRow.append(field('Look up a name', lookupBox, { grow: true, hint: 'Searches iNaturalist and fills the names in.' }), lookupGo);
-  form.append(lookupRow, lookupOut);
+  /*
+   * The iNaturalist taxon id, carried through a save untouched.
+   *
+   * The lookup that used to set it is gone, but the id it left behind is what
+   * lets the map ask iNaturalist for this exact taxon rather than guessing
+   * from a name. Dropping it here would quietly unlink every species that has
+   * one the next time it was saved.
+   */
+  const pickedTaxonId = record.inatTaxonId ?? null;
 
   // --- fungal characters
   // Shown only for fungi. Division, gills and stipe are the first cuts in any
@@ -3604,6 +3889,35 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   editor.append(form);
 
   /*
+   * Your own finds, straight after the record itself.
+   *
+   * If you have met this species, your own photographs of it are the ones
+   * worth seeing first — the reference shots and the guides below are what you
+   * check a specimen against, not what you remember it by. Omitted entirely
+   * rather than shown empty: most of the library has never been found, and 400
+   * records each announcing that they have not is noise.
+   */
+  if (!creating) {
+    const mine = Model.sortByDate(Model.viewAll(state.observations, state.species).filter((r) => r.species?.id === record.id));
+    if (mine.length) {
+      const section = sheetSection(sheet, 'Finds', `${plural(mine.length, 'observation')} of this species.`);
+      const gallery = el('div', 'gallery');
+      for (const row of mine) gallery.append(findCard(row));
+      section.append(gallery);
+    }
+  }
+
+  /*
+   * What a good one looks like, before what anyone wrote about it.
+   *
+   * You reach this holding a specimen and asking whether it matches, and a
+   * photograph settles that faster than a paragraph does.
+   */
+  // --- example photographs
+  const tray = makeTray({ existing: record.photos || [], onChange: markDirty, addBelow: true, note: 'Reference shots — what a good one looks like.' });
+  sheetSection(sheet, 'Example photographs', 'Kept on the species, separate from any one find.').append(tray.node);
+
+  /*
    * What the guides say, kept apart from what this library concludes.
    *
    * Every other field here is one answer arrived at by reading around;
@@ -3616,29 +3930,6 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   sheetSection(sheet, 'Excerpts',
     'What a guide says about this species, in its own words. **bold**, *italics*, and lines starting with - for a list.')
     .append(excerpts.node);
-
-  // --- example photographs
-  const tray = makeTray({ existing: record.photos || [], onChange: markDirty, addBelow: true, note: 'Reference shots — what a good one looks like.' });
-  /*
-   * Your own finds first, then the reference shots.
-   *
-   * When you have met the species, your photographs of it are the ones worth
-   * seeing; the borrowed reference shots are what you check against. The
-   * section is omitted entirely rather than showing an empty state — most of
-   * the library has never been found, and 400 records each announcing that
-   * they have not is noise.
-   */
-  if (!creating) {
-    const mine = Model.sortByDate(Model.viewAll(state.observations, state.species).filter((r) => r.species?.id === record.id));
-    if (mine.length) {
-      const section = sheetSection(sheet, 'Finds', `${plural(mine.length, 'observation')} of this species.`);
-      const gallery = el('div', 'gallery');
-      for (const row of mine) gallery.append(findCard(row));
-      section.append(gallery);
-    }
-  }
-
-  sheetSection(sheet, 'Example photographs', 'Kept on the species, separate from any one find.').append(tray.node);
 
   // --- actions
   const actions = el('div', 'form-actions');
@@ -3674,7 +3965,6 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
       commonName: commonPick.value.trim(),
       scientificName: scientificPick.value.trim(),
       habitat: habitatPick.value.trim(),
-      notes: notesPick.value.trim(),
       edibility: ediblePick.value,
       lookalikes: lookalikePick.value.trim(),
       photos: tray.photos(),
@@ -3710,28 +4000,6 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
 }
 
 /** One iNaturalist match, offered as a button rather than applied. */
-function lookupHit(hit, onPick) {
-  const button = el('button', 'lookup-hit');
-  button.type = 'button';
-  if (hit.photo) {
-    const img = el('img');
-    img.src = hit.photo;
-    img.alt = '';
-    img.loading = 'lazy';
-    img.addEventListener('error', () => img.replaceWith(el('span', 'no-preview', '🖼')), { once: true });
-    button.append(img);
-  } else {
-    button.append(el('span', 'no-preview', '🖼'));
-  }
-  const body = el('div');
-  body.append(el('div', 'lookup-hit-name', hit.commonName || hit.scientificName));
-  body.append(el('div', 'lookup-hit-sci', `${hit.scientificName}${hit.rank && hit.rank !== 'species' ? ` · ${hit.rank}` : ''}`));
-  button.append(body);
-  if (hit.observations) button.append(el('span', 'lookup-hit-count', `${hit.observations.toLocaleString('en-US')} obs`));
-  button.addEventListener('click', onPick);
-  return button;
-}
-
 /**
  * A chip for one tag: its colour comes from its category, and a colour tag
  * paints the colour it names.
@@ -4239,12 +4507,6 @@ function wire() {
   $('filter-sp-q').addEventListener('input', (ev) => { state.speciesFilters.q = ev.target.value; renderSpeciesTable(derive().life); });
   $('species-new').addEventListener('click', () => openSpeciesSheet(null, {}));
   $('glossary-q').addEventListener('input', (ev) => { state.glossaryFilters.q = ev.target.value; render(); });
-  $('filter-species').addEventListener('change', (ev) => {
-    state.filters.speciesId = ev.target.value;
-    // Picking a species is what asks iNaturalist anything at all.
-    loadInat();
-    render();
-  });
   for (const [id, mode] of [['mode-finds', 'finds'], ['mode-map', 'map']]) {
     $(id).addEventListener('click', () => setMode(mode));
   }
@@ -4265,7 +4527,10 @@ function wire() {
     if (ev.target === $('scrim')) state.closeSheet?.();
   });
   document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && !$('scrim').hidden) state.closeSheet?.();
+    // The lightbox sits over the sheet and owns Escape while it is up. Asked
+    // here rather than left to stopPropagation: both listeners are on
+    // document, so the one bound first wins and that is this one.
+    if (ev.key === 'Escape' && !$('scrim').hidden && !lightboxOpen()) state.closeSheet?.();
   });
 
   // Chart type is sized against the rendered width, so a resize has to redraw.

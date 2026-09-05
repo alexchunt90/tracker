@@ -256,6 +256,20 @@ written here where it does not; each says which. A term with no definition yet
 is not an error — the Undefined filter is the writing queue, the same way
 dashed grey tags are the vocabulary queue.
 
+**Terms usually arrive from the other direction**: you tag a species and the
+word turns up here wanting a definition. The line above the table is for the
+case that goes the other way — a word read in a guide before you have met the
+thing it describes. A term added by hand is kept even when nothing is recorded
+about it and nothing is tagged with it; otherwise it would vanish the moment
+you gave it the category the vocabulary already guessed.
+
+**The cross at the end of a row forgets what is recorded about a term**, not
+the term itself. A word something is tagged with cannot be removed from this
+list — the list is a reading of the tags — so deleting it clears its definition
+and category and leaves it sitting in the writing queue. Only a term nothing
+points at disappears outright. The prompt says which of the two you are about
+to do.
+
 **A category is set here and nowhere else.** It used to be a click on the tag
 wherever it happened to appear, which made a global fact look like a local
 edit: reclassifying `angular` on one mushroom said nothing about the next one.
@@ -517,16 +531,29 @@ Optional, on by default, and switched off with `inaturalist.enabled: false` in
   and to a single taxon when you pick a species that has been matched against
   iNaturalist. "Where does everyone else find chanterelles" is the question it
   answers.
-- **In the species editor** — *Look up a name* searches their taxonomy and
-  offers matches. Picking one fills in the common and scientific names and
-  remembers the taxon id. It is **offered, never applied on its own**; the
-  identification stays yours.
+A species record can carry an iNaturalist taxon id, which is what lets the map
+ask for that exact taxon rather than guessing from a name. The editor no longer
+sets one — the name lookup that did has been removed — but an id already on a
+record is carried through every save untouched.
 
 Their photographs are proxied too, through a host allowlist, so the page makes
 no third-party requests at all. Responses are cached for five minutes because
 panning re-asks constantly and their terms ask callers to be gentle. Set
 `TRACKER_USER_AGENT` in `.env` to something with your contact address, which is
 what they ask for.
+
+**The clock button under the umbrella** narrows the map to the past month —
+their records and your own alike. Research-grade observations go back years and the map draws them all,
+faded with age, which answers "where does this species grow" well and "is
+anyone finding it right now" badly — a single week's flush disappears into a
+decade of pins. Thirty-one days is the window: shorter and a quiet week reads
+as nothing at all, longer and last autumn crowds out this one. It narrows what
+is drawn, not what is fetched, so it costs no extra request and toggles
+instantly. A record with no date is not shown as recent.
+
+It narrows the **map only**, deliberately. The button lives there, and a filter
+that went on quietly shortening the gallery from a control you cannot see there
+is a filter you would eventually lose a find to.
 
 If iNaturalist is unreachable the map says so quietly and carries on. Your own
 pins are unaffected.

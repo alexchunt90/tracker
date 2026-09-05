@@ -103,7 +103,7 @@ const MapView = (() => {
     return svg;
   }
 
-  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover, onRainToggle }) {
+  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover, onRainToggle, onRecentToggle }) {
     const view = { lat: 0, lon: 0, zoom: 2 };
     let pins = [];
     // The rainfall overlay: cells on a fixed geographic lattice, each already
@@ -154,6 +154,16 @@ const MapView = (() => {
       rainButton.classList.add('map-button-toggle');
       rainButton.setAttribute('aria-pressed', 'false');
       controls.append(rainButton);
+    }
+
+    // Under the rain, because it asks the same question of a different layer:
+    // never mind the whole record, what has been happening lately.
+    let recentButton = null;
+    if (onRecentToggle) {
+      recentButton = button('◷', 'Only iNaturalist finds from the past month', () => onRecentToggle());
+      recentButton.classList.add('map-button-toggle');
+      recentButton.setAttribute('aria-pressed', 'false');
+      controls.append(recentButton);
     }
     node.append(controls);
 
@@ -613,6 +623,12 @@ const MapView = (() => {
         if (!rainButton) return;
         rainButton.classList.toggle('is-on', !!on);
         rainButton.setAttribute('aria-pressed', on ? 'true' : 'false');
+      },
+      /** The same arrangement for the recency filter: the caller holds the state. */
+      setRecentActive(on) {
+        if (!recentButton) return;
+        recentButton.classList.toggle('is-on', !!on);
+        recentButton.setAttribute('aria-pressed', on ? 'true' : 'false');
       },
       /*
        * The credit line, which changes with what is actually drawn. A layer

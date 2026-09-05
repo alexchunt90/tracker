@@ -59,6 +59,10 @@
        data, not to either rendering, so they sit above the toggle. -->
   <section class="block" id="finds-block">
     <div class="filter-row">
+      <!-- Inert on a wide screen (display: contents) so these two stay direct
+           flex children of the row; on a phone it becomes the row they share,
+           which is what stops the grid stretching the toggle. -->
+      <div class="finds-lead">
       <div class="filter-search"><input type="search" id="filter-q" placeholder="Search finds…" aria-label="Search finds" /></div>
       <div class="view-toggle" role="tablist" aria-label="How to show the finds">
         <button type="button" class="view-toggle-button is-on" id="mode-finds" role="tab" aria-selected="true" title="Gallery">
@@ -73,12 +77,11 @@
           <span class="view-toggle-mark" aria-hidden="true">&#8982;</span><span class="view-toggle-word">Map</span>
         </button>
       </div>
+      </div>
       <div class="filter-set" id="filter-type"></div>
       <div class="filter-set" id="filter-status"></div>
       <div class="filter-set" id="filter-extra"></div>
-      <label class="inline-pick" id="filter-species-wrap">Species
-        <select id="filter-species"></select>
-      </label>
+      <div class="filter-set" id="filter-species-wrap"></div>
     </div>
 
     <div class="gallery" id="finds-gallery"></div>
@@ -111,17 +114,20 @@
         <input type="file" id="obs-file" accept="image/*" multiple hidden />
         <div class="shot-strip" id="obs-shots"></div>
 
-        <div class="entry-row">
-          <label>Type
+        <!-- What the find is, when it was, and where in figures: one line on a
+             wide screen, and on a phone the same four controls broken cleanly
+             two and two rather than wherever the width happens to run out. -->
+        <div class="entry-row is-lead">
+          <label class="fill">Type
             <select id="obs-type"></select>
-            <span class="field-hint">Naming it comes later.</span>
           </label>
-          <label>When
+          <label class="fill">When
             <input type="datetime-local" id="obs-when" />
-            <span class="field-hint" id="obs-when-hint">&nbsp;</span>
           </label>
-          <label>Latitude<input type="text" class="coord" id="obs-lat" inputmode="decimal" placeholder="—" /></label>
-          <label>Longitude<input type="text" class="coord" id="obs-lon" inputmode="decimal" placeholder="—" /></label>
+          <label class="pin">Latitude<input type="text" class="coord" id="obs-lat" inputmode="decimal" placeholder="—" /></label>
+          <label class="pin">Longitude<input type="text" class="coord" id="obs-lon" inputmode="decimal" placeholder="—" /></label>
+        </div>
+        <div class="entry-row">
           <label class="grow">Place<input type="text" id="obs-place" placeholder="Trailside, mixed conifer" /></label>
           <label class="wide">Notes<textarea id="obs-notes" placeholder="Anything you will not remember: smell, substrate, what it was growing with…"></textarea></label>
         </div>
@@ -171,10 +177,19 @@
 <main class="frame" id="view-glossary" hidden>
 
   <section class="block">
-    <div class="filter-row">
-      <div class="filter-set" id="glossary-filter-cat"></div>
-      <div class="filter-set" id="glossary-filter-state"></div>
-      <div class="filter-search"><input type="search" id="glossary-q" placeholder="Search terms…" aria-label="Search terms" /></div>
+    <!-- Finding a term and adding one are two jobs, so they are two groups with
+         a rule between them: a bar on a wide screen, the same element turned
+         on its side into a divider on a narrow one. -->
+    <div class="glossary-controls">
+      <div class="filter-row">
+        <div class="filter-set" id="glossary-filter-cat"></div>
+        <div class="filter-set" id="glossary-filter-state"></div>
+        <div class="filter-search"><input type="search" id="glossary-q" placeholder="Search terms…" aria-label="Search terms" /></div>
+      </div>
+      <div class="glossary-rule" aria-hidden="true"></div>
+      <!-- A term you have read but not yet tagged anything with. Built in
+           script because the categories come from the model. -->
+      <div class="glossary-add" id="glossary-add"></div>
     </div>
     <div class="table-scroll">
       <table class="ledger">
@@ -185,6 +200,7 @@
             <th>Definition</th>
             <th class="nowrap">Same as</th>
             <th class="r nowrap">Uses</th>
+            <th class="nowrap"><span class="sr-only">Remove</span></th>
           </tr>
         </thead>
         <tbody id="glossary-rows"></tbody>
