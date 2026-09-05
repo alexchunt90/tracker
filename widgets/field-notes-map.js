@@ -18,7 +18,7 @@
  * address of your log — "http://192.168.0.60:4175" — in the Parameter field.
  * ------------------------------------------------------------------------- */
 
-const FALLBACK_BASE = 'http://192.168.0.60:4175';
+const FALLBACK_BASE = 'https://batcave.tail9f2885.ts.net/tracker/';
 const REFRESH_MINUTES = 60;
 
 const BASE = (args.widgetParameter || FALLBACK_BASE).trim().replace(/\/+$/, '');

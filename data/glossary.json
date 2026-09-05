@@ -1,5 +1,5 @@
 {
-  "version": 23,
+  "version": 37,
   "terms": {
     "acrid": {
       "definition": "with a sharp biting taste, hot and peppery",
@@ -32,6 +32,10 @@
       "source": "Mushrooms of the Pacific Northwest (2009), glossary",
       "category": "descriptor"
     },
+    "angular": {
+      "category": "descriptor",
+      "definition": "describes pores that end in angles, as opposed to rounded pores"
+    },
     "anise": {
       "definition": "smells of licorice"
     },
@@ -39,6 +43,11 @@
       "definition": "a skirt-like ring",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary",
       "sameAs": "ring"
+    },
+    "apical pore": {
+      "definition": "A single opening at the top of a puffball through which spores escape.",
+      "source": "written for this log",
+      "category": "form"
     },
     "apricot": {
       "definition": ""
@@ -125,7 +134,8 @@
     },
     "bolete": {
       "definition": "a fleshy mushroom with a tube layer on the underside of the cap",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
+      "category": "habitat"
     },
     "boletoid": {
       "definition": "Built like a bolete: a cap on a stipe, with a spongy layer of tubes and pores underneath instead of gills.",
@@ -194,6 +204,10 @@
     },
     "bruises orange": {
       "definition": "Bruises or cuts turn orange.",
+      "source": "written for this log"
+    },
+    "bruises pink": {
+      "definition": "Bruises or cuts turn pink.",
       "source": "written for this log"
     },
     "bruises purple": {
@@ -312,6 +326,10 @@
     "coarsely scaly": {
       "definition": ""
     },
+    "collybioid": {
+      "definition": "Built like a Collybia: a modest cap on a slim, central, cartilaginous stipe.",
+      "source": "written for this log"
+    },
     "columella": {
       "definition": "sterile stipe-like tissue within some false truffes or puffballs",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
@@ -367,7 +385,8 @@
       "definition": ""
     },
     "cracked": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor"
     },
     "cream": {
       "definition": ""
@@ -539,6 +558,10 @@
       "definition": "even, smooth, not toothed or broken up; usually in reference to the cap or gill margin",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
+    "epigeous": {
+      "definition": "Fruiting above ground, in the ordinary way. The opposite of hypogeous.",
+      "source": "written for this log"
+    },
     "equal": {
       "definition": "of the same diameter throughout; usually in reference to a stipe",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
@@ -623,7 +646,8 @@
     },
     "folds": {
       "definition": "Shallow wrinkles or creases on the spore-bearing surface.",
-      "source": "written for this log"
+      "source": "written for this log",
+      "sameAs": "wrinkles"
     },
     "forking": {
       "definition": "Splitting into two or more branches.",
@@ -687,6 +711,10 @@
       "definition": "in gasteromycetes, the tissue in which the spores are formed; may include capillitium",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
+    "glutinous": {
+      "definition": "Slimy to the touch",
+      "source": "written for this log"
+    },
     "goblet-shaped": {
       "definition": ""
     },
@@ -713,6 +741,10 @@
     },
     "grass": {
       "definition": ""
+    },
+    "greasy": {
+      "definition": "Faintly oily to the touch, without being properly viscid.",
+      "source": "written for this log"
     },
     "green": {
       "definition": ""
@@ -755,7 +787,8 @@
       "definition": ""
     },
     "hairy": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor"
     },
     "hardwood": {
       "definition": "flowering trees with broad leaves such as alder, maple, madrone, and oak; may be deciduous or evergreen",
@@ -763,6 +796,10 @@
     },
     "hazel-brown": {
       "definition": ""
+    },
+    "helvelloid": {
+      "definition": "Built like an elfin saddle or false morel: a lobed, saddle-shaped or brain-like head on a stipe.",
+      "source": "written for this log"
     },
     "hemlock": {
       "definition": ""
@@ -784,6 +821,10 @@
     "hygrophanous": {
       "definition": "changing from translucent to opaque, and often markedly fading in color (expallent), upon drying; usually in reference to the cap surface",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
+    },
+    "hypogeous": {
+      "definition": "Fruiting underground, so it has to be dug for — the truffles and their relatives.",
+      "source": "written for this log"
     },
     "immediately": {
       "definition": ""
@@ -832,7 +873,8 @@
       "category": "habitat"
     },
     "large": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor"
     },
     "lateral": {
       "definition": "attached at one side, as in the short stipe of many shelf-fungi",
@@ -1061,6 +1103,10 @@
       "definition": "Tissue covering the gills of a young mushroom, often leaving a ring on the stipe.",
       "source": "written for this log"
     },
+    "partially emergent": {
+      "definition": "Fruiting mostly below ground with the top breaking the surface.",
+      "source": "written for this log"
+    },
     "peach": {
       "definition": ""
     },
@@ -1113,6 +1159,10 @@
     "pleasant": {
       "definition": ""
     },
+    "pleurotoid": {
+      "definition": "Built like an oyster mushroom: a shelving cap with the stipe off to one side or absent.",
+      "source": "written for this log"
+    },
     "plicate": {
       "definition": "folded like a fan or pleated skirt",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
@@ -1142,7 +1192,9 @@
       "definition": ""
     },
     "powdery": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor",
+      "sameAs": "pruinose"
     },
     "pruinose": {
       "definition": "finely powdery",
@@ -1276,11 +1328,16 @@
     "round": {
       "definition": ""
     },
+    "rubbery": {
+      "definition": "Springy and yielding, returning to shape — firmer than soft, not as stiff as tough.",
+      "source": "written for this log"
+    },
     "rudimentary": {
       "definition": ""
     },
     "russula": {
-      "definition": ""
+      "definition": "",
+      "category": "habitat"
     },
     "rust": {
       "definition": ""
@@ -1345,7 +1402,8 @@
       "definition": ""
     },
     "short": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor"
     },
     "silky": {
       "definition": ""
@@ -1608,6 +1666,11 @@
       "definition": "remnants of a universal veil found at the base of the stipe",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
+    "warts": {
+      "definition": "Raised lumps or patches on the surface, often veil remnants on a cap.",
+      "source": "written for this log",
+      "category": "descriptor"
+    },
     "warty": {
       "definition": ""
     },
@@ -1660,7 +1723,9 @@
       "definition": ""
     },
     "wrinkled": {
-      "definition": ""
+      "definition": "",
+      "category": "descriptor",
+      "sameAs": "wrinkles"
     },
     "wrinkles": {
       "definition": ""
@@ -1691,64 +1756,12 @@
       "sameAs": "tan"
     },
     "yellowish white": {
-      "definition": ""
+      "definition": "",
+      "sameAs": "cream"
     },
     "zonate": {
       "definition": "with concentric bands of different color or different shades of one basic color; usually in reference to the cap surface Stipe shapes. Illustration by Marsha Mello.",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
-    },
-    "helvelloid": {
-      "definition": "Built like an elfin saddle or false morel: a lobed, saddle-shaped or brain-like head on a stipe.",
-      "source": "written for this log"
-    },
-    "apical pore": {
-      "definition": "A single opening at the top of a puffball through which spores escape.",
-      "source": "written for this log"
-    },
-    "warts": {
-      "definition": "Raised lumps or patches on the surface, often veil remnants on a cap.",
-      "source": "written for this log",
-      "category": "descriptor"
-    },
-    "angular": {
-      "category": "descriptor",
-      "definition": "describes pores that end in angles, as opposed to rounded pores"
-    },
-    "glutinous": {
-      "definition": "Slimy to the touch, wetter than viscid — the top of the viscid–slimy scale.",
-      "source": "written for this log"
-    },
-    "greasy": {
-      "definition": "Faintly oily to the touch, without being properly viscid.",
-      "source": "written for this log"
-    },
-    "rubbery": {
-      "definition": "Springy and yielding, returning to shape — firmer than soft, not as stiff as tough.",
-      "source": "written for this log"
-    },
-    "bruises pink": {
-      "definition": "Bruises or cuts turn pink.",
-      "source": "written for this log"
-    },
-    "pleurotoid": {
-      "definition": "Built like an oyster mushroom: a shelving cap with the stipe off to one side or absent.",
-      "source": "written for this log"
-    },
-    "collybioid": {
-      "definition": "Built like a Collybia: a modest cap on a slim, central, cartilaginous stipe.",
-      "source": "written for this log"
-    },
-    "hypogeous": {
-      "definition": "Fruiting underground, so it has to be dug for — the truffles and their relatives.",
-      "source": "written for this log"
-    },
-    "epigeous": {
-      "definition": "Fruiting above ground, in the ordinary way. The opposite of hypogeous.",
-      "source": "written for this log"
-    },
-    "partially emergent": {
-      "definition": "Fruiting mostly below ground with the top breaking the surface.",
-      "source": "written for this log"
     }
   }
 }

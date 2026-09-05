@@ -17,7 +17,7 @@
 
 // Used when the widget has no Parameter set, and when running the script by
 // hand in the Scriptable app.
-const FALLBACK_BASE = 'http://192.168.0.60:4175';
+const FALLBACK_BASE = 'https://batcave.tail9f2885.ts.net/tracker/';
 
 // The log changes at the pace of a walk in the woods, not a share price.
 const REFRESH_MINUTES = 30;
