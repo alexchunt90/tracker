@@ -1031,6 +1031,8 @@ button.tag-text:hover { text-decoration: underline dotted; }
 .cat-swatch[data-category="habitat"] { color: var(--flora); }
 .cat-swatch[data-category="measure"] { color: var(--ink-soft); }
 .cat-swatch[data-category="colour"] { color: var(--ink-soft); }
+/* A shade of a colour: the ring its tags carry. */
+.cat-swatch[data-category="secondary"] { color: var(--ink-soft); background: none; border-width: 2px; }
 /* Unclassified: the dashed, hollow treatment its tags get. */
 .cat-swatch[data-category="note"] { background: none; border-style: dashed; color: var(--ink-faint); }
 
@@ -1043,12 +1045,19 @@ button.tag-text:hover { text-decoration: underline dotted; }
 /* A colour tag paints the colour it names, so the word and the thing agree.
    The text stays neutral: some of these are near-black, and a "black" tag
    written in black would be unreadable. */
-.tag[data-category="colour"] { color: var(--ink-soft); }
+.tag[data-category="colour"],
+.tag[data-category="secondary"] { color: var(--ink-soft); }
 .tag-swatch {
   width: 10px; height: 10px; flex: none; border-radius: 50%;
-  background: var(--ink-faint);
+  background: var(--swatch, var(--ink-faint));
   /* A rim, so white and near-black swatches both read against the panel. */
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+/* A secondary colour is a shade of one of the core colours, and its swatch is
+   a ring rather than a dot: the same paint, drawn as the lesser claim. */
+.tag[data-category="secondary"] .tag-swatch {
+  background: transparent;
+  box-shadow: inset 0 0 0 2.5px var(--swatch, var(--ink-faint)), inset 0 0 0 3px rgba(255, 255, 255, 0.18);
 }
 
 /* --- tag suggestions ----------------------------------------------------- */
@@ -1403,6 +1412,11 @@ button.chosen-shot { border: 1px solid var(--rule); }
 #glossary-rows td { vertical-align: top; padding-top: 10px; }
 /* A long term must wrap rather than force its column wider. */
 #glossary-rows td:nth-child(1) .tag { white-space: normal; }
+/* The "of brown" picker sits under the category, only for secondary colours.
+   Stacked rather than beside it: the column is sized to one select, and a
+   second one alongside ran under the definition. */
+.gl-primary { display: block; margin: 4px 0 0; }
+.gl-primary[hidden] { display: none; }
 #glossary-rows select {
   font-family: var(--body); font-size: 13px; padding: 4px 7px;
   background: var(--card-sunk); color: var(--ink);

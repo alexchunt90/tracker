@@ -3441,6 +3441,7 @@ function glossaryRows(rows) {
       category: Model.classifyTag(term, null),
       guessed: Model.guessCategory(term, null),
       sameAs: entry.sameAs || '',
+      primary: Model.primaryOf(term),
       synonyms: Model.synonymsOf(term, all),
       uses: usage.uses,
       characters: [...usage.characters],
@@ -3552,6 +3553,10 @@ function renderGlossaryAdd(all) {
   box.setAttribute('aria-label', 'New glossary term');
   const pick = select(WORD_CATEGORIES, 'note');
   pick.setAttribute('aria-label', 'Category for the new term');
+  const primaryPick = primarySelect(Object.keys(Model.PRIMARY_COLOURS)[0]);
+  primaryPick.setAttribute('aria-label', 'Colour the new term is a shade of');
+  primaryPick.hidden = true;
+  pick.addEventListener('change', () => { primaryPick.hidden = pick.value !== 'secondary'; });
   const go = el('button', 'solid-button', 'Add');
   go.type = 'button';
 
@@ -3569,12 +3574,21 @@ function renderGlossaryAdd(all) {
       return;
     }
     box.value = '';
-    addTerm(term, pick.value);
+    addTerm(term, pick.value, primaryPick.value);
   };
   go.addEventListener('click', commit);
   box.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); commit(); } });
 
-  wrap.append(box, pick, go);
+  wrap.append(box, pick, primaryPick, go);
+}
+
+/** The core colours, as a picker, each drawn beside its swatch's name. */
+function primarySelect(current) {
+  const options = Object.keys(Model.PRIMARY_COLOURS).map((id) => ({ id, label: `of ${id}` }));
+  const node = select(options, current);
+  node.classList.add('gl-primary');
+  node.title = 'The core colour this shade reads as when matching.';
+  return node;
 }
 
 function glossaryRow(t) {
@@ -3588,8 +3602,17 @@ function glossaryRow(t) {
   // The category, settable here and nowhere else.
   const catCell = el('td', 'nowrap gl-cat');
   const pick = select(WORD_CATEGORIES, t.category);
-  pick.addEventListener('change', () => setTermCategory(t.term, pick.value));
   catCell.append(pick);
+  // A secondary colour is a shade *of* something, and this is where it says
+  // what. The picker is only there when it means something.
+  const primaryPick = primarySelect(t.primary || Model.guessPrimary(t.term));
+  primaryPick.hidden = t.category !== 'secondary';
+  primaryPick.addEventListener('change', () => setTermCategory(t.term, 'secondary', primaryPick.value));
+  pick.addEventListener('change', () => {
+    primaryPick.hidden = pick.value !== 'secondary';
+    setTermCategory(t.term, pick.value, primaryPick.value);
+  });
+  catCell.append(primaryPick);
   tr.append(catCell);
 
   // The definition, edited in place.
@@ -3687,11 +3710,24 @@ function pruneTerm(terms, term) {
  * rather than pinning it. Storing a redundant override would freeze the term
  * against a later change to the word lists, which is the opposite of useful.
  */
-function setTermCategory(term, category) {
+/**
+ * A secondary colour carries its primary with it. Both are dropped when
+ * they are what the vocabulary would have said anyway, for the same reason a
+ * redundant category is: stored, they would freeze the term against a later
+ * change to the tables.
+ */
+function setTermCategory(term, category, primary) {
   const terms = { ...state.glossary.terms };
   const entry = { ...(terms[term] || {}) };
-  if (category === Model.guessCategory(term, null)) delete entry.category;
-  else entry.category = category;
+  const secondary = category === 'secondary';
+  const guessed = category === Model.guessCategory(term, null)
+    && (!secondary || primary === Model.guessPrimary(term));
+  if (guessed) { delete entry.category; delete entry.primary; }
+  else {
+    entry.category = category;
+    if (secondary && primary) entry.primary = primary;
+    else delete entry.primary;
+  }
   terms[term] = entry;
   pruneTerm(terms, term);
   saveGlossary(terms);
@@ -3730,14 +3766,17 @@ function setTermDefinition(term, definition) {
  * a word read in a guide, written down before you have met the thing it
  * describes. It is marked `added` so it survives having nothing said about it.
  */
-function addTerm(text, category) {
+function addTerm(text, category, primary) {
   const term = Model.normalizeTag(text);
   if (!term) return false;
   const terms = { ...state.glossary.terms };
   const entry = { ...(terms[term] || {}), added: true };
   // A redundant override is not stored, for the same reason it is not stored
   // when set from a row: it would freeze the term against the word lists.
-  if (category && category !== Model.guessCategory(term, null)) entry.category = category;
+  if (category && category !== Model.guessCategory(term, null)) {
+    entry.category = category;
+    if (category === 'secondary' && primary) entry.primary = primary;
+  }
   terms[term] = entry;
   saveGlossary(terms);
   return true;
@@ -4119,6 +4158,14 @@ function showTagTip(chip, tag) {
     row.append(el('span', 'tag-tip-label', 'Same as'), document.createTextNode(synonyms.join(', ')));
     tip.append(row);
   }
+  // A shade says which colour it counts as, which is the one thing about it
+  // that matters when a specimen is matched against the library.
+  const primary = tag.category === 'secondary' ? Model.primaryOf(tag.text) : null;
+  if (primary) {
+    const row = el('p', 'tag-tip-same');
+    row.append(el('span', 'tag-tip-label', 'Reads as'), document.createTextNode(primary));
+    tip.append(row);
+  }
   tip.append(el('p', 'tag-tip-cat', Model.tagCategory(tag.category).label));
 
   placeTip(tip, chip.getBoundingClientRect());
@@ -4164,10 +4211,12 @@ function tagChip(tag, { onCycle, onRemove, tip = true } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
 
-  if (tag.category === 'colour') {
+  // A colour paints a dot of itself; a secondary colour a ring, so the two
+  // tiers read apart at a glance while the shade still shows.
+  if (tag.category === 'colour' || tag.category === 'secondary') {
     const swatch = el('span', 'tag-swatch');
     const paint = Model.tagSwatch(tag.text);
-    if (paint) swatch.style.background = paint;
+    if (paint) swatch.style.setProperty('--swatch', paint);
     chip.append(swatch);
   }
 

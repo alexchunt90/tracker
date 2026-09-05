@@ -1,5 +1,5 @@
 {
-  "version": 39,
+  "version": 40,
   "terms": {
     "acrid": {
       "definition": "with a sharp biting taste, hot and peppery",
@@ -24,8 +24,7 @@
       "definition": ""
     },
     "amber-brown": {
-      "definition": "",
-      "category": "colour"
+      "definition": ""
     },
     "anastomosing": {
       "definition": "describes gills that split and re-join in network fashion, like a braided stream",
@@ -81,8 +80,7 @@
       "definition": ""
     },
     "beige": {
-      "definition": "",
-      "category": "colour"
+      "definition": ""
     },
     "berry canes": {
       "definition": ""
@@ -537,9 +535,6 @@
       "definition": "Attached off-centre.",
       "source": "written for this log"
     },
-    "egg-yellow": {
-      "definition": ""
-    },
     "elastic": {
       "definition": "Stretching before it breaks.",
       "source": "written for this log"
@@ -601,9 +596,6 @@
       "definition": "odor or taste like that of freshly ground meal; when strong, somewhat like that of cucumber or watermelon rind",
       "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
-    "ferruginous": {
-      "definition": ""
-    },
     "fetid": {
       "definition": ""
     },
@@ -632,9 +624,6 @@
       "sameAs": "plane"
     },
     "flattened": {
-      "definition": ""
-    },
-    "flesh-pink": {
       "definition": ""
     },
     "fleshy": {
@@ -1107,9 +1096,6 @@
       "definition": "Fruiting mostly below ground with the top breaking the surface.",
       "source": "written for this log"
     },
-    "peach": {
-      "definition": ""
-    },
     "peelable": {
       "definition": ""
     },
@@ -1502,9 +1488,6 @@
     "stout": {
       "definition": ""
     },
-    "straw": {
-      "definition": ""
-    },
     "streaked": {
       "definition": ""
     },
@@ -1635,13 +1618,9 @@
       "definition": "Covered in a dense short pile, like velvet.",
       "source": "written for this log"
     },
-    "verdigris": {
-      "definition": ""
-    },
     "vinaceous": {
       "definition": "said to be the color of red wine; in practice, not so deeply colored and with duller gray to brown tones, yielding more of a dark salmon-pink",
-      "source": "Mushrooms of the Pacific Northwest (2009), glossary",
-      "category": "colour"
+      "source": "Mushrooms of the Pacific Northwest (2009), glossary"
     },
     "vinaceous brown": {
       "definition": ""

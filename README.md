@@ -186,7 +186,8 @@ a colour word and an attachment term never look like the same kind of claim:
 | Category       | Colour            | Examples                              |
 | -------------- | ----------------- | ------------------------------------- |
 | **form**       | amber             | gills, false gills, pores, ring, volva |
-| **colour**     | a swatch of itself | egg-yellow, olive, pale yellow        |
+| **colour**     | a dot of itself   | white, yellow, brown, olive, grey     |
+| **secondary colour** | a ring of itself | apricot, tawny, pale yellow, reddish brown |
 | **descriptor** | blue              | decurrent, adnate, crowded, viscid, bitter |
 | **habitat**    | green             | soil, duff, dead hardwood, Douglas fir |
 | **measure**    | mono grey         | 8 cm, 3–10 cm                         |
@@ -207,7 +208,37 @@ looks right is a guess nobody ever checks, and the grey is what makes the gaps
 in the vocabulary visible. That is the only way the vocabulary gets better.
 
 The word lists are plain arrays at the top of `public/model.js` — `FORMS`,
-`DESCRIPTORS`, `HABITATS` and `COLOURS`. Add to them as the log grows.
+`DESCRIPTORS`, `HABITATS`, `PRIMARY_COLOURS` and `SECONDARY_COLOURS`. Add to
+them as the log grows.
+
+### Colour, in two tiers
+
+One word per shade was the wrong grain for matching. *Whitish yellow* and
+*yellowish white* were two tags, a specimen tagged one never matched a species
+recorded as the other, and the vocabulary had grown to fifty colours with a
+hundred and twenty-five spellings in use.
+
+So there is a **core set** — the colours a key actually turns on, eighteen of
+them and held under thirty on purpose — and everything else is a **secondary
+colour** that names one of the core set as its primary:
+
+> white · cream · buff · tan · yellow · ochre · orange · red · pink · brown ·
+> cinnamon · rust · olive · green · blue · purple · grey · black
+
+A secondary keeps its own swatch, so `apricot` still paints apricot, and is
+drawn as a ring rather than a dot so the tiers read apart. **For matching it
+reads as its primary**: a cap tagged `reddish brown` agrees with a species
+recorded `brown`, and filtering the library to `brown` finds the species
+recorded `red-brown`. Shades built from a modifier and a colour — `pale
+yellow`, `olive-brown`, `greyish vinaceous` — are secondaries too, derived
+rather than listed, and read as the colour they end in. A secondary is not a
+*synonym* of its primary: it is a narrower claim, and the Glossary's Same-as
+column does not list thirty shades under `brown`.
+
+A colour a guide uses and the vocabulary does not arrives as a dashed note,
+like any unknown word. The Glossary can make it a secondary colour on the
+spot — choose the category and the core colour it is a shade of — and it
+gets a swatch and a match without an edit to the tables.
 
 ### Measures
 
@@ -310,6 +341,11 @@ list — the list is a reading of the tags — so deleting it clears its definit
 and category and leaves it sitting in the writing queue. Only a term nothing
 points at disappears outright. The prompt says which of the two you are about
 to do.
+
+**A secondary colour is set with the colour it is a shade of.** Choosing the
+category shows a second picker — *of brown*, *of yellow* — and the two are
+stored together. The link is what the ranking uses, so it is the one thing
+about a shade worth getting right.
 
 **A category is set here and nowhere else.** It used to be a click on the tag
 wherever it happened to appear, which made a global fact look like a local

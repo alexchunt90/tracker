@@ -193,7 +193,8 @@ const Model = (() => {
    */
   const TAG_CATEGORIES = [
     { id: 'form', label: 'Form', hint: 'The structure itself — gills, pores, a ring, a volva.' },
-    { id: 'colour', label: 'Colour', hint: 'Shown with a swatch of the colour named.' },
+    { id: 'colour', label: 'Colour', hint: 'One of the core colours. Shown with a swatch of itself.' },
+    { id: 'secondary', label: 'Secondary colour', hint: 'A shade of a core colour — reads as that colour when matching.' },
     { id: 'descriptor', label: 'Descriptor', hint: 'A quality — adnate, viscid, crowded, bitter.' },
     { id: 'habitat', label: 'Habitat', hint: 'What it grows on or with — a tree, wood, soil, dung.' },
     { id: 'measure', label: 'Measure', hint: 'A size, in whole centimetres — 20 cm.' },
@@ -202,19 +203,69 @@ const Model = (() => {
   const tagCategory = (id) => TAG_CATEGORIES.find((c) => c.id === id) || TAG_CATEGORIES[TAG_CATEGORIES.length - 1];
 
   /*
-   * Named colours, with a swatch each. Mycological colour language is its own
-   * dialect — "buff", "ochre", "cinnamon", "tawny" — and a tag that renders
-   * the colour it names is worth more than the same word in grey.
+   * Colour, in two tiers.
+   *
+   * Mycological colour language is its own dialect — "buff", "ochre",
+   * "cinnamon", "tawny" — and a tag that renders the colour it names is worth
+   * more than the same word in grey. But one word per shade was the wrong
+   * grain for matching: "whitish yellow" and "yellowish white" were two tags,
+   * a specimen tagged one never matched a species recorded as the other, and
+   * the vocabulary had grown to fifty colours with a hundred and twenty-five
+   * spellings in use.
+   *
+   * So there is a core set — the colours a key actually turns on, held under
+   * thirty on purpose — and everything else is a *secondary* colour that
+   * names one of them as its primary. A secondary keeps its own swatch, so
+   * "apricot" still paints apricot; for matching it reads as its primary, so
+   * a cap tagged "reddish brown" agrees with a species recorded "brown".
+   * Shades built from a modifier and a colour — "pale yellow", "olive-brown"
+   * — are secondaries too, derived rather than listed, and read as the colour
+   * they end in.
    */
-  const COLOURS = {
-    white: '#f2f0e9', cream: '#f0e6c8', ivory: '#efe7d2', buff: '#e8d8b0', straw: '#e6d78c',
-    yellow: '#e8c840', 'egg-yellow': '#f0c850', gold: '#d9b038', ochre: '#c8963c', mustard: '#c9a227',
-    apricot: '#f0a860', orange: '#e08840', tawny: '#c07838', salmon: '#e89878', peach: '#f0b48c',
-    pink: '#e0a0a8', red: '#c04038', scarlet: '#cc3322', 'red-brown': '#8c4a30', rust: '#a85830',
-    cinnamon: '#a06840', tan: '#c8a878', brown: '#7a5230', 'dark-brown': '#4a3020', umber: '#5b4636',
-    olive: '#7a7a38', green: '#5a8848', 'blue-green': '#4a8878', verdigris: '#4f8f7a',
-    grey: '#8a8a8a', 'blue-grey': '#7c8b99', blue: '#5a80b0', lilac: '#a890c0', purple: '#7a5090',
-    violet: '#6a4a90', black: '#1a1a1a', 'flesh-pink': '#e4bfae', ferruginous: '#9c5220',
+  const PRIMARY_COLOURS = {
+    white: '#f2f0e9', cream: '#f0e6c8', buff: '#e8d8b0', tan: '#c8a878',
+    yellow: '#e8c840', ochre: '#c8963c', orange: '#e08840',
+    red: '#c04038', pink: '#e0a0a8',
+    brown: '#7a5230', cinnamon: '#a06840', rust: '#a85830',
+    olive: '#7a7a38', green: '#5a8848', blue: '#5a80b0', purple: '#7a5090',
+    grey: '#8a8a8a', black: '#1a1a1a',
+  };
+
+  // Each names the primary it reads as, and paints its own swatch.
+  const SECONDARY_COLOURS = {
+    ivory: { of: 'white', swatch: '#efe7d2' },
+    beige: { of: 'buff', swatch: '#d8c8a8' },
+    clay: { of: 'tan', swatch: '#b89a78' },
+    caramel: { of: 'tan', swatch: '#b8763a' },
+    butterscotch: { of: 'tan', swatch: '#d29a4a' },
+    gold: { of: 'yellow', swatch: '#d9b038' },
+    mustard: { of: 'yellow', swatch: '#c9a227' },
+    lemon: { of: 'yellow', swatch: '#f0e050' },
+    ochraceous: { of: 'ochre', swatch: '#c8963c' },
+    apricot: { of: 'orange', swatch: '#f0a860' },
+    amber: { of: 'orange', swatch: '#d9931e' },
+    scarlet: { of: 'red', swatch: '#cc3322' },
+    brick: { of: 'red', swatch: '#a8422e' },
+    burgundy: { of: 'red', swatch: '#7a2030' },
+    maroon: { of: 'red', swatch: '#702030' },
+    salmon: { of: 'pink', swatch: '#e89878' },
+    rose: { of: 'pink', swatch: '#e08090' },
+    rosy: { of: 'pink', swatch: '#e08090' },
+    'red-brown': { of: 'brown', swatch: '#8c4a30' },
+    'dark-brown': { of: 'brown', swatch: '#4a3020' },
+    umber: { of: 'brown', swatch: '#5b4636' },
+    tawny: { of: 'brown', swatch: '#c07838' },
+    hazel: { of: 'brown', swatch: '#8a6a3c' },
+    olivaceous: { of: 'olive', swatch: '#7a7a38' },
+    'blue-green': { of: 'green', swatch: '#4a8878' },
+    turquoise: { of: 'blue', swatch: '#40a0a0' },
+    violet: { of: 'purple', swatch: '#6a4a90' },
+    lilac: { of: 'purple', swatch: '#a890c0' },
+    // Wine-coloured. Guides reach for it constantly, and it is closer to
+    // purple than to red in every use the library has.
+    vinaceous: { of: 'purple', swatch: '#8b4a5e' },
+    'blue-grey': { of: 'grey', swatch: '#7c8b99' },
+    smoky: { of: 'grey', swatch: '#6e6a66' },
     /*
      * Hedged colours, which field guides use constantly and standing alone:
      * "cap whitish", not "cap whitish something". They were the single largest
@@ -222,17 +273,71 @@ const Model = (() => {
      * rule below only fires when a base colour follows. Muted renderings of
      * their base, since that is what the words mean.
      */
-    whitish: '#e8e6df', yellowish: '#d8c66a', brownish: '#8a6b4a', reddish: '#b05a4a',
-    greyish: '#9a9a9a', pinkish: '#d8b0b0', greenish: '#7a9a68', blackish: '#2e2e2e',
-    purplish: '#8a6a9a', orangish: '#d9964f',
+    whitish: { of: 'white', swatch: '#e8e6df' },
+    yellowish: { of: 'yellow', swatch: '#d8c66a' },
+    brownish: { of: 'brown', swatch: '#8a6b4a' },
+    reddish: { of: 'red', swatch: '#b05a4a' },
+    greyish: { of: 'grey', swatch: '#9a9a9a' },
+    pinkish: { of: 'pink', swatch: '#d8b0b0' },
+    greenish: { of: 'green', swatch: '#7a9a68' },
+    blackish: { of: 'black', swatch: '#2e2e2e' },
+    purplish: { of: 'purple', swatch: '#8a6a9a' },
+    orangish: { of: 'orange', swatch: '#d9964f' },
+  };
+
+  // Every named colour's swatch, both tiers. What the chips paint from.
+  const COLOURS = {
+    ...PRIMARY_COLOURS,
+    ...Object.fromEntries(Object.entries(SECONDARY_COLOURS).map(([k, v]) => [k, v.swatch])),
   };
 
   // Modifiers that may precede a colour and still leave it a colour.
   const COLOUR_MODIFIERS = new Set([
     'pale', 'dark', 'deep', 'bright', 'dull', 'light', 'faint', 'rich', 'dusky', 'olivaceous',
     'greyish', 'brownish', 'yellowish', 'reddish', 'pinkish', 'greenish', 'blackish', 'whitish',
-    'purplish', 'orangish', 'creamy', 'golden', 'wine',
+    'purplish', 'orangish', 'creamy', 'golden', 'wine', 'medium', 'dingy', 'vivid', 'sordid',
   ]);
+
+  /**
+   * "pale yellow", "olive-brown", "greyish vinaceous": a colour with something
+   * in front of it. The last word is the colour it reads as.
+   */
+  function derivedColour(key) {
+    const words = key.split(/[\s-]+/);
+    if (words.length < 2) return null;
+    const last = words[words.length - 1];
+    if (!COLOURS[last]) return null;
+    if (!words.slice(0, -1).every((w) => COLOUR_MODIFIERS.has(w) || COLOURS[w])) return null;
+    return last;
+  }
+
+  /*
+   * Which primary a secondary colour is a shade of, set by hand in the
+   * glossary. Keyed term -> primary. A glossary can make any word a secondary
+   * colour, which is how a colour a guide uses and the vocabulary does not
+   * gets a swatch and a match without an edit to this file.
+   */
+  const termPrimaries = new Map();
+
+  /**
+   * The primary colour a term reads as, or null if it is not a secondary.
+   *
+   * A primary itself answers null: it reads as nothing but itself. The
+   * glossary's answer beats the table, and the table beats the derivation —
+   * so "pale red-brown" reads as brown by way of red-brown.
+   */
+  function primaryOf(text, { ignoreOverrides = false } = {}) {
+    const key = normalizeTag(text);
+    if (!key || PRIMARY_COLOURS[key]) return null;
+    if (!ignoreOverrides && termPrimaries.has(key)) return termPrimaries.get(key);
+    if (SECONDARY_COLOURS[key]) return SECONDARY_COLOURS[key].of;
+    const last = derivedColour(key);
+    if (!last) return null;
+    return PRIMARY_COLOURS[last] ? last : primaryOf(last, { ignoreOverrides });
+  }
+
+  /** What the vocabulary would say a term is a shade of, ignoring the glossary. */
+  const guessPrimary = (text) => primaryOf(text, { ignoreOverrides: true });
 
   const FORMS = new Set([
     'gills', 'false gills', 'pores', 'teeth', 'spines', 'ridges', 'folds', 'wrinkles', 'gleba',
@@ -336,10 +441,15 @@ const Model = (() => {
   const applyGlossary = (glossary) => {
     termOverrides.clear();
     termSynonyms.clear();
+    termPrimaries.clear();
     for (const [term, entry] of Object.entries(glossary?.terms || {})) {
       const key = normalizeTag(term);
       if (entry?.category) termOverrides.set(key, entry.category);
       if (entry?.sameAs) termSynonyms.set(key, normalizeTag(entry.sameAs));
+      // A primary only means something on a secondary colour, and only when
+      // it names a colour of the core set.
+      const primary = normalizeTag(entry?.primary);
+      if (entry?.category === 'secondary' && PRIMARY_COLOURS[primary]) termPrimaries.set(key, primary);
     }
   };
 
@@ -371,23 +481,21 @@ const Model = (() => {
     if (!ignoreOverrides && termOverrides.has(key)) return termOverrides.get(key);
     let found = null;
 
-    if (COLOURS[key]) found = 'colour';
+    if (PRIMARY_COLOURS[key]) found = 'colour';
+    else if (SECONDARY_COLOURS[key]) found = 'secondary';
     else if (FORMS.has(key)) found = 'form';
     else if (DESCRIPTORS.has(key)) found = 'descriptor';
     else if (HABITATS.has(key)) found = 'habitat';
-    else {
-      const words = key.split(/[\s-]+/);
-      const last = words[words.length - 1];
-      // "pale yellow", "dark olive" — a colour with something in front of it.
-      if (COLOURS[last] && words.slice(0, -1).every((w) => COLOUR_MODIFIERS.has(w) || COLOURS[w])) found = 'colour';
-      else if (parseMeasure(key)?.values.length) found = 'measure';
-      else found = 'note';
-    }
+    // "pale yellow", "dark olive" — a colour with something in front of it,
+    // which makes it a shade of that colour.
+    else if (derivedColour(key)) found = 'secondary';
+    else if (parseMeasure(key)?.values.length) found = 'measure';
+    else found = 'note';
 
     // Under "scent / taste", apricot is a smell, not a colour. A few words mean
     // different things depending on the character they sit under, and the
     // character is the only context available to tell them apart.
-    if (spec && found === 'colour' && spec.colourAs) return spec.colourAs;
+    if (spec && (found === 'colour' || found === 'secondary') && spec.colourAs) return spec.colourAs;
 
     // Anything the vocabulary does not know stays a note, deliberately. It
     // would be easy to guess from the character it was typed into — an
@@ -406,7 +514,9 @@ const Model = (() => {
     const key = normalizeTag(text);
     if (COLOURS[key]) return COLOURS[key];
     const words = key.split(/[\s-]+/);
-    return COLOURS[words[words.length - 1]] || null;
+    // A shade paints the colour it ends in; a secondary set by hand in the
+    // glossary, with no swatch of its own, paints its primary.
+    return COLOURS[words[words.length - 1]] || COLOURS[primaryOf(key)] || null;
   }
 
   // --- measures -------------------------------------------------------------
@@ -567,7 +677,7 @@ const Model = (() => {
         'hypogeous', 'partially emergent', 'epigeous'] },
   ];
 
-  /** Suggestions for one character: its own vocabulary, then every colour. */
+  /** Suggestions for one character: its own vocabulary, then every colour, core first. */
   function characterVocab(spec) {
     const seen = new Set(spec.vocab);
     return [...spec.vocab, ...Object.keys(COLOURS).filter((c) => !seen.has(c))];
@@ -984,14 +1094,17 @@ const Model = (() => {
    */
   function synonymsOf(text, knownTerms) {
     const key = normalizeTag(text);
-    const group = termGroup(key);
+    // Without the colour folding: a secondary colour is a shade of its
+    // primary, not another word for it, and listing thirty shades under
+    // "brown" as things it is the same as would be a different claim.
+    const group = wordGroup(key);
     const out = new Set();
 
     // Growth-form groups.
     for (const [term, g] of Object.entries(BODY_GROUPS)) if (g === group && term !== key) out.add(term);
     // Anything pointed at the same canonical form by hand, in either direction.
     for (const term of new Set([...termSynonyms.keys(), ...(knownTerms || [])])) {
-      if (term !== key && termGroup(term) === group) out.add(term);
+      if (term !== key && wordGroup(term) === group) out.add(term);
     }
     if (/grey/.test(key)) out.add(key.replace(/grey/g, 'gray'));
     return [...out].sort();
@@ -1006,10 +1119,26 @@ const Model = (() => {
    * makes two words for one idea behave as one.
    */
   function termGroup(text) {
-    const key = normalizeTag(text);
+    return canonical(normalizeTag(text), { colours: true });
+  }
+
+  /** The same, without a secondary colour folding onto its primary. */
+  function wordGroup(text) {
+    return canonical(normalizeTag(text), { colours: false });
+  }
+
+  /*
+   * A secondary colour reads as its primary for matching, which is the whole
+   * reason the tier exists: "reddish brown" on the specimen and "brown" in
+   * the library are one claim about one cap. The fold comes after the named
+   * synonyms and the growth forms, so a term pointed elsewhere by hand still
+   * goes where it was pointed.
+   */
+  function canonical(key, { colours }) {
+    const resolve = (k) => BODY_GROUPS[k] || (colours && primaryOf(k)) || k;
     const named = termSynonyms.get(key);
-    if (named) return termSynonyms.get(named) || BODY_GROUPS[named] || named;
-    return BODY_GROUPS[key] || key;
+    if (named) return termSynonyms.get(named) || resolve(named);
+    return resolve(key);
   }
 
   /**
@@ -1324,7 +1453,7 @@ const Model = (() => {
 
   return {
     TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
-    TAG_CATEGORIES, COLOURS,
+    TAG_CATEGORIES, COLOURS, PRIMARY_COLOURS, SECONDARY_COLOURS, primaryOf, guessPrimary, wordGroup,
     typeLabel, typeGlyph, edibility, isChoice, isDubious, isDangerous, speciesHasTag,
     findEdibility, edibilityCounts, ageOpacity,
     character, characterValue, characterVocab, nutrition, speciesText,
