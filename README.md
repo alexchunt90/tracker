@@ -720,7 +720,12 @@ a home screen has no screen to respond to.
 
 ```
 server.js            the only server. Static files, JSON state, photo uploads,
-                     and the two upstream proxies.
+                     and the upstream proxies.
+lib/
+  store.js           where the state lives: files, or an S3 bucket
+  photos.js          what a stored photograph is called, and what it may be
+  rain.js            the lattice the rainfall layer samples on
+  env.js             the .env reader the server and the scripts share
 public/
   index.html         every view, hidden and shown by tab
   styles.css         black grounds, one configurable accent
@@ -732,11 +737,42 @@ config.json          theme, map source, iNaturalist and elevation switches
 data/
   observations.json  the finds
   species.json       the library
+  glossary.json      the vocabulary, tracked — see scripts/glossary-sync.js
+example/             what an empty store is seeded from
+scripts/             the glossary sync, the one-way upload to a bucket, lint
+test/                node:test files, one per idea — see below
 widgets/             Scriptable scripts for an iPhone home screen
 photos/              uploads, named by a minted id
 tiles/               cached basemap
 elevation/           cached ground elevations, one file per coordinate
+rain/                cached rainfall, one file per lattice cell
+state/               the same five, for a containerised run
 ```
+
+## Tests
+
+```bash
+npm test
+```
+
+There is still nothing to install. `package.json` exists to name that command
+and `npm run lint`, and declares no dependencies; the tests run on
+`node:test`, which ships with Node 18 and later, and the lint is `node --check`
+over every tracked file.
+
+Each file in `test/` holds the properties of one idea rather than a walk
+through one function: the two tiers of colour, the shapes a size is written
+in, the excerpt markup being total, the rainfall lattice covering the screen,
+the store refusing a stale token, the EXIF reader against files built byte by
+byte, and the SigV4 signing against vectors captured from the AWS CLI.
+`test/server.test.js` starts the real server against an empty temporary
+`STATE_DIR` — with the bucket switched off, whatever `.env` says — and drives
+the HTTP surface end to end, as far as each upstream route's validation.
+Nothing in the suite reaches an outside service.
+
+The same suite runs on every push in GitHub Actions, on Node 18, 20 and 22,
+alongside a build of the Docker image that has to start and answer
+`/api/state` from an empty volume.
 
 ## Storage
 
@@ -763,7 +799,7 @@ in development rather than only in production.
 
 The S3 requests are signed with SigV4 using `node:crypto` rather than the AWS
 SDK — a page of well-specified arithmetic against fifty packages, in a project
-whose README opens by saying it has none. `node test/sigv4.test.js` checks the
+whose README opens by saying it has none. `test/sigv4.test.js` checks the
 signing against reference signatures taken from botocore. It exists because a
 wrong signature and a wrong policy both come back as 403, and telling them
 apart afterwards is expensive.

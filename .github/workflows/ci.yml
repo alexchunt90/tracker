@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Test on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 18 is the floor the code is written to (no --env-file, node:test
+        # without describe-level hooks); 22 is what the Docker image runs.
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # No install step: the project has no dependencies, and keeping it that
+      # way is a stated goal. If one ever appears, add `npm ci` here.
+      - run: npm run lint
+      - run: npm test
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t field-notes:ci .
+      # The image must at least start and answer its own healthcheck route
+      # against an empty volume, which exercises the seed.
+      - run: |
+          docker run -d --name fn -p 4175:4175 -e HOST=0.0.0.0 field-notes:ci
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4175/api/state > /dev/null; then echo up; exit 0; fi
+            sleep 1
+          done
+          docker logs fn
+          exit 1
