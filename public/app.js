@@ -90,13 +90,6 @@ function fmtWhen(value, { time = true } = {}) {
 
 const fmtDate = (value) => fmtWhen(value, { time: false });
 
-/** Local wall-clock now, in the format a datetime-local input expects. */
-function nowLocal() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 /**
  * "1 find" / "2 finds". `many` is for anything that does not just take an -s;
  * a word that already ends in one is assumed to be its own plural, which is
@@ -520,8 +513,6 @@ function setView(view, { push = true } = {}) {
     tab.setAttribute('aria-selected', tab.dataset.view === state.view ? 'true' : 'false');
   }
   for (const name of VIEWS) $(`view-${name}`).hidden = name !== state.view;
-  // A map built or drawn while its tab was hidden measured a zero-width box.
-  if (state.view === 'map' && mapView) requestAnimationFrame(() => mapView.redraw());
   if (push) history.pushState(routeState(), '', routeUrl());
   render();
 }
@@ -706,13 +697,13 @@ function shotCard(shot, onRemove, onOpen) {
     /*
      * Somebody else's photograph carries their name. Every borrowed reference
      * shot here is under a Creative Commons licence, and those licences are
-     * granted on condition of credit \u2014 so the credit is not decoration, it is
+     * granted on condition of credit — so the credit is not decoration, it is
      * the terms. It links back to the observation it came from.
      */
     if (p.attribution) {
       const credit = p.sourceUrl ? el('a', 'shot-credit') : el('div', 'shot-credit');
       credit.textContent = p.attribution;
-      credit.title = p.attribution + (p.licence ? ` \u2014 ${p.licence}` : '');
+      credit.title = p.attribution + (p.licence ? ` — ${p.licence}` : '');
       if (p.sourceUrl) {
         credit.href = p.sourceUrl;
         credit.target = '_blank';
@@ -777,7 +768,7 @@ function render() {
   else renderSpecies(d);
 }
 
-function renderMasthead({ rows, summary: s, life }) {
+function renderMasthead({ summary: s, life }) {
   $('chip-finds').textContent = s.total;
   $('chip-identified').textContent = s.total ? `${Math.round(s.identifiedShare * 100)}%` : '—';
   $('chip-identified-source').textContent = s.total ? `${s.identified} of ${s.total}` : 'nothing logged yet';
@@ -806,7 +797,7 @@ function renderLog({ rows }) {
   $('map-pane').hidden = state.mode !== 'map';
 
   if (state.mode === 'finds') renderGallery(shown, rows);
-  else renderMap(shown, rows);
+  else renderMap(shown);
 
   renderFindsVerdict(shown, rows);
 }
@@ -919,11 +910,11 @@ function speciesPanel(rows) {
   const head = el('div', 'species-head');
   head.append(search);
   if (held) {
-    const clear = el('button', 'species-clear', 'Clear');
-    clear.type = 'button';
-    clear.title = `Stop filtering by ${speciesLabel(held)}`;
-    clear.addEventListener('click', () => pick(''));
-    head.append(clear);
+    const clearButton = el('button', 'species-clear', 'Clear');
+    clearButton.type = 'button';
+    clearButton.title = `Stop filtering by ${speciesLabel(held)}`;
+    clearButton.addEventListener('click', () => pick(''));
+    head.append(clearButton);
   }
 
   const body = el('div', 'species-body');
@@ -953,9 +944,9 @@ function speciesPanel(rows) {
   const section = (title, list, note) => {
     if (!list.length) return null;
     const box = el('div', 'species-section');
-    const head = el('div', 'species-section-head', title);
-    if (note) head.append(el('span', 'species-section-note', note));
-    box.append(head);
+    const sectionHead = el('div', 'species-section-head', title);
+    if (note) sectionHead.append(el('span', 'species-section-note', note));
+    box.append(sectionHead);
     for (const sp of list) box.append(row(sp));
     return box;
   };
@@ -1043,7 +1034,6 @@ function renderFindsVerdict(shown, rows) {
   if (sum.unidentified) parts.push(`${plural(sum.unidentified, 'find')} still unidentified`);
   if (sum.uncertain) parts.push(`${plural(sum.uncertain, 'identification')} marked uncertain`);
   if (state.mode === 'map') {
-    const picked = selectedSpecies();
     if (picked && inatShown().length) {
       node.append(strongText(
         `${plural(inatShown().length, 'record')} of it from other people${inatWindow()}, as triangles that fade with age.`));
@@ -1117,14 +1107,6 @@ function typeDropdown(counts, onChange) {
 }
 
 /**
- * How settled the identification is, as a dropdown of one choice.
- *
- * Unlike types, these do not combine: identified and unidentified are
- * complements, and uncertain is a slice of identified, so "identified and
- * uncertain" would only ever mean "identified". Radios, not checkboxes, and
- * picking one closes the menu \u2014 there is nothing else to say.
- */
-/**
  * One choice from a short list, as a dropdown.
  *
  * The pill rows this replaced read as a set of toggles when only one could
@@ -1175,7 +1157,14 @@ function choiceDropdown({ name, options, current, onPick, label }) {
   return wrap;
 }
 
-/** How settled the identification is. One of four, so one choice. */
+/**
+ * How settled the identification is, as a dropdown of one choice.
+ *
+ * Unlike types, these do not combine: identified and unidentified are
+ * complements, and uncertain is a slice of identified, so "identified and
+ * uncertain" would only ever mean "identified". Radios, not checkboxes, and
+ * picking one closes the menu — there is nothing else to say.
+ */
 function statusDropdown(sum, onChange) {
   return choiceDropdown({
     name: 'filter-status',
@@ -1198,7 +1187,7 @@ function statusDropdown(sum, onChange) {
  * genuinely combine: "choice or edible" is the forager's question and "toxic
  * or deadly" is the cautionary one, and neither is a single tier. Seven of
  * them would make seven pills, which is why this was a lone "choice edible"
- * toggle before \u2014 the tiers were there, just unreachable.
+ * toggle before — the tiers were there, just unreachable.
  */
 function edibilityDropdown(counts, onChange) {
   const wrap = el('div', 'dropdown');
@@ -1285,7 +1274,6 @@ function wireDropdown(wrap, button, menu) {
   });
   return close;
 }
-
 
 // --- gallery ----------------------------------------------------------------
 
@@ -1697,7 +1685,7 @@ function inatPins(results, edibility) {
     type: o.type,
     label: `${o.commonName || o.scientificName} — iNaturalist`,
     // Other people's records only load for one species at a time, so they all
-    // share that species' tier \u2014 the same colour as your own finds of it.
+    // share that species' tier — the same colour as your own finds of it.
     edibility: o.type === 'fungi' ? edibility : '',
     // Old sightings fade. Where a species was six years ago is worth knowing;
     // it is just not worth as much as where it was last week.
@@ -1713,7 +1701,7 @@ function inatPins(results, edibility) {
  * panel any more — it was a second way of looking at one record, and the
  * record already has a good one.
  */
-function renderMap(shown, rows) {
+function renderMap(shown) {
   const placed = minePlaced(shown);
 
   if (!mapView) {
@@ -1760,7 +1748,6 @@ function renderMap(shown, rows) {
   // A tile layer drawn while the pane was hidden measured a zero-width box.
   requestAnimationFrame(() => mapView.redraw());
   renderMapLegend(placed);
-  void rows;
 }
 
 /**
@@ -2559,7 +2546,7 @@ const lightboxOpen = () => !!lightbox && !lightbox.node.hidden;
 function openLightbox(photos, startAt = 0) {
   const list = (photos || []).filter((p) => fullSrc(p) || thumbSrc(p));
   if (!list.length) return;
-  let at = Math.max(0, Math.min(startAt, list.length - 1));
+  const at = Math.max(0, Math.min(startAt, list.length - 1));
 
   if (!lightbox) {
     const node = el('div', 'lightbox');
@@ -3036,7 +3023,7 @@ function buildIdentifySheet(sheet, stored, close) {
   let chosen = null;
   let confidence = stored.confidence === 'low' ? 'low' : 'high';
 
-  const head = sheetHead(sheet, row.name, row.scientificName, close, { unknown: !row.identified });
+  sheetHead(sheet, row.name, row.scientificName, close, { unknown: !row.identified });
 
   // --- the specimen
   const shots = sheetSection(sheet);
@@ -3251,7 +3238,7 @@ function buildIdentifySheet(sheet, stored, close) {
 
     // Reference photographs: what a good one looks like, which is the whole
     // reason they were worth importing.
-    const shots = el('div', 'chosen-shots');
+    const refShots = el('div', 'chosen-shots');
     const photos = (sp.photos || []).slice(0, 3);
     if (photos.length) {
       for (const [i, photo] of photos.entries()) {
@@ -3267,17 +3254,17 @@ function buildIdentifySheet(sheet, stored, close) {
         // The credit still lives on hover; the click is for looking closely.
         if (photo.attribution) frame.title = photo.attribution;
         frame.addEventListener('click', () => openLightbox(photos, i));
-        shots.append(frame);
+        refShots.append(frame);
       }
     } else {
-      shots.append(el('div', 'chosen-noshot', 'No reference photographs on file.'));
+      refShots.append(el('div', 'chosen-noshot', 'No reference photographs on file.'));
     }
 
     const facts = el('div', 'chosen-facts');
-    const head = el('div', 'chosen-head');
-    head.append(el('h4', 'chosen-name', sp.commonName || sp.scientificName || 'Unnamed'));
-    if (sp.edibility && sp.edibility !== 'unknown') head.append(edibleBadge(sp.edibility));
-    facts.append(head);
+    const chosenHead = el('div', 'chosen-head');
+    chosenHead.append(el('h4', 'chosen-name', sp.commonName || sp.scientificName || 'Unnamed'));
+    if (sp.edibility && sp.edibility !== 'unknown') chosenHead.append(edibleBadge(sp.edibility));
+    facts.append(chosenHead);
     const sci = sciLine(sp.commonName || sp.scientificName, sp.scientificName, 'chosen-sci sci');
     if (sci) facts.append(sci);
 
@@ -3293,7 +3280,7 @@ function buildIdentifySheet(sheet, stored, close) {
           `You tagged \u201c${clash.tag.text}\u201d under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
       }
     }
-    pickBody.append(shots, facts);
+    pickBody.append(refShots, facts);
 
     // The recorded characters, with the ones your tags agreed on marked. The
     // rest are what to go and look at again before committing.
@@ -3709,12 +3696,9 @@ function pruneTerm(terms, term) {
  * Choosing the category the vocabulary would have guessed clears the override
  * rather than pinning it. Storing a redundant override would freeze the term
  * against a later change to the word lists, which is the opposite of useful.
- */
-/**
- * A secondary colour carries its primary with it. Both are dropped when
- * they are what the vocabulary would have said anyway, for the same reason a
- * redundant category is: stored, they would freeze the term against a later
- * change to the tables.
+ *
+ * A secondary colour carries its primary with it, dropped on the same rule:
+ * kept only when it differs from what the tables would have said.
  */
 function setTermCategory(term, category, primary) {
   const terms = { ...state.glossary.terms };
@@ -3913,9 +3897,9 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
 
   const grid = el('div', 'characters');
   const characterFields = Model.FUNGI_CHARACTERS.map((spec) => {
-    const cell = tagField(spec, Model.character(record, spec.id), markDirty);
-    grid.append(cell.node);
-    return cell;
+    const fieldCell = tagField(spec, Model.character(record, spec.id), markDirty);
+    grid.append(fieldCell.node);
+    return fieldCell;
   });
   traits.append(grid);
 
@@ -3956,7 +3940,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   const relativeWrap = el('div');
   relativeWrap.append(el('span', 'field-label', 'Closely related'), relatives.node);
   relativeWrap.append(el('p', 'field-hint',
-    'Another species the guides mention under this one \u2014 a different organism, '
+    'Another species the guides mention under this one — a different organism, '
     + 'not another name for it. Not searched.'));
   relativeWrap.style.marginTop = '10px';
   traits.append(relativeWrap);
@@ -4072,24 +4056,8 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
   });
   actions.append(el('span', 'save-status spacer', ''), save);
   sheet.append(actions);
-
-  // Cancelling a create has to tell the caller, or a picker sitting on the
-  // "+ New species…" sentinel is left there.
-  if (creating && onCreated) {
-    const wrapped = state.closeSheet;
-    state.closeSheet = (opts) => { wrapped(opts); };
-  }
 }
 
-/** One iNaturalist match, offered as a button rather than applied. */
-/**
- * A chip for one tag: its colour comes from its category, and a colour tag
- * paints the colour it names.
- *
- * `onCycle` makes the label a button that walks the categories. The vocabulary
- * only guesses, and a guess with no way to correct it is worse than no guess —
- * so every tag can be reclassified in place.
- */
 /*
  * What a tag means, on a pause.
  *
@@ -4150,7 +4118,7 @@ function showTagTip(chip, tag) {
   } else {
     // Worth saying rather than showing nothing: an undefined term is a gap in
     // the glossary, and this is exactly the moment it is noticed.
-    tip.append(el('p', 'tag-tip-none', 'Not defined yet \u2014 add one in the Glossary.'));
+    tip.append(el('p', 'tag-tip-none', 'Not defined yet — add one in the Glossary.'));
   }
 
   if (synonyms.length) {
@@ -4207,7 +4175,12 @@ function categorySwatch(category) {
   return dot;
 }
 
-function tagChip(tag, { onCycle, onRemove, tip = true } = {}) {
+/**
+ * A chip for one tag: its colour comes from its category, and a colour tag
+ * paints the colour it names. `onRemove` adds the ×; `tip` arms the glossary
+ * tooltip, which a picking surface turns off.
+ */
+function tagChip(tag, { onRemove, tip = true } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
 
@@ -4228,7 +4201,6 @@ function tagChip(tag, { onCycle, onRemove, tip = true } = {}) {
   // the category — which the glossary tooltip already names at its foot.
   const label = el('span', 'tag-text', tag.text);
   chip.append(label);
-  void onCycle;
 
   if (onRemove) {
     const drop = el('button', 'tag-drop', '×');
@@ -4253,7 +4225,7 @@ function tagChip(tag, { onCycle, onRemove, tip = true } = {}) {
  * in place of the input rather than leaving an empty row that reads unfinished.
  */
 function tagField(spec, value, onChange) {
-  const cell = el('div', 'character');
+  const root = el('div', 'character');
   const tags = value.tags.map((t) => ({ ...t }));
 
   const head = el('div', 'character-head');
@@ -4270,7 +4242,7 @@ function tagField(spec, value, onChange) {
     naLabel.append(naBox, document.createTextNode('N/A'));
     head.append(naLabel);
   }
-  cell.append(head);
+  root.append(head);
 
   const list = el('div', 'tag-list');
   const absentLine = el('p', 'tag-absent', spec.absent);
@@ -4334,7 +4306,7 @@ function tagField(spec, value, onChange) {
 
   const wrap = el('div', 'tag-wrap');
   wrap.append(list, absentLine, suggestions);
-  cell.append(wrap);
+  root.append(wrap);
 
   function drawSuggestions() {
     const groups = tagSuggestions(spec, box.value, tags);
@@ -4400,7 +4372,7 @@ function tagField(spec, value, onChange) {
   box.addEventListener('blur', closeSuggestions);
 
   const sync = () => {
-    cell.classList.toggle('is-na', naBox.checked);
+    root.classList.toggle('is-na', naBox.checked);
     list.hidden = naBox.checked;
     absentLine.hidden = !naBox.checked;
     if (naBox.checked) closeSuggestions();
@@ -4409,7 +4381,7 @@ function tagField(spec, value, onChange) {
   sync();
   draw();
 
-  return { spec, node: cell, read: () => ({ na: naBox.checked, tags: naBox.checked ? [] : tags.map((t) => ({ ...t })) }) };
+  return { spec, node: root, read: () => ({ na: naBox.checked, tags: naBox.checked ? [] : tags.map((t) => ({ ...t })) }) };
 }
 
 /** Only what was actually said, so the file does not fill with empty keys. */
@@ -4663,13 +4635,6 @@ function wire() {
     // here rather than left to stopPropagation: both listeners are on
     // document, so the one bound first wins and that is this one.
     if (ev.key === 'Escape' && !$('scrim').hidden && !lightboxOpen()) state.closeSheet?.();
-  });
-
-  // Chart type is sized against the rendered width, so a resize has to redraw.
-  let resizeTimer = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { if (state.view === 'log' && state.mode === 'map') mapView?.redraw(); }, 150);
   });
 }
 

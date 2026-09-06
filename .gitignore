@@ -18,6 +18,9 @@ elevation/
 # when the date rolls over.
 rain/
 
+# The Docker volume: config, data, photos and caches for a containerised run.
+state/
+
 # Reference material, kept out of the repo for size and licensing.
 fungi_ebooks/
 /research/

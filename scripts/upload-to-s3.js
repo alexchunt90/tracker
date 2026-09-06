@@ -14,27 +14,16 @@
  * Photographs are skipped when the bucket already holds them, so an
  * interrupted run resumes by being run again.
  */
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const { createStore, KEYS, StoreConflict } = require(path.join(ROOT, 'lib/store.js'));
+const { loadEnv } = require(path.join(ROOT, 'lib/env.js'));
+const { PHOTO_MIME, referencedPhotos } = require(path.join(ROOT, 'lib/photos.js'));
 
-// --- .env, same rules as the server -----------------------------------------
-for (const line of (fs.existsSync(path.join(ROOT, '.env'))
-  ? fs.readFileSync(path.join(ROOT, '.env'), 'utf8') : '').split('\n')) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith('#')) continue;
-  const eq = trimmed.indexOf('=');
-  if (eq === -1) continue;
-  const key = trimmed.slice(0, eq).trim();
-  if (!key || key in process.env) continue;
-  let value = trimmed.slice(eq + 1).trim();
-  const q = value[0];
-  if ((q === '"' || q === "'") && value.endsWith(q) && value.length > 1) value = value.slice(1, -1);
-  process.env[key] = value;
-}
+// The same .env rules as the server.
+loadEnv(path.join(ROOT, '.env'));
 
 const DRY = process.argv.includes('--dry-run');
 const FORCE = process.argv.includes('--force');
@@ -46,10 +35,6 @@ if (!process.env.S3_BUCKET) {
 }
 const store = createStore(process.env, ROOT, PHOTO_DIR);
 
-const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
-  '.webp': 'image/webp', '.gif': 'image/gif', '.heic': 'image/heic',
-  '.heif': 'image/heif', '.avif': 'image/avif', '.tiff': 'image/tiff' };
-
 const readLocal = async (rel) => {
   try {
     return JSON.parse(await fsp.readFile(path.join(ROOT, rel), 'utf8'));
@@ -58,18 +43,6 @@ const readLocal = async (rel) => {
     throw err;
   }
 };
-
-/** Every photograph any record points at — the same reachability the app uses. */
-function referenced(observations, species) {
-  const set = new Set();
-  for (const rec of [...(observations || []), ...(species || [])]) {
-    for (const p of rec.photos || []) {
-      if (p?.file) set.add(p.file);
-      if (p?.thumb) set.add(p.thumb);
-    }
-  }
-  return set;
-}
 
 (async () => {
   console.log(`${DRY ? 'Would upload' : 'Uploading'} to ${store.describe()}\n`);
@@ -99,7 +72,8 @@ function referenced(observations, species) {
   }
 
   // --- the photographs ------------------------------------------------------
-  const want = referenced(local.observations, local.species);
+  // The same reachability the app's orphan sweep runs on.
+  const want = referencedPhotos(local.observations, local.species);
   const onDisk = await fsp.readdir(PHOTO_DIR).catch(() => []);
   const present = new Set(onDisk);
   const missing = [...want].filter((f) => !present.has(f));
@@ -122,7 +96,7 @@ function referenced(observations, species) {
   for (const name of todo) {
     try {
       const body = await fsp.readFile(path.join(PHOTO_DIR, name));
-      await store.writePhoto(name, body, MIME[path.extname(name).toLowerCase()]);
+      await store.writePhoto(name, body, PHOTO_MIME[path.extname(name).toLowerCase()]);
       done++;
     } catch (err) {
       failed++;

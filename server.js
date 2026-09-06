@@ -14,57 +14,27 @@
 
 const http = require('node:http');
 const os = require('node:os');
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { loadEnv } = require('./lib/env.js');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
-const { RAIN_MAX_CELLS, rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
+const { IMAGE_TYPES, PHOTO_MIME, PHOTO_NAME, mintPhotoName, referencedPhotos } = require('./lib/photos.js');
+const { rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const ENV_PATH = path.join(ROOT, '.env');
 
-// --- .env -------------------------------------------------------------------
-// Node 18 has no --env-file. A missing .env is fine; the real environment
-// always wins.
-
-function loadEnv(file) {
-  let raw;
-  try {
-    raw = fs.readFileSync(file, 'utf8');
-  } catch (err) {
-    if (err.code === 'ENOENT') return;
-    throw err;
-  }
-  for (const line of raw.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    if (!key || key in process.env) continue;
-    let value = trimmed.slice(eq + 1).trim();
-    const quote = value[0];
-    if ((quote === '"' || quote === "'") && value.endsWith(quote) && value.length > 1) {
-      value = value.slice(1, -1);
-    }
-    process.env[key] = value;
-  }
-}
-
+// A missing .env is fine; the real environment always wins. See lib/env.js.
 loadEnv(ENV_PATH);
 
 // Writable state. Defaults to the project directory, which is the layout when
 // running from a checkout. Point STATE_DIR at a mounted volume to containerise
 // — and note it must be a *directory*: saves write a temp file and rename over
 // the target, which fails against a bind-mounted file.
+// The four documents live under it too, at the paths lib/store.js names.
 const STATE_DIR = process.env.STATE_DIR ? path.resolve(process.env.STATE_DIR) : ROOT;
-const CONFIG_PATH = path.join(STATE_DIR, 'config.json');
-const DATA_DIR = path.join(STATE_DIR, 'data');
-const OBSERVATIONS_PATH = path.join(DATA_DIR, 'observations.json');
-const SPECIES_PATH = path.join(DATA_DIR, 'species.json');
-const GLOSSARY_PATH = path.join(DATA_DIR, 'glossary.json');
 const PHOTO_DIR = path.join(STATE_DIR, 'photos');
 const TILE_DIR = path.join(STATE_DIR, 'tiles');
 const ELEVATION_DIR = path.join(STATE_DIR, 'elevation');
@@ -85,22 +55,6 @@ const MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
 };
-
-// What may be uploaded, and what each type is stored as. The extension comes
-// from this table rather than from the client's filename: a name is attacker
-// controlled, and it is the only thing that decides how the file is served
-// back later.
-const IMAGE_TYPES = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'image/gif': '.gif',
-  'image/heic': '.heic',
-  'image/heif': '.heif',
-  'image/avif': '.avif',
-  'image/tiff': '.tiff',
-};
-const PHOTO_MIME = Object.fromEntries(Object.entries(IMAGE_TYPES).map(([m, e]) => [e, m]));
 
 // Phone photos run large, and a HEIC burst frame larger still.
 const MAX_PHOTO_BYTES = 32 * 1024 * 1024;
@@ -172,40 +126,9 @@ const readSpecies = () => readValue('species', []);
 const readGlossary = () => readValue('glossary', { version: 0, terms: {} });
 
 // --- photos -----------------------------------------------------------------
+// The name rules and the reachability walk are in lib/photos.js, shared with
+// the upload script.
 
-// Serving a stored file is the one place a request string reaches the
-// filesystem, so the name is required to be exactly what we mint: hex plus a
-// known extension. Nothing else is even looked up, which makes traversal and
-// symlink tricks unrepresentable rather than merely filtered.
-const PHOTO_NAME = /^[0-9a-f]{16}\.(jpg|png|webp|gif|heic|heif|avif|tiff)$/;
-
-const mintPhotoName = (ext) => crypto.randomBytes(8).toString('hex') + ext;
-
-/** Every photo filename referenced by any saved record. */
-function referencedPhotos(observations, species) {
-  const set = new Set();
-  const add = (photos) => {
-    for (const p of photos || []) {
-      if (p?.file) set.add(p.file);
-      if (p?.thumb) set.add(p.thumb);
-    }
-  };
-  for (const o of observations || []) add(o.photos);
-  for (const s of species || []) add(s.photos);
-  return set;
-}
-
-/**
- * Delete stored photos nothing points at any more.
- *
- * Reachability rather than reference counting: a count has to be maintained
- * correctly at every edit, and one missed decrement leaks a file forever while
- * one extra deletes a photo still on screen. Sweeping from the records cannot
- * drift, because the records are the truth.
- *
- * Failures here are logged and swallowed. A leftover file wastes disk; a
- * delete that throws mid-save would fail a request that already succeeded.
- */
 /**
  * A local copy of a photograph held in the bucket.
  *
@@ -237,6 +160,17 @@ async function loadPhoto(name) {
   return remote;
 }
 
+/**
+ * Delete stored photos nothing points at any more.
+ *
+ * Reachability rather than reference counting: a count has to be maintained
+ * correctly at every edit, and one missed decrement leaks a file forever while
+ * one extra deletes a photo still on screen. Sweeping from the records cannot
+ * drift, because the records are the truth.
+ *
+ * Failures here are logged and swallowed. A leftover file wastes disk; a
+ * delete that throws mid-save would fail a request that already succeeded.
+ */
 async function pruneOrphanPhotos() {
   try {
     const [observations, species] = await Promise.all([readObservations(), readSpecies()]);
@@ -642,6 +576,9 @@ const ICONIC_TO_TYPE = {
   Actinopterygii: 'fauna',
 };
 
+/** Rewrite an upstream image URL to go back through this server. */
+const proxiedPhoto = (url) => (url ? `api/inat/photo?url=${encodeURIComponent(url)}` : null);
+
 /** Only the fields the map and the species editor actually draw. */
 function slimObservation(o) {
   const type = ICONIC_TO_TYPE[o.taxon?.iconic_taxon_name] ?? null;
@@ -666,9 +603,6 @@ function slimObservation(o) {
     obscured: !!o.obscured,
   };
 }
-
-/** Rewrite an upstream image URL to go back through this server. */
-const proxiedPhoto = (url) => (url ? `api/inat/photo?url=${encodeURIComponent(url)}` : null);
 
 function slimTaxon(t) {
   return {
@@ -865,6 +799,28 @@ function upsert({ list, id, incoming, sortKey }) {
   return { value: next, status: 200, body: { saved: true, id, version: record.version, record } };
 }
 
+// --- request parsing --------------------------------------------------------
+
+/**
+ * A query parameter as a number, or NaN when it is missing or not one.
+ *
+ * Read as a string first. `Number(null)` is 0, not NaN, so a request with no
+ * coordinate at all would otherwise pass a finiteness check as a point in the
+ * Gulf of Guinea and be answered — or sent upstream — rather than corrected.
+ */
+function numberParam(params, key) {
+  const raw = params.get(key);
+  if (raw === null || raw.trim() === '') return NaN;
+  return Number(raw);
+}
+
+/** The four corners of a viewport, or null when any is missing or malformed. */
+function boundingBox(params) {
+  const [swlat, swlng, nelat, nelng] = ['swlat', 'swlng', 'nelat', 'nelng'].map((k) => numberParam(params, k));
+  if (![swlat, swlng, nelat, nelng].every(Number.isFinite)) return null;
+  return { swlat, swlng, nelat, nelng };
+}
+
 // --- server -----------------------------------------------------------------
 
 const server = http.createServer(async (req, res) => {
@@ -967,8 +923,8 @@ const server = http.createServer(async (req, res) => {
       const config = await readConfig();
       if (config.elevation?.enabled === false) return json(res, 200, { enabled: false, metres: null });
 
-      const lat = Number(url.searchParams.get('lat'));
-      const lon = Number(url.searchParams.get('lon'));
+      const lat = numberParam(url.searchParams, 'lat');
+      const lon = numberParam(url.searchParams, 'lon');
       const sane = Number.isFinite(lat) && Number.isFinite(lon)
         && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
       if (!sane) return json(res, 400, { error: 'a latitude and longitude are required' });
@@ -988,14 +944,9 @@ const server = http.createServer(async (req, res) => {
       const config = await readConfig();
       if (config.rain?.enabled === false) return json(res, 200, { enabled: false, cells: [] });
 
-      // Read as strings first. `Number(null)` is 0, not NaN, so a request with
-      // no box at all would otherwise pass the finiteness check as a point in
-      // the Gulf of Guinea and be answered rather than corrected.
-      const raw = ['swlat', 'swlng', 'nelat', 'nelng'].map((k) => url.searchParams.get(k));
-      if (raw.some((v) => v === null || v.trim() === '')) return json(res, 400, { error: 'a bounding box is required' });
-      const box = raw.map(Number);
-      if (!box.every(Number.isFinite)) return json(res, 400, { error: 'a bounding box is required' });
-      const [swlat, swlng, nelat, nelng] = box;
+      const box = boundingBox(url.searchParams);
+      if (!box) return json(res, 400, { error: 'a bounding box is required' });
+      const { swlat, swlng, nelat, nelng } = box;
       if (swlat > nelat || swlat < -90 || nelat > 90) return json(res, 400, { error: 'that bounding box is upside down' });
 
       // A viewport that has wrapped the date line arrives as a box wider than
@@ -1006,7 +957,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const days = Math.min(RAIN_MAX_DAYS, Math.max(1, Number(config.rain?.days) || RAIN_DEFAULT_DAYS));
-      const { spacing, cells, tooWide, problem } = await recentRainfall({ swlat, swlng, nelat, nelng }, days);
+      const { spacing, cells, tooWide, problem } = await recentRainfall(box, days);
       if (tooWide) return json(res, 200, { enabled: true, cells: [], tooWide: true });
 
       return json(res, 200, {
@@ -1031,11 +982,11 @@ const server = http.createServer(async (req, res) => {
       const config = await readConfig();
       if (config.inaturalist?.enabled === false) return json(res, 200, { enabled: false, results: [] });
 
-      const box = ['swlat', 'swlng', 'nelat', 'nelng'].map((k) => Number(url.searchParams.get(k)));
-      if (!box.every(Number.isFinite)) return json(res, 400, { error: 'a bounding box is required' });
+      const box = boundingBox(url.searchParams);
+      if (!box) return json(res, 400, { error: 'a bounding box is required' });
 
       const query = new URLSearchParams({
-        swlat: box[0], swlng: box[1], nelat: box[2], nelng: box[3],
+        swlat: box.swlat, swlng: box.swlng, nelat: box.nelat, nelng: box.nelng,
         // Research grade only. An unvetted identification is worth less than
         // no identification when the point of looking is to check your own.
         quality_grade: 'research',
@@ -1222,6 +1173,9 @@ function json(res, status, payload) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
+    // Decoded by the stream, so a multi-byte character split across two
+    // chunks arrives whole rather than as two replacement characters.
+    req.setEncoding('utf8');
     req.on('data', (chunk) => {
       data += chunk;
       if (data.length > MAX_BODY_BYTES) reject(tooLarge('Body too large'));

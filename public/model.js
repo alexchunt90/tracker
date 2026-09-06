@@ -175,9 +175,6 @@ const Model = (() => {
     });
   }
 
-  // --- seasonality ----------------------------------------------------------
-
-
   // --- tags -----------------------------------------------------------------
 
   /*
@@ -424,8 +421,6 @@ const Model = (() => {
     // scent and taste
     'mild', 'bitter', 'acrid', 'peppery', 'farinaceous', 'mealy', 'anise', 'almond', 'radish',
     'phenolic', 'sweet', 'fruity', 'fishy', 'garlic', 'rancid', 'sour', 'nutty', 'earthy',
-    // habit
-    'clustered', 'scattered', 'solitary', 'troops', 'fairy ring', 'caespitose',
     /*
      * Terms the guides use constantly that the vocabulary did not hold. Each
      * arrived as a dashed note from a tagging pass and was used enough times
@@ -436,12 +431,12 @@ const Model = (() => {
     'spermatic', 'musty', 'moldy', 'metallic', 'medicinal', 'chlorine', 'unpleasant',
     'pungent', 'nauseating', 'spicy', 'aromatic', 'soapy', 'cucumber',
     // texture and substance
-    'thick', 'thin', 'firm', 'stout', 'rigid', 'stocky', 'slender', 'wiry', 'pithy',
+    'thick', 'thin', 'firm', 'stout', 'rigid', 'stocky', 'wiry', 'pithy',
     'chambered', 'watery', 'translucent', 'deliquescent',
     // surface
     'silky', 'woolly', 'cottony', 'hairy', 'felty', 'scurfy', 'streaked', 'spotted',
     'dotted', 'furrowed', 'ribbed', 'wrinkled', 'cracked', 'cracking', 'matte',
-    'granular', 'granulose', 'subviscid', 'shaggy', 'bristly', 'velvety',
+    'granular', 'granulose', 'subviscid', 'shaggy', 'bristly',
     // shape
     'cylindrical', 'club-shaped', 'saddle-shaped', 'funnel-shaped', 'vase-shaped',
     'hemispherical', 'spindle-shaped', 'saucer-shaped', 'hoof-like', 'ear-shaped',
@@ -449,7 +444,7 @@ const Model = (() => {
     'flattened', 'curved', 'twisted', 'contorted', 'narrow', 'round',
     // margin, edge and veil
     'marginate', 'appendiculate', 'translucent-striate', 'fugacious', 'flaring',
-    'lacerate', 'eroded', 'fading', 'confluent', 'imbricate',
+    'lacerate', 'fading', 'confluent', 'imbricate',
   ]);
 
   const HABITATS = new Set([
@@ -878,7 +873,7 @@ const Model = (() => {
     /*
      * Division and nutrition come after the characters, not before them.
      * The find sheet shows this list beside what you tagged on the find, and
-     * both lists walk FUNGI_CHARACTERS in the same order \u2014 so anything put in
+     * both lists walk FUNGI_CHARACTERS in the same order — so anything put in
      * front of them offsets the two columns and the rows stop lining up.
      */
     if (sp.division) out.push({ label: 'Division', value: sp.division, tags: [] });
@@ -1400,7 +1395,7 @@ const Model = (() => {
 
   /*
    * A find's tier is its species' tier, and a find with no species is
-   * `unknown` \u2014 an unidentified mushroom is not edible-unless-proven, it is
+   * `unknown` — an unidentified mushroom is not edible-unless-proven, it is
    * simply not yet known. That also keeps the tiers summing to the total, so
    * the counts in the filter add up to the number of finds.
    */
@@ -1418,7 +1413,7 @@ const Model = (() => {
    *
    * A sighting from last week tells you where to look this weekend; one from
    * six years ago still tells you the species lives there. Both are worth
-   * having, so the scale fades but never reaches nothing \u2014 a pin you cannot
+   * having, so the scale fades but never reaches nothing — a pin you cannot
    * see is a pin that is not on the map.
    *
    * Full for the past month, then a quarter down per year: 0.75 under a year,

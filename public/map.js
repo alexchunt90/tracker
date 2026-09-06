@@ -83,7 +83,7 @@ const MapView = (() => {
    *
    * SVG rather than a CSS border, because half the edibility tiers are
    * hollow and a CSS triangle is a border trick with no interior to leave
-   * empty \u2014 it can only ever be solid.
+   * empty — it can only ever be solid.
    */
   function pinShape(kind) {
     const svg = document.createElementNS(SVG, 'svg');
@@ -103,7 +103,7 @@ const MapView = (() => {
     return svg;
   }
 
-  function create({ node, tileUrl, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover, onRainToggle, onRecentToggle }) {
+  function create({ node, attribution, minZoom = 2, maxZoom = 19, onSelect, onViewChange, onHover, onRainToggle, onRecentToggle }) {
     const view = { lat: 0, lon: 0, zoom: 2 };
     let pins = [];
     // The rainfall overlay: cells on a fixed geographic lattice, each already

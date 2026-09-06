@@ -23,27 +23,15 @@
  * unsorted file appends each newly-defined term at the bottom where it reads
  * as noise rather than as the one line that changed.
  */
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const { createStore, KEYS, StoreConflict, serialize } = require(path.join(ROOT, 'lib/store.js'));
+const { loadEnv } = require(path.join(ROOT, 'lib/env.js'));
 
-// --- .env, same rules as the server -----------------------------------------
-for (const line of (fs.existsSync(path.join(ROOT, '.env'))
-  ? fs.readFileSync(path.join(ROOT, '.env'), 'utf8') : '').split('\n')) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith('#')) continue;
-  const eq = trimmed.indexOf('=');
-  if (eq === -1) continue;
-  const key = trimmed.slice(0, eq).trim();
-  if (!key || key in process.env) continue;
-  let value = trimmed.slice(eq + 1).trim();
-  const q = value[0];
-  if ((q === '"' || q === "'") && value.endsWith(q) && value.length > 1) value = value.slice(1, -1);
-  process.env[key] = value;
-}
+// The same .env rules as the server.
+loadEnv(path.join(ROOT, '.env'));
 
 const FILE = path.join(ROOT, KEYS.glossary);
 const FORCE = process.argv.includes('--force');
