@@ -1546,6 +1546,68 @@ const Model = (() => {
     return { minLat: minLat - padLat, maxLat: maxLat + padLat, minLon: minLon - padLon, maxLon: maxLon + padLon, count: placed.length };
   }
 
+  // --- the bulk import ------------------------------------------------------
+  /*
+   * A day's photographs, sorted into finds after the fact.
+   *
+   * The entry form takes one find at a time, which is the right shape for the
+   * specimen in your hand. The evening after a long walk is a different shape:
+   * eighty photographs on the phone, most of them three or four angles of the
+   * same thing, and all of them from the same wood. What the import needs from
+   * the model is small — the order to show them in, what a group of them says
+   * about when and where the find was, and how a batch-wide edit reaches the
+   * finds that have not been touched by hand.
+   */
+
+  /**
+   * The order the import queue shows photographs in: by the time they were
+   * taken, the undated ones last, and ties broken by name with the digits
+   * read as numbers so IMG_9 comes before IMG_10.
+   */
+  function importOrder(photos) {
+    return [...(photos || [])].sort((a, b) => {
+      const at = a.takenAt || '';
+      const bt = b.takenAt || '';
+      if (at && bt && at !== bt) return at.localeCompare(bt);
+      if (!!at !== !!bt) return at ? -1 : 1;
+      return String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true });
+    });
+  }
+
+  /**
+   * When and where a group of photographs says a find was: the earliest clock
+   * reading among them, and the first fix. The same rule the entry form uses
+   * when photographs are dropped in one at a time.
+   */
+  function deriveFind(photos) {
+    const dated = importOrder(photos).find((p) => p.takenAt);
+    const placed = (photos || []).find((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+    return {
+      observedAt: dated ? dated.takenAt : null,
+      lat: placed ? placed.lat : null,
+      lon: placed ? placed.lon : null,
+    };
+  }
+
+  /**
+   * Carry a change in shared values into one find's own fields.
+   *
+   * A field follows the batch only while it still reads exactly what the batch
+   * used to say. One that was edited by hand has become that find's own, and a
+   * later batch-wide correction must not undo it. The same rule serves the
+   * values derived from a find's photographs: taking a photograph out of a
+   * group moves the find's time only if nobody had typed a different one.
+   */
+  function followBatch(own, before, after) {
+    const next = { ...own };
+    for (const key of Object.keys(after)) {
+      const held = own[key] == null ? '' : String(own[key]);
+      const was = before[key] == null ? '' : String(before[key]);
+      if (held === was) next[key] = after[key];
+    }
+    return next;
+  }
+
   return {
     TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
     TAG_CATEGORIES, COLOURS, PRIMARY_COLOURS, SECONDARY_COLOURS, primaryOf, guessPrimary, wordGroup,
@@ -1562,6 +1624,7 @@ const Model = (() => {
     fungiTraits, speciesNames, speciesRelatives, formatCoord, mapLink, bounds,
     excerpts, richText,
     photoElevation, recordedElevation, formatElevation,
+    importOrder, deriveFind, followBatch,
   };
 })();
 

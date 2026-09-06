@@ -593,20 +593,33 @@ async function uploadBlob(blob, mime) {
 }
 
 /**
- * Read one file's metadata, build its preview, and store both.
+ * Read one file's metadata and build its preview, without storing anything.
  *
- * The EXIF is read from the very buffer that gets uploaded, so what the form
- * displays and what the server holds cannot drift apart.
+ * Kept apart from the upload because the bulk import wants the two at
+ * different moments: the time a photograph was taken decides where it sits in
+ * the queue, and that should show as soon as the file is read rather than
+ * after eighty uploads have taken their turn.
  */
-async function ingestPhoto(file) {
+async function inspectPhoto(file) {
   const mime = mimeOf(file);
   if (!SUPPORTED.has(mime)) throw new Error(mime ? `${mime} is not a supported image` : 'unrecognised file type');
 
   const buffer = await file.arrayBuffer();
   const meta = Exif.read(buffer);
   const preview = await makePreview(file);
+  return { mime, buffer, meta, preview };
+}
 
-  const stored = await uploadBlob(new Blob([buffer], { type: mime }), mime);
+/**
+ * Store an inspected photograph and its preview, and build the record.
+ *
+ * Uploads the very buffer the EXIF was read from when it is still held, so
+ * what the form displayed and what the server holds cannot drift apart. A
+ * caller that let the buffer go to bound memory gets the file read again.
+ */
+async function storePhoto(file, { mime, buffer, meta, preview }) {
+  const bytes = buffer || await file.arrayBuffer();
+  const stored = await uploadBlob(new Blob([bytes], { type: mime }), mime);
   let thumb = null;
   if (preview) {
     // A failed preview upload must not lose the original, which is already
@@ -631,6 +644,11 @@ async function ingestPhoto(file) {
     model: meta.model,
     hasExif: meta.hasExif,
   };
+}
+
+/** Read one file, build its preview, and store both: the entry form's path. */
+async function ingestPhoto(file) {
+  return storePhoto(file, await inspectPhoto(file));
 }
 
 // --- metadata adoption ------------------------------------------------------
@@ -2062,6 +2080,479 @@ async function submitObservation(ev) {
     notice('');
     render();
   }
+}
+
+// --- the bulk import --------------------------------------------------------
+/*
+ * A day's photographs, sorted into finds after the fact.
+ *
+ * The entry form logs one find, which is the right shape for the thing in
+ * your hand. It is the wrong shape for the evening after a long walk, when
+ * there are eighty photographs on the phone, most of them three angles of the
+ * same specimen, and all of them from the same wood. So: drop in the lot, see
+ * them in the order they were taken, tick the ones that are one specimen and
+ * group them into a find. Say the place and the day's notes once for the
+ * batch, correct them on the finds that differ, and log everything in one
+ * write.
+ *
+ * Nothing here is part of the log until the last button: the queue and the
+ * groups live in this closure and die with the sheet. The photographs are
+ * stored as they arrive, which is what keeps the final save small — and a
+ * batch that is never logged leaves nothing behind but files the orphan sweep
+ * takes a few hours later.
+ */
+
+/** Run tasks a few at a time. Eighty concurrent decodes would swamp a phone. */
+function pool(limit) {
+  let active = 0;
+  const waiting = [];
+  const next = () => {
+    if (active >= limit || !waiting.length) return;
+    active++;
+    const { fn, resolve, reject } = waiting.shift();
+    fn().then(resolve, reject).finally(() => { active--; next(); });
+  };
+  return (fn) => new Promise((resolve, reject) => { waiting.push({ fn, resolve, reject }); next(); });
+}
+
+/**
+ * Save many new finds in one request. Unlike saveRecord there is no version to
+ * echo: these records did not exist a moment ago, and the server refuses any
+ * id that did.
+ */
+async function saveBatch(observations) {
+  status('saving…');
+  try {
+    const payload = await request('api/observations', 'POST', { observations });
+    state.observations.push(...payload.records);
+    invalidateUsage();
+    notice('');
+    status('saved');
+    return true;
+  } catch (err) {
+    status('');
+    notice(`Could not save: ${err.message}`);
+    return false;
+  }
+}
+
+function openImportSheet() {
+  openSheet((sheet, close) => buildImportSheet(sheet, close));
+}
+
+function buildImportSheet(sheet, close) {
+  // Every photograph dropped in, grouped or not. Each moves through reading
+  // (metadata and preview, in the browser) → storing (on its way to the
+  // server) → ready, or fails at either step and can only be removed.
+  const items = [];
+  // The groups made so far. Each holds its items, the values its photographs
+  // say (`derived`), and the fields it will be logged with (`own`), which
+  // start as copies of the batch's and of the derived ones.
+  const finds = [];
+  const batch = { type: state.config?.nature?.defaultType || 'fungi', place: '', notes: '' };
+  // Previews are object URLs, which hold their blobs until revoked. Eighty of
+  // them is real memory, so they go with the sheet.
+  const locals = [];
+  let lastPicked = null;
+
+  const reading = pool(3);
+  const storing = pool(2);
+
+  const cleanup = () => { for (const url of locals) URL.revokeObjectURL(url); locals.length = 0; };
+  // The sheet's own close, so the previews go however it is shut: the × in
+  // the head, Escape, a click on the backdrop, or the save.
+  const shut = (opts) => { close(opts); if ($('scrim').hidden) cleanup(); };
+  state.closeSheet = shut;
+
+  sheetHead(sheet, 'Import a batch', 'Every photograph from a walk, sorted into finds.', shut);
+
+  // --- the queue
+  const queueSection = sheetSection(sheet, 'Photographs',
+    'Shown in the order they were taken. Tick the ones that are one specimen and group them.');
+
+  const zone = el('div', 'dropzone');
+  zone.tabIndex = 0;
+  zone.setAttribute('role', 'button');
+  zone.setAttribute('aria-label', 'Add photos');
+  zone.append(el('span', 'dropzone-title', 'Add photos'), el('span', 'dropzone-note', 'Drop in the whole day. JPEG, PNG, HEIC.'));
+  const fileInput = el('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.multiple = true;
+  fileInput.hidden = true;
+  wireDropzone(zone, fileInput, accept);
+
+  const toolbar = el('div', 'import-toolbar');
+  const count = el('span', 'spacer');
+  const pickAll = el('button', 'ghost-button is-small', 'All');
+  pickAll.type = 'button';
+  const pickNone = el('button', 'ghost-button is-small', 'None');
+  pickNone.type = 'button';
+  const group = el('button', 'solid-button is-small', 'Group as a find');
+  group.type = 'button';
+  toolbar.append(count, pickAll, pickNone, group);
+  toolbar.hidden = true;
+
+  const list = el('div', 'import-queue');
+  list.setAttribute('role', 'list');
+  queueSection.append(zone, fileInput, toolbar, list);
+
+  // --- shared by every find
+  const shared = sheetSection(sheet, 'For every find',
+    'Copied into each find below. A find you have edited by hand keeps its own words when these change.');
+  const batchType = select(Model.TYPES, batch.type);
+  const batchPlace = input('text', '', { placeholder: 'Trailside, mixed conifer' });
+  const batchNotes = el('textarea');
+  batchNotes.placeholder = 'The weather, what was fruiting, who you were with…';
+  const sharedLead = el('div', 'entry-row');
+  const typeField = field('Type', batchType);
+  const placeField = field('Place', batchPlace, { grow: true });
+  sharedLead.append(typeField, placeField, field('Notes', batchNotes, { wide: true }));
+  shared.append(sharedLead);
+
+  const share = (key, value) => {
+    const before = { ...batch };
+    batch[key] = value;
+    for (const find of finds) find.own = Model.followBatch(find.own, before, { [key]: value });
+    drawFinds();
+  };
+  batchType.addEventListener('change', () => share('type', batchType.value));
+  batchPlace.addEventListener('input', () => share('place', batchPlace.value));
+  batchNotes.addEventListener('input', () => share('notes', batchNotes.value));
+
+  // --- the finds
+  const findsSection = sheetSection(sheet, 'Finds', 'What will be logged. When and where come from the photographs; correct them here.');
+  const findList = el('div', 'import-finds');
+  findsSection.append(findList);
+
+  // --- actions
+  const actions = el('div', 'form-actions');
+  const hint = el('span', 'save-status spacer');
+  const cancel = el('button', 'ghost-button', 'Cancel');
+  cancel.type = 'button';
+  cancel.addEventListener('click', () => shut());
+  const submit = el('button', 'solid-button', 'Log finds');
+  submit.type = 'button';
+  submit.addEventListener('click', commit);
+  actions.append(hint, cancel, submit);
+  sheet.append(actions);
+
+  // --- behaviour
+
+  const queued = () => Model.importOrder(items.filter((it) => !it.find));
+  const busy = () => items.filter((it) => it.status === 'reading' || it.status === 'storing').length;
+  const selected = () => queued().filter((it) => it.picked && it.status !== 'failed');
+
+  function accept(files) {
+    for (const file of Array.from(files || [])) {
+      const it = {
+        key: uid(), file, name: file.name || 'photo', bytes: file.size,
+        status: 'reading', takenAt: null, lat: null, lon: null,
+        local: null, photo: null, error: null, picked: false, find: null,
+      };
+      items.push(it);
+      reading(() => inspectPhoto(file))
+        .then((read) => {
+          it.takenAt = read.meta.takenAt;
+          it.lat = read.meta.lat;
+          it.lon = read.meta.lon;
+          if (read.preview) {
+            it.local = URL.createObjectURL(read.preview.blob);
+          } else if (DISPLAYABLE.has(read.mime)) {
+            it.local = URL.createObjectURL(file);
+          }
+          if (it.local) locals.push(it.local);
+          // Let the bytes go while the upload waits its turn: eighty buffers
+          // at once is more memory than a phone has, and storePhoto reads
+          // the file again.
+          read.buffer = null;
+          it.status = 'storing';
+          settle(it);
+          return storing(() => storePhoto(file, read));
+        })
+        .then((photo) => { it.photo = photo; it.status = 'ready'; })
+        .catch((err) => { it.status = 'failed'; it.error = err.message; })
+        .finally(() => settle(it));
+    }
+    markDirty();
+    drawQueue();
+    paintFooter();
+  }
+
+  /** An item changed state. Redraw wherever it is, and re-derive its find. */
+  function settle(it) {
+    if (it.find) refresh(it.find);
+    else drawQueue();
+    paintFooter();
+  }
+
+  /** A find's photographs changed, or one of them learned its metadata. */
+  function refresh(find) {
+    const before = find.derived;
+    find.derived = Model.deriveFind(find.items);
+    find.own = Model.followBatch(find.own, before, find.derived);
+    drawFinds();
+  }
+
+  function remove(it) {
+    items.splice(items.indexOf(it), 1);
+    if (it.local) URL.revokeObjectURL(it.local);
+    if (lastPicked === it) lastPicked = null;
+    drawQueue();
+    paintFooter();
+  }
+
+  function pick(it, ev) {
+    if (it.status === 'failed') return;
+    const next = !it.picked;
+    const rows = queued();
+    // Shift extends from the last one clicked: the photographs of one specimen
+    // sit together in time, so a run of them is the common case.
+    if (ev.shiftKey && lastPicked && rows.includes(lastPicked)) {
+      const [a, b] = [rows.indexOf(lastPicked), rows.indexOf(it)].sort((x, y) => x - y);
+      for (const row of rows.slice(a, b + 1)) if (row.status !== 'failed') row.picked = next;
+    } else {
+      it.picked = next;
+    }
+    lastPicked = it;
+    drawQueue();
+  }
+
+  function makeFind() {
+    const chosen = selected();
+    if (!chosen.length) return;
+    const derived = Model.deriveFind(chosen);
+    const find = { key: uid(), items: chosen, derived, own: { ...batch, ...derived } };
+    for (const it of chosen) { it.find = find; it.picked = false; }
+    finds.push(find);
+    lastPicked = null;
+    drawQueue();
+    drawFinds();
+    paintFooter();
+  }
+
+  /** Put one photograph back in the queue, dissolving its find if it was the last. */
+  function release(find, it) {
+    it.find = null;
+    find.items.splice(find.items.indexOf(it), 1);
+    if (find.items.length) refresh(find);
+    else { finds.splice(finds.indexOf(find), 1); drawFinds(); }
+    drawQueue();
+    paintFooter();
+  }
+
+  function ungroup(find) {
+    for (const it of find.items) it.find = null;
+    finds.splice(finds.indexOf(find), 1);
+    drawQueue();
+    drawFinds();
+    paintFooter();
+  }
+
+  const thumbOf = (it) => {
+    const holder = el('div', 'import-thumb');
+    const src = it.local || (it.photo ? thumbSrc(it.photo) : null);
+    if (src) {
+      const img = el('img');
+      img.src = src;
+      img.alt = it.name;
+      holder.append(img);
+    } else {
+      holder.append(el('span', 'no-preview', it.status === 'failed' ? '⚠' : '🖼'));
+    }
+    return holder;
+  };
+
+  function queueRow(it) {
+    const row = el('div', 'import-row'
+      + (it.picked ? ' is-picked' : '')
+      + (it.status === 'reading' || it.status === 'storing' ? ' is-busy' : '')
+      + (it.status === 'failed' ? ' is-failed' : ''));
+    row.setAttribute('role', 'listitem');
+
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = it.picked;
+    box.disabled = it.status === 'failed';
+    box.setAttribute('aria-label', `Select ${it.name}`);
+    // The row is the target and the box only shows the state: a click on
+    // either goes through pick(), and the redraw sets the box to match.
+    box.addEventListener('click', (ev) => { ev.preventDefault(); });
+    row.addEventListener('click', (ev) => {
+      if (ev.target.closest('.shot-drop')) return;
+      pick(it, ev);
+    });
+
+    const facts = el('div', 'import-facts');
+    facts.append(el('div', 'import-when' + (it.takenAt ? '' : ' is-unknown'),
+      it.takenAt ? fmtWhen(it.takenAt) : it.status === 'reading' ? 'Reading…' : 'No date in the file'));
+    const detail = el('div', 'import-detail');
+    detail.append(document.createTextNode(it.name));
+    if (Number.isFinite(it.lat)) {
+      detail.append(document.createTextNode(' · '), el('span', 'has', Model.formatCoord(it.lat, it.lon)));
+    }
+    detail.append(document.createTextNode(` · ${fmtBytes(it.bytes)}`));
+    facts.append(detail);
+    if (it.status === 'storing') facts.append(el('div', 'import-state', 'uploading…'));
+    if (it.status === 'failed') facts.append(el('div', 'import-state is-failed', it.error || 'failed'));
+
+    const drop = el('button', 'shot-drop', '×');
+    drop.type = 'button';
+    drop.title = 'Remove';
+    drop.setAttribute('aria-label', `Remove ${it.name}`);
+    drop.addEventListener('click', () => remove(it));
+
+    row.append(box, thumbOf(it), facts, drop);
+    return row;
+  }
+
+  function drawQueue() {
+    const rows = queued();
+    const chosen = selected().length;
+    toolbar.hidden = !rows.length;
+    count.textContent = chosen
+      ? `${plural(rows.length, 'photo')} · ${chosen} selected`
+      : plural(rows.length, 'photo');
+    group.disabled = !chosen;
+    group.textContent = chosen ? `Group ${chosen} as a find` : 'Group as a find';
+    clear(list);
+    for (const it of rows) list.append(queueRow(it));
+  }
+
+  function findCard(find, index) {
+    const card = el('div', 'import-find');
+
+    const head = el('div', 'import-find-head');
+    head.append(el('strong', null, `Find ${index + 1}`), el('span', 'import-find-count', plural(find.items.length, 'photo')));
+    const split = el('button', 'ghost-button is-small', 'Ungroup');
+    split.type = 'button';
+    split.addEventListener('click', () => ungroup(find));
+    head.append(split);
+    card.append(head);
+
+    const shots = el('div', 'import-find-shots');
+    for (const it of Model.importOrder(find.items)) {
+      const shot = el('div', 'import-find-shot' + (it.status === 'failed' ? ' is-failed' : ''));
+      shot.title = it.takenAt ? fmtWhen(it.takenAt) : it.name;
+      const drop = el('button', 'shot-drop', '×');
+      drop.type = 'button';
+      drop.title = 'Back to the queue';
+      drop.setAttribute('aria-label', `Return ${it.name} to the queue`);
+      drop.addEventListener('click', () => release(find, it));
+      shot.append(thumbOf(it), drop);
+      shots.append(shot);
+    }
+    card.append(shots);
+
+    const typePick = select(Model.TYPES, find.own.type);
+    const whenPick = input('datetime-local', find.own.observedAt || '');
+    const latPick = input('text', find.own.lat ?? '', { inputmode: 'decimal', placeholder: '—' });
+    const lonPick = input('text', find.own.lon ?? '', { inputmode: 'decimal', placeholder: '—' });
+    latPick.className = lonPick.className = 'coord';
+    const placePick = input('text', find.own.place || '', { placeholder: batch.place || 'Trailside, mixed conifer' });
+    const notesPick = el('textarea');
+    notesPick.value = find.own.notes || '';
+    notesPick.placeholder = 'Anything you will not remember about this one.';
+
+    const bind = (node, key, event = 'input') => node.addEventListener(event, () => { find.own[key] = node.value; });
+    bind(typePick, 'type', 'change');
+    bind(whenPick, 'observedAt');
+    bind(latPick, 'lat');
+    bind(lonPick, 'lon');
+    bind(placePick, 'place');
+    bind(notesPick, 'notes');
+
+    const lead = el('div', 'entry-row is-lead');
+    const typeField = field('Type', typePick);
+    const whenField = field('When', whenPick);
+    typeField.className = whenField.className = 'fill';
+    const latField = field('Latitude', latPick);
+    const lonField = field('Longitude', lonPick);
+    latField.className = lonField.className = 'pin';
+    lead.append(typeField, whenField, latField, lonField);
+    const rest = el('div', 'entry-row');
+    rest.append(field('Place', placePick, { grow: true }), field('Notes', notesPick, { wide: true }));
+    card.append(lead, rest);
+    return card;
+  }
+
+  function drawFinds() {
+    clear(findList);
+    if (!finds.length) {
+      findList.append(el('p', 'import-empty', 'Nothing grouped yet. Tick photographs above and group them.'));
+      return;
+    }
+    // In the order they happened, which is the order the log will show them.
+    const ordered = [...finds].sort((a, b) => String(a.own.observedAt || '').localeCompare(String(b.own.observedAt || '')));
+    for (const [i, find] of ordered.entries()) findList.append(findCard(find, i));
+  }
+
+  function paintFooter() {
+    const inFlight = busy();
+    submit.disabled = !!inFlight || !finds.length;
+    submit.textContent = finds.length ? `Log ${plural(finds.length, 'find')}` : 'Log finds';
+    const left = queued().length;
+    hint.textContent = inFlight
+      ? `${plural(inFlight, 'photo')} still uploading…`
+      : finds.length && left ? `${plural(left, 'photo')} still in the queue`
+      : '';
+  }
+
+  async function commit() {
+    if (busy()) { notice('Photos are still uploading.'); return; }
+    if (!finds.length) return;
+
+    const observations = [];
+    const ordered = [...finds].sort((a, b) => String(a.own.observedAt || '').localeCompare(String(b.own.observedAt || '')));
+    for (const [i, find] of ordered.entries()) {
+      const lat = coordValue(find.own.lat, 90);
+      const lon = coordValue(find.own.lon, 180);
+      if (lat === false || lon === false) {
+        notice(`Find ${i + 1}: latitude must be between −90 and 90, longitude between −180 and 180.`);
+        return;
+      }
+      if ((lat === null) !== (lon === null)) {
+        notice(`Find ${i + 1}: a location needs both a latitude and a longitude.`);
+        return;
+      }
+      const photos = find.items.filter((it) => it.photo).map((it) => it.photo);
+      if (!photos.length) {
+        notice(`Find ${i + 1} has no photograph that could be stored.`);
+        return;
+      }
+      observations.push({
+        id: uid(),
+        version: 0,
+        speciesId: null,
+        type: find.own.type || batch.type,
+        confidence: 'high',
+        characters: {},
+        observedAt: find.own.observedAt || null,
+        lat, lon,
+        place: String(find.own.place || '').trim() || null,
+        notes: String(find.own.notes || '').trim() || null,
+        photos,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    const left = queued().length;
+    if (left && !confirm(`${plural(left, 'photo')} still in the queue will not be logged. Log the ${plural(observations.length, 'find')} anyway?`)) return;
+
+    if (await saveBatch(observations)) {
+      shut({ force: true });
+      notice(`Logged ${plural(observations.length, 'find')}.`);
+      render();
+    }
+  }
+
+  pickAll.addEventListener('click', () => { for (const it of queued()) if (it.status !== 'failed') it.picked = true; drawQueue(); });
+  pickNone.addEventListener('click', () => { for (const it of queued()) it.picked = false; drawQueue(); });
+  group.addEventListener('click', makeFind);
+
+  drawQueue();
+  drawFinds();
+  paintFooter();
 }
 
 // --- the species view -------------------------------------------------------
@@ -4651,6 +5142,7 @@ function wire() {
 
   $('obs-form').addEventListener('submit', submitObservation);
   $('obs-reset').addEventListener('click', () => { resetObsForm(); notice(''); });
+  $('obs-bulk').addEventListener('click', openImportSheet);
 
   $('filter-q').addEventListener('input', (ev) => { state.filters.q = ev.target.value; render(); });
   $('filter-sp-q').addEventListener('input', (ev) => { state.speciesFilters.q = ev.target.value; renderSpeciesTable(derive().life); });

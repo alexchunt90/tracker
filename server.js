@@ -60,6 +60,9 @@ const MIME = {
 // Phone photos run large, and a HEIC burst frame larger still.
 const MAX_PHOTO_BYTES = 32 * 1024 * 1024;
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
+// A bulk import is one walk's worth of finds, not a migration. The body limit
+// would stop a bigger one anyway; this makes the refusal say why.
+const MAX_BATCH = 500;
 
 // A photo uploaded from a form that was never submitted has nothing pointing at
 // it, and would be pruned the moment anything else saved. This is the grace
@@ -803,6 +806,38 @@ function upsert({ list, id, incoming, sortKey }) {
   return { value: next, status: 200, body: { saved: true, id, version: record.version, record } };
 }
 
+/**
+ * Insert a batch of new records in one write, or none of them.
+ *
+ * The bulk import lands a whole walk at once. Fifty separate PUTs would be
+ * fifty rewrites of the document and fifty chances for one to fail with the
+ * batch half-saved, so the batch goes in as one change: every record is
+ * checked first, and a bad one refuses the lot with its position named. New
+ * records only — an id already in the log is a conflict, not an update,
+ * because the import never loaded the version it would have to echo back.
+ */
+function insertMany({ list, batch }) {
+  const seen = new Set();
+  const held = new Set(list.map((x) => x.id));
+  for (const [i, incoming] of batch.entries()) {
+    if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+      return { reject: true, status: 400, body: { error: `observation ${i} is not an object` } };
+    }
+    if (typeof incoming.id !== 'string' || !/^[\w-]+$/.test(incoming.id)) {
+      return { reject: true, status: 400, body: { error: `observation ${i} has no usable id` } };
+    }
+    if (seen.has(incoming.id)) {
+      return { reject: true, status: 400, body: { error: `observation ${i} repeats id ${incoming.id}` } };
+    }
+    if (held.has(incoming.id)) {
+      return { reject: true, status: 409, body: { error: `record ${incoming.id} is already in the log` } };
+    }
+    seen.add(incoming.id);
+  }
+  const records = batch.map((incoming) => ({ ...incoming, version: 1 }));
+  return { value: [...list, ...records], status: 200, body: { saved: records.length, records } };
+}
+
 // --- request parsing --------------------------------------------------------
 
 /**
@@ -1060,6 +1095,21 @@ const server = http.createServer(async (req, res) => {
       } catch (err) {
         return json(res, 200, { results: [], problem: `iNaturalist unavailable: ${err.message}` });
       }
+    }
+
+    // Many new finds at once, from the bulk import. See insertMany.
+    if (pathname === '/api/observations' && req.method === 'POST') {
+      const incoming = JSON.parse(await readBody(req) || '{}');
+      const batch = incoming.observations;
+      if (!Array.isArray(batch) || !batch.length) {
+        return json(res, 400, { error: 'observations must be a non-empty array' });
+      }
+      if (batch.length > MAX_BATCH) {
+        return json(res, 400, { error: `at most ${MAX_BATCH} observations per import` });
+      }
+      const out = await mutate('observations', [], (list) => insertMany({ list, batch }));
+      if (out.status === 200) pruneOrphanPhotos();
+      return json(res, out.status, out.body);
     }
 
     const observationMatch = pathname.match(/^\/api\/observations\/([\w-]+)$/);

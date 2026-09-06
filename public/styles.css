@@ -714,6 +714,72 @@ a.shot-credit:hover { color: var(--accent); text-decoration: underline; }.shot-m
 }
 @keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
+/* --- the bulk import ----------------------------------------------------- */
+/* A queue of rows rather than a strip of tiles: the job is to read the time
+   on each one and tick a run of them, and a list is what a checklist is. */
+
+.solid-button.is-small, .ghost-button.is-small { padding: 5px 10px; font-size: 11px; letter-spacing: 0.1em; }
+
+.import-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  margin: 0 0 10px; font-size: 12.5px; color: var(--ink-soft);
+}
+.import-toolbar .spacer { margin-right: auto; }
+
+.import-queue { display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow-y: auto; padding-right: 2px; }
+.import-queue:empty { display: none; }
+
+.import-row {
+  display: grid; grid-template-columns: auto 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 6px 8px; cursor: pointer;
+  background: var(--card-sunk); border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.import-row:hover { border-color: var(--accent-dim); }
+.import-row.is-picked { border-color: var(--accent); background: var(--accent-wash); }
+.import-row.is-failed { border-color: var(--warn); cursor: default; }
+.import-row input[type="checkbox"] { margin: 0; width: 16px; height: 16px; accent-color: var(--accent); cursor: inherit; }
+.import-row.is-busy .import-thumb { opacity: 0.5; }
+
+.import-thumb {
+  width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden;
+  background: var(--paper); border-radius: var(--radius);
+}
+.import-thumb img { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
+.import-thumb .no-preview { font-size: 20px; opacity: 0.5; }
+
+.import-facts { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.import-when { font-size: 14px; color: var(--ink); }
+.import-when.is-unknown { color: var(--ink-faint); font-style: italic; }
+.import-detail { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.import-detail .has { color: var(--accent); }
+.import-state { font-size: 11px; color: var(--ink-faint); }
+.import-state.is-failed { color: var(--warn); }
+.import-row .shot-drop { position: static; }
+
+.import-empty {
+  margin: 0; padding: 14px 10px; text-align: center; font-size: 12.5px; color: var(--ink-faint);
+  border: 1px dashed var(--rule); border-radius: var(--radius);
+}
+
+/* One grouped find: its photographs, then the same fields the entry form has. */
+.import-find {
+  padding: 12px; margin-bottom: 12px;
+  background: var(--card-sunk); border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.import-find-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.import-find-head strong { font-family: var(--display); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
+.import-find-count { font-size: 12.5px; color: var(--ink-soft); margin-right: auto; }
+.import-find-shots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.import-find-shot {
+  position: relative; width: 72px; height: 72px; overflow: hidden;
+  border: 1px solid var(--rule); border-radius: var(--radius); background: var(--paper);
+}
+.import-find-shot.is-failed { border-color: var(--warn); }
+.import-find-shot .import-thumb { width: 100%; height: 100%; border-radius: 0; }
+.import-find-shot .shot-drop { top: 3px; right: 3px; width: 18px; height: 18px; font-size: 11px; }
+.import-find .entry-row:last-child { margin-bottom: 0; }
+.import-find .entry-row textarea { min-height: 48px; }
+
 /* --- gallery ------------------------------------------------------------- */
 
 .gallery {
