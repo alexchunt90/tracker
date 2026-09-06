@@ -935,6 +935,82 @@ const Model = (() => {
     return cleanNames(sp?.relatives || []);
   }
 
+  /**
+   * Which of a species' relatives the library now describes in their own right.
+   *
+   * A relative earns its place on the parent record by having nowhere else to
+   * live: the guide named it in passing, it has no record, and so a find that
+   * is plainly that species says so through the parent. The moment it gets a
+   * record of its own that reasoning inverts — the find belongs under its own
+   * species, and offering the name here files it in the wrong place.
+   *
+   * This is not a mistake anyone made. Half of these names were written from
+   * the 2009 edition and were perfectly true then; the revised edition was
+   * read in later and gave those species records of their own. Which means it
+   * cannot be fixed once: every import stales another handful. So the question
+   * is asked of the library as it stands, every time the list is drawn, and
+   * nothing is stored.
+   *
+   * Matched against every name a record answers to — see `speciesNames` —
+   * because a relative is usually written under the name its own guide used:
+   * `Agrocybe pediades` is the record filed as Agrocybe semiorbicularis. Exact
+   * names only, bar case and stray spaces. A near-miss is a typo worth seeing
+   * (`Hygrophorus goetzii` for goetzei), and quietly linking it to a different
+   * fungus would hide the thing worth fixing.
+   *
+   * A record never counts as its own relative.
+   */
+  function resolveRelatives(sp, species) {
+    const described = [];
+    const undescribed = [];
+    for (const name of speciesRelatives(sp)) {
+      const rec = speciesByName(name, species, sp?.id);
+      if (rec) described.push({ name, species: rec });
+      else undescribed.push(name);
+    }
+    return { described, undescribed };
+  }
+
+  /**
+   * The record that answers to `name`, if the library holds one.
+   *
+   * `exceptId` is the record doing the asking, so nothing resolves to itself.
+   * Null when no record claims the name — which is the ordinary case for a
+   * relative, and the whole point of the field.
+   */
+  function speciesByName(name, species, exceptId) {
+    const key = nameKey(name);
+    if (!key) return null;
+    const rec = nameIndex(species).get(key);
+    return rec && rec.id !== exceptId ? rec : null;
+  }
+
+  const nameKey = (n) => String(n || '').trim().replace(/\s+/g, ' ').toLowerCase();
+
+  /*
+   * Name -> record, over the whole library. Rebuilt only when handed a
+   * different list: the identification sheet resolves relatives on every
+   * repaint, and walking six hundred records for each keystroke is the kind
+   * of thing that makes a search box feel broken. `state.species` is replaced
+   * wholesale on save, so identity is a sound test for staleness.
+   */
+  let nameIndexCache = null;
+  function nameIndex(species) {
+    const list = species || [];
+    if (nameIndexCache && nameIndexCache.list === list) return nameIndexCache.index;
+    const index = new Map();
+    for (const sp of list) {
+      for (const name of speciesNames(sp)) {
+        const key = nameKey(name);
+        // First record to claim a name keeps it. A name on two records is a
+        // duplicate to resolve in the library, not something to guess at here.
+        if (key && !index.has(key)) index.set(key, sp);
+      }
+    }
+    nameIndexCache = { list, index };
+    return index;
+  }
+
   /** Trimmed, non-empty, and each name once whatever its case. */
   function cleanNames(list) {
     const seen = new Set();
@@ -1559,7 +1635,8 @@ const Model = (() => {
     byId, view, viewAll, displayName, relativeOf,
     summary, latestOf, lifeList,
     filter, sortByDate,
-    fungiTraits, speciesNames, speciesRelatives, formatCoord, mapLink, bounds,
+    fungiTraits, speciesNames, speciesRelatives, resolveRelatives, speciesByName,
+    formatCoord, mapLink, bounds,
     excerpts, richText,
     photoElevation, recordedElevation, formatElevation,
   };

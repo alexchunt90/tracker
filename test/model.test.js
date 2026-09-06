@@ -248,6 +248,45 @@ describe('names and edibility', () => {
     assert.deepEqual(Model.speciesRelatives(null), []);
   });
 
+  test('a relative the library describes separately resolves to that record', () => {
+    const library = [
+      ...SPECIES,
+      { id: 'fissuratus', kind: 'fungi', commonName: '', scientificName: 'Agaricus fissuratus',
+        relatives: ['Agaricus sylvicola', 'Agaricus albolutescens', 'Agaricus fissuratus'] },
+      { id: 'sylvicola', kind: 'fungi', commonName: '', scientificName: 'Agaricus sylvicola' },
+    ];
+    const parent = library.find((s) => s.id === 'fissuratus');
+    const { described, undescribed } = Model.resolveRelatives(parent, library);
+    // sylvicola has its own record, so it is a species to open, not a label.
+    assert.deepEqual(described.map((d) => [d.name, d.species.id]), [['Agaricus sylvicola', 'sylvicola']]);
+    // albolutescens has none and stays what the field is for. A record listing
+    // itself resolves to nothing rather than linking to where you already are.
+    assert.deepEqual(undescribed, ['Agaricus albolutescens', 'Agaricus fissuratus']);
+  });
+
+  test('a relative written under an older name still finds the record', () => {
+    const library = [
+      { id: 'semi', kind: 'fungi', scientificName: 'Agrocybe semiorbicularis', formerNames: ['Naucoria semiorbicularis'], synonyms: ['Agrocybe pediades'] },
+      { id: 'coronilla', kind: 'fungi', scientificName: 'Stropharia coronilla', relatives: ['agrocybe  PEDIADES', 'Naucoria semiorbicularis'] },
+    ];
+    const { described, undescribed } = Model.resolveRelatives(library[1], library);
+    // Case and stray spaces do not matter; a synonym and a former name both count.
+    assert.deepEqual(described.map((d) => d.species.id), ['semi', 'semi']);
+    assert.deepEqual(undescribed, []);
+    // A near-miss is a typo worth seeing, not something to guess through.
+    assert.equal(Model.speciesByName('Agrocybe pediadis', library), null);
+    assert.equal(Model.speciesByName('', library), null);
+    assert.equal(Model.speciesByName('Agrocybe pediades', library, 'semi'), null);
+  });
+
+  test('the index follows the library rather than the record it was built from', () => {
+    const before = [{ id: 'a', scientificName: 'A b', relatives: ['C d'] }];
+    assert.deepEqual(Model.resolveRelatives(before[0], before).undescribed, ['C d']);
+    // The same relative, once the library grows a record for it.
+    const after = [...before, { id: 'c', scientificName: 'C d' }];
+    assert.deepEqual(Model.resolveRelatives(after[0], after).described.map((d) => d.species.id), ['c']);
+  });
+
   test('edibility is a scale from the kitchen to the morgue', () => {
     const ranks = Model.EDIBILITY.map((e) => e.rank);
     assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b));
