@@ -2775,6 +2775,17 @@ function buildObservationSheet(sheet, stored, close) {
   // Assigned once the traits section is built, below; sync() runs after that.
   let paintTraits = () => {};
 
+  /*
+   * A find identified as one of its species' closely related names keeps that
+   * name for as long as it stays filed under the same species. Pick another
+   * species here and the relative goes with the old one: it was a name from
+   * that record's list, and means nothing under a different record. Changing
+   * which relative is done on the identification sheet, where the list is.
+   */
+  const keptRelative = (sp) => (sp && sp.id === stored.speciesId ? Model.relativeOf(stored, sp) : null);
+  const relativeNote = el('p', 'field-hint');
+  relativeNote.hidden = true;
+
   /** The title is derived, so it has to follow the controls, not the file. */
   const sync = () => {
     const chosen = speciesPick.value && speciesPick.value !== NEW_SPECIES
@@ -2786,10 +2797,15 @@ function buildObservationSheet(sheet, stored, close) {
 
     paintEdible(chosen);
     paintTraits(chosen);
-    const preview = Model.displayName({ confidence: confidencePick.value }, chosen);
+    const relative = keptRelative(chosen);
+    const preview = Model.displayName({ confidence: confidencePick.value, relative }, chosen);
     head.title.textContent = preview;
     head.title.classList.toggle('is-unknown', !chosen);
-    head.sub.textContent = chosen?.scientificName || '';
+    head.sub.textContent = relative ? `Filed under ${chosen.scientificName}` : chosen?.scientificName || '';
+    relativeNote.hidden = !relative;
+    if (relative) {
+      relativeNote.textContent = `Identified as ${relative}, a species the ${chosen.commonName || chosen.scientificName} entry names alongside. Re-identify to change which; choosing another species above drops it.`;
+    }
   };
 
   speciesPick.addEventListener('change', () => {
@@ -2850,7 +2866,7 @@ function buildObservationSheet(sheet, stored, close) {
   // A phone gives these three one row between them rather than a column.
   for (const one of measured) one.classList.add('measure');
   rowB.append(...measured, field('Notes', notesPick, { wide: true }));
-  form.append(rowA, rowB);
+  form.append(rowA, relativeNote, rowB);
 
   // What you wrote down about this specimen, as against what the species is
   // supposed to be. Keeping the two apart is the point: one is an observation,
@@ -2957,6 +2973,7 @@ function buildObservationSheet(sheet, stored, close) {
     const next = {
       ...stored,
       speciesId: chosen ? chosen.id : null,
+      relative: keptRelative(chosen),
       type: chosen ? chosen.kind : typePick.value,
       confidence: chosen ? confidencePick.value : 'high',
       observedAt: whenPick.value || null,
@@ -3022,6 +3039,9 @@ function buildIdentifySheet(sheet, stored, close) {
 
   let chosen = null;
   let confidence = stored.confidence === 'low' ? 'low' : 'high';
+  // Which of the chosen species' closely related names the find is, when it
+  // is one of those rather than the species itself. Empty means the species.
+  let relative = '';
 
   sheetHead(sheet, row.name, row.scientificName, close, { unknown: !row.identified });
 
@@ -3082,9 +3102,22 @@ function buildIdentifySheet(sheet, stored, close) {
   confidencePick.addEventListener('change', () => { confidence = confidencePick.value; paintFooter(); });
   const confidenceWrap = field('Confidence', confidencePick, {});
 
+  /*
+   * The species itself, or one of the species it is filed alongside.
+   *
+   * A guide's entry names its neighbours, and a find is sometimes plainly one
+   * of them — the specimen tagged Gastroboletus turbinatus that is actually
+   * G. ruber. Those neighbours are deliberately not species records, so the
+   * find stays filed under the entry that describes it and carries the
+   * relative's name. Shown only when the chosen species lists any.
+   */
+  const relativePick = el('select');
+  relativePick.addEventListener('change', () => { relative = relativePick.value; paintFooter(); });
+  const relativeWrap = field('Identify as', relativePick, {});
+
   const assign = el('button', 'solid-button', 'Identify');
   assign.type = 'button';
-  assign.addEventListener('click', () => commit({ speciesId: chosen.id, confidence }));
+  assign.addEventListener('click', () => commit({ speciesId: chosen.id, confidence, relative: relative || null }));
 
   const saveTags = el('button', 'ghost-button', 'Save tags only');
   saveTags.type = 'button';
@@ -3107,7 +3140,7 @@ function buildIdentifySheet(sheet, stored, close) {
   const left = el('div', 'identify-actions-left');
   left.append(remove);
 
-  footer.append(footerText, left, confidenceWrap, saveTags, assign);
+  footer.append(footerText, left, relativeWrap, confidenceWrap, saveTags, assign);
   sheet.append(footer);
 
   // --- behaviour
@@ -3217,6 +3250,9 @@ function buildIdentifySheet(sheet, stored, close) {
 
     card.addEventListener('click', () => {
       chosen = chosen && chosen.id === sp.id ? null : sp;
+      // Re-choosing the species the find is already filed under keeps the
+      // relative it was identified as; any other species starts as itself.
+      relative = chosen && chosen.id === stored.speciesId ? Model.relativeOf(stored, chosen) || '' : '';
       redraw();
     });
     return card;
@@ -3324,7 +3360,7 @@ function buildIdentifySheet(sheet, stored, close) {
         // The characters carry across, so a new species arrives already
         // describing the specimen that prompted it.
         seed: { characters: JSON.parse(JSON.stringify(draftObs.characters)) },
-        onCreated: (created) => { if (created) commit({ speciesId: created.id, confidence }); },
+        onCreated: (created) => { if (created) commit({ speciesId: created.id, confidence, relative: null }); },
       });
     });
     wrap.append(button);
@@ -3335,15 +3371,24 @@ function buildIdentifySheet(sheet, stored, close) {
     clear(footerText);
     confidenceWrap.hidden = !chosen;
     assign.disabled = !chosen;
+    // The relative the find already carries stays on offer even if the record
+    // has since dropped it from the list — otherwise it would have nothing to
+    // sit on and quietly read as the species.
+    const relatives = chosen ? [...new Set([...Model.speciesRelatives(chosen), ...(relative ? [relative] : [])])] : [];
+    relativeWrap.hidden = !relatives.length;
     if (chosen) {
-      assign.textContent = `Identify as ${chosen.commonName || chosen.scientificName}`;
+      clear(relativePick);
+      relativePick.append(new Option(chosen.commonName || chosen.scientificName || 'This species', ''));
+      for (const name of relatives) relativePick.append(new Option(name, name));
+      relativePick.value = relative;
+      assign.textContent = `Identify as ${relative || chosen.commonName || chosen.scientificName}`;
       // No "Chosen" label here: the section right above the footer is titled
       // that, and the button below names the species again. The footer's job
       // is to keep the name in view while the candidate list is scrolled.
       footerText.append(
         el('span', 'identify-chosen', chosen.commonName || chosen.scientificName || 'Unnamed'),
       );
-      const preview = Model.displayName({ confidence }, chosen);
+      const preview = Model.displayName({ confidence, relative }, chosen);
       footerText.append(el('span', 'identify-preview', `Will read as “${preview}”.`));
     } else {
       assign.textContent = 'Identify';
@@ -3367,7 +3412,7 @@ function buildIdentifySheet(sheet, stored, close) {
     const clear_ = el('button', 'ghost-button', 'Clear identification');
     clear_.type = 'button';
     clear_.title = 'Keep the find and its tags, drop the name.';
-    clear_.addEventListener('click', () => commit({ speciesId: null, confidence: 'high' }));
+    clear_.addEventListener('click', () => commit({ speciesId: null, confidence: 'high', relative: null }));
     left.append(clear_);
   }
 

@@ -47,6 +47,11 @@ library ranks itself against those tags as you type. Pick a species, set a
 confidence, and it has a name. Or press **Save tags only** and come back when
 you have a spore print.
 
+When the species you picked lists any [closely related](#the-two-records)
+species, an **Identify as** dropdown in the footer offers them. Choose one and
+the find is still filed under the species record — its tags, photographs and
+guide excerpts are the ones that describe it — but reads as the relative.
+
 Tapping an identified find opens its record instead, which carries a
 **Re-identify** button back into the sheet.
 
@@ -92,11 +97,18 @@ your tags already filled in, and links it to the find on save.
 **An observation's name is not stored.** It is derived, every time it is drawn,
 from the species it points at:
 
-| Species linked? | Confidence | Name shown              |
-| --------------- | ---------- | ----------------------- |
-| no              | —          | *Unidentified*          |
-| yes             | high       | Golden Chanterelle      |
-| yes             | low        | Golden Chanterelle**?** |
+| Species linked? | Identified as   | Confidence | Name shown                |
+| --------------- | --------------- | ---------- | ------------------------- |
+| no              | —               | —          | *Unidentified*            |
+| yes             | the species     | high       | Golden Chanterelle        |
+| yes             | the species     | low        | Golden Chanterelle**?**   |
+| yes             | a close relative | high      | *Cantharellus roseocanus* |
+
+The one exception is the last row. A find identified as a **closely related**
+species carries that relative's name, because the relative has no record of
+its own to derive it from — that is the point of the list. It is still the
+species record that describes the find, and picking a different species for
+it drops the relative.
 
 So correcting a species — or finally identifying something six months later —
 renames every observation of it at once. A stored name would have to be found
@@ -155,6 +167,12 @@ is for what a specimen could be *mistaken* for, which is a narrower claim than
 being mentioned alongside. They are recorded here and, unlike the three names
 above, are never searched: a relative is a different organism, and unioning it
 into the lookup would return somebody else's observations under this record.
+
+It is also the one list a find can be identified *as*. A specimen filed under
+*Gastroboletus turbinatus* that turns out to be *G. ruber* does not need a
+*G. ruber* record cluttering the library: the identification sheet's
+**Identify as** dropdown offers the relatives, and the find keeps its place
+under the *turbinatus* record while reading as *ruber*.
 
 ## Fungal characters
 

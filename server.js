@@ -699,13 +699,16 @@ async function findWidget() {
 
   const o = chosen.record;
   const sp = o.speciesId ? index.get(o.speciesId) || null : null;
-  const base = sp ? (sp.commonName || sp.scientificName || 'Unidentified') : 'Unidentified';
+  // A find identified as one of its species' closely related names goes by
+  // that name, exactly as the app draws it.
+  const relative = sp ? String(o.relative || '').trim() : '';
+  const base = sp ? (relative || sp.commonName || sp.scientificName || 'Unidentified') : 'Unidentified';
   return {
     kind: 'find',
     of: candidates.length,
     id: o.id,
     name: sp && o.confidence === 'low' ? `${base}?` : base,
-    scientificName: sp ? sp.scientificName || '' : '',
+    scientificName: sp ? relative || sp.scientificName || '' : '',
     type: sp ? sp.kind : o.type,
     edibility: sp ? sp.edibility || 'unknown' : 'unknown',
     when: o.observedAt || null,

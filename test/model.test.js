@@ -42,6 +42,24 @@ describe('what a find is called', () => {
     assert.equal(Model.view(find({ speciesId: 'nettle', type: 'fungi' }), index).name, 'Urtica dioica');
   });
 
+  test('a find identified as a closely related species goes by that name, still filed under the record', () => {
+    const row = Model.view(find({ speciesId: 'chant', relative: ' Cantharellus roseocanus ' }), index);
+    assert.equal(row.name, 'Cantharellus roseocanus');
+    assert.equal(row.scientificName, 'Cantharellus roseocanus');
+    assert.equal(row.relative, 'Cantharellus roseocanus');
+    assert.equal(row.species.id, 'chant');
+    assert.equal(row.identified, true);
+    // The question mark applies to the relative exactly as it would the species.
+    assert.equal(Model.view(find({ speciesId: 'chant', relative: 'Cantharellus roseocanus', confidence: 'low' }), index).name, 'Cantharellus roseocanus?');
+    // A blank relative is no relative.
+    assert.equal(Model.view(find({ speciesId: 'chant', relative: '  ' }), index).name, 'Chanterelle');
+    assert.equal(Model.view(find({ speciesId: 'chant', relative: null }), index).relative, null);
+    // With nothing to be a relative of, the relative goes with the dangling species.
+    const dangling = Model.view(find({ speciesId: 'gone', relative: 'Cantharellus roseocanus' }), index);
+    assert.equal(dangling.name, 'Unidentified');
+    assert.equal(dangling.relative, null);
+  });
+
   test('type follows the species; a deleted species reads as unidentified', () => {
     const row = Model.view(find({ speciesId: 'nettle', type: 'fungi' }), index);
     assert.equal(row.type, 'flora');
@@ -222,6 +240,12 @@ describe('names and edibility', () => {
     const names = Model.speciesNames({ scientificName: 'A b', synonyms: ['C d', 'a B'], formerNames: ['E f', ''], relatives: ['G h'] });
     assert.deepEqual(names, ['A b', 'C d', 'E f']);
     assert.deepEqual(Model.speciesNames(null), []);
+  });
+
+  test('the relatives are the list a find can be identified as one of, cleaned the same way', () => {
+    assert.deepEqual(Model.speciesRelatives({ relatives: [' G h', '', 'g H', 'I j'] }), ['G h', 'I j']);
+    assert.deepEqual(Model.speciesRelatives({}), []);
+    assert.deepEqual(Model.speciesRelatives(null), []);
   });
 
   test('edibility is a scale from the kitchen to the morgue', () => {

@@ -26,15 +26,37 @@ const Model = (() => {
   const byId = (list) => new Map((list || []).map((x) => [x.id, x]));
 
   /**
+   * The closely related species a find was identified as, if it was one.
+   *
+   * A find is filed under the species whose entry describes it, and may name
+   * one of that entry's relatives instead of the entry itself: the
+   * Gastroboletus turbinatus record lists G. ruber alongside, and a find that
+   * is plainly the latter should say so without a species record of its own
+   * cluttering the library. It is a name rather than an id because a relative
+   * only exists as a name on the parent record.
+   *
+   * Null when there is no species to be a relative of — a dangling id reads as
+   * unidentified, and the relative goes with it. Not checked against the
+   * parent's current list: a relative since removed from the record still
+   * names what the find was identified as, rather than silently reverting.
+   */
+  function relativeOf(obs, species) {
+    if (!species) return null;
+    const name = String(obs?.relative || '').trim();
+    return name || null;
+  }
+
+  /**
    * What to call an observation.
    *
    * Unidentified until a species is linked. Once linked, the species' common
-   * name — with a question mark when the identification was only a guess, so a
-   * low-confidence call can never be mistaken for a settled one at a glance.
+   * name — or the relative it was identified as — with a question mark when
+   * the identification was only a guess, so a low-confidence call can never be
+   * mistaken for a settled one at a glance.
    */
   function displayName(obs, species) {
     if (!species) return UNIDENTIFIED;
-    const base = species.commonName || species.scientificName || UNIDENTIFIED;
+    const base = relativeOf(obs, species) || species.commonName || species.scientificName || UNIDENTIFIED;
     return obs.confidence === 'low' ? `${base}?` : base;
   }
 
@@ -54,7 +76,10 @@ const Model = (() => {
       uncertain: !!species && obs.confidence === 'low',
       type: species ? species.kind : obs.type,
       name: displayName(obs, species),
-      scientificName: species ? species.scientificName || '' : '',
+      // A find identified as a relative goes by the relative's binomial — the
+      // one thing a relative has, there being no record to carry a common name.
+      relative: relativeOf(obs, species),
+      scientificName: species ? relativeOf(obs, species) || species.scientificName || '' : '',
       when: obs.observedAt || null,
       hasPlace: Number.isFinite(obs.lat) && Number.isFinite(obs.lon),
       // What is written on the record, else what the photographs said. Null when
@@ -898,9 +923,23 @@ const Model = (() => {
    * return a different fungus's observations.
    */
   function speciesNames(sp) {
+    return cleanNames([sp?.scientificName, ...(sp?.synonyms || []), ...(sp?.formerNames || [])]);
+  }
+
+  /**
+   * The species named alongside this one — names, not records, and not other
+   * names for it. The list a find can be identified as one of instead of the
+   * species itself; see `relativeOf`.
+   */
+  function speciesRelatives(sp) {
+    return cleanNames(sp?.relatives || []);
+  }
+
+  /** Trimmed, non-empty, and each name once whatever its case. */
+  function cleanNames(list) {
     const seen = new Set();
     const out = [];
-    for (const n of [sp?.scientificName, ...(sp?.synonyms || []), ...(sp?.formerNames || [])]) {
+    for (const n of list) {
       const name = String(n || '').trim();
       const key = name.toLowerCase();
       if (!name || seen.has(key)) continue;
@@ -1517,10 +1556,10 @@ const Model = (() => {
     classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, readTags, tagsFrom, characterSpec,
     MEASURE_MAX_CM, parseMeasure, measureText, measureOf, measureRange, withinRange, displayTags,
     bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup, queryGroups,
-    byId, view, viewAll, displayName,
+    byId, view, viewAll, displayName, relativeOf,
     summary, latestOf, lifeList,
     filter, sortByDate,
-    fungiTraits, speciesNames, formatCoord, mapLink, bounds,
+    fungiTraits, speciesNames, speciesRelatives, formatCoord, mapLink, bounds,
     excerpts, richText,
     photoElevation, recordedElevation, formatElevation,
   };
