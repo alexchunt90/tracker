@@ -125,6 +125,68 @@ test('the page and its assets are served; nothing outside public/ is', async () 
   assert.equal((await call('GET', '/api/nothing')).status, 404);
 });
 
+test('text goes out gzipped when asked for, and only then; images never do', async () => {
+  // Undici undoes the gzip itself, so the body reads the same either way and
+  // the header is what says whether the wire carried the smaller form.
+  const zipped = await call('GET', '/api/state', undefined, { 'Accept-Encoding': 'gzip' });
+  assert.equal(zipped.status, 200);
+  assert.equal(zipped.headers.get('content-encoding'), 'gzip');
+  assert.equal(zipped.headers.get('vary'), 'Accept-Encoding');
+  assert.ok(Array.isArray(zipped.payload.species) && zipped.payload.species.length > 0);
+
+  const plain = await call('GET', '/api/state', undefined, { 'Accept-Encoding': 'identity' });
+  assert.equal(plain.headers.get('content-encoding'), null);
+  assert.deepEqual(plain.payload, zipped.payload);
+
+  const js = await call('GET', '/app.js', undefined, { 'Accept-Encoding': 'gzip' });
+  assert.equal(js.headers.get('content-encoding'), 'gzip');
+
+  // A 404 body is a few dozen bytes: the gzip header would cost more than it saves.
+  const tiny = await call('GET', '/api/nothing', undefined, { 'Accept-Encoding': 'gzip' });
+  assert.equal(tiny.status, 404);
+  assert.equal(tiny.headers.get('content-encoding'), null);
+
+  const icon = await call('GET', '/icon-192.png', undefined, { 'Accept-Encoding': 'gzip' });
+  assert.equal(icon.status, 200);
+  assert.equal(icon.headers.get('content-encoding'), null);
+  assert.equal(icon.headers.get('vary'), null);
+});
+
+test('an asset the browser already holds is answered with a 304, not the bytes', async () => {
+  const first = await call('GET', '/app.js');
+  assert.equal(first.status, 200);
+  assert.equal(first.headers.get('cache-control'), 'no-cache');
+  const tag = first.headers.get('etag');
+  assert.match(tag, /^W\/"[A-Za-z0-9_-]+"$/);
+
+  // Same tag whether or not the wire was compressed: it names the bytes, not
+  // the encoding, which is what lets one validator serve both.
+  const zipped = await call('GET', '/app.js', undefined, { 'Accept-Encoding': 'gzip' });
+  assert.equal(zipped.headers.get('etag'), tag);
+
+  const again = await call('GET', '/app.js', undefined, { 'If-None-Match': tag, 'Accept-Encoding': 'gzip' });
+  assert.equal(again.status, 304);
+  assert.equal(again.headers.get('etag'), tag);
+  assert.equal(again.payload.length, 0);
+
+  const stale = await call('GET', '/app.js', undefined, { 'If-None-Match': 'W/"somethingelse"' });
+  assert.equal(stale.status, 200);
+  assert.ok(stale.payload.length > 0);
+
+  // A different file, a different tag; JSON carries none and is never cached.
+  const css = await call('GET', '/styles.css');
+  assert.notEqual(css.headers.get('etag'), tag);
+  const state = await call('GET', '/api/state');
+  assert.equal(state.headers.get('etag'), null);
+  assert.equal(state.headers.get('cache-control'), 'no-store');
+
+  // HEAD carries the validator too, and nothing else.
+  const head = await fetch(base + '/app.js', { method: 'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get('etag'), tag);
+  assert.equal((await head.arrayBuffer()).byteLength, 0);
+});
+
 // --- collections ------------------------------------------------------------
 
 test('a find is created, versioned, and refused when stale', async () => {

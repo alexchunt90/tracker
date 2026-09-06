@@ -17,6 +17,7 @@ const os = require('node:os');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const { loadEnv } = require('./lib/env.js');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
 const { IMAGE_TYPES, PHOTO_MIME, PHOTO_NAME, mintPhotoName, referencedPhotos } = require('./lib/photos.js');
@@ -1139,27 +1140,29 @@ const server = http.createServer(async (req, res) => {
       if (!PHOTO_NAME.test(name)) return json(res, 404, { error: 'Not found' });
       const data = await loadPhoto(name);
       if (!data) return json(res, 404, { error: 'Not found' });
-      res.writeHead(200, {
+      return send(res, 200, {
         'Content-Type': PHOTO_MIME[path.extname(name)] || 'application/octet-stream',
-        'Content-Length': data.length,
         // An id is minted per upload and never rewritten, so the bytes behind
         // one of these URLs can never change.
         'Cache-Control': 'public, max-age=31536000, immutable',
-      });
-      return res.end(req.method === 'HEAD' ? undefined : data);
+      }, data);
     }
 
     const rel = pathname === '/' ? '/index.html' : pathname;
     const filePath = path.join(PUBLIC_DIR, path.normalize(rel));
     if (!filePath.startsWith(PUBLIC_DIR)) return json(res, 403, { error: 'Forbidden' });
 
+    // The app has no build step, so its files carry no version in their
+    // names and cannot be cached blind the way photos are. Instead the phone
+    // asks every time and is told "unchanged" — a 304 with no body — unless
+    // the file really did change, in which case the edit is on screen at the
+    // next reload rather than after some cache expires.
     const data = await fsp.readFile(filePath);
-    res.writeHead(200, {
+    return send(res, 200, {
       'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream',
-      'Content-Length': data.length,
-      'Cache-Control': 'no-store',
-    });
-    return res.end(req.method === 'HEAD' ? undefined : data);
+      'Cache-Control': 'no-cache',
+      ETag: etagFor(data),
+    }, data);
   } catch (err) {
     if (err.code === 'ENOENT') return json(res, 404, { error: 'Not found' });
     if (err.tooLarge) return json(res, 413, { error: err.message });
@@ -1169,8 +1172,82 @@ const server = http.createServer(async (req, res) => {
 });
 
 function json(res, status, payload) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(payload));
+  send(res, status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  }, JSON.stringify(payload));
+}
+
+// --- sending ----------------------------------------------------------------
+// Every body leaves through send(), which is where two things the phone cares
+// about happen: the body is gzipped when the browser can take it, and a file
+// the browser already holds is answered with a 304 rather than sent again.
+
+// Text and JSON shrink four or five times over the wire. Images are already
+// compressed and only get bigger.
+const COMPRESSIBLE = /^(text\/|application\/json|image\/svg\+xml)/;
+// Below this the gzip header costs more than it saves.
+const GZIP_MIN_BYTES = 1024;
+
+/**
+ * Send a body with the headers given, gzipped when the client accepts it and
+ * the type is worth it. A response carrying an ETag becomes a 304 when the
+ * client's If-None-Match names that tag. HEAD gets the headers and no body.
+ *
+ * The request is taken from res.req rather than passed, so the many json()
+ * call sites need not change.
+ */
+function send(res, status, headers, body) {
+  const req = res.req;
+  const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+  const out = { ...headers };
+  const compressible = COMPRESSIBLE.test(out['Content-Type'] || '');
+  if (compressible) out.Vary = 'Accept-Encoding';
+
+  if (out.ETag && status === 200 && etagMatches(req.headers['if-none-match'], out.ETag)) {
+    // Only the headers a cache needs to keep what it has fresh.
+    res.writeHead(304, {
+      ETag: out.ETag,
+      ...(out['Cache-Control'] ? { 'Cache-Control': out['Cache-Control'] } : {}),
+      ...(out.Vary ? { Vary: out.Vary } : {}),
+    });
+    return res.end();
+  }
+
+  const gzip = compressible && buf.length >= GZIP_MIN_BYTES && acceptsGzip(req);
+  const data = gzip ? zlib.gzipSync(buf, { level: 6 }) : buf;
+  if (gzip) out['Content-Encoding'] = 'gzip';
+  out['Content-Length'] = data.length;
+  res.writeHead(status, out);
+  return res.end(req.method === 'HEAD' ? undefined : data);
+}
+
+/** Whether the request's Accept-Encoding admits gzip. */
+function acceptsGzip(req) {
+  const header = req.headers['accept-encoding'] || '';
+  return header.split(',').some((part) => {
+    const [name, ...params] = part.trim().split(';');
+    if (name.trim() !== 'gzip' && name.trim() !== '*') return false;
+    const q = params.map((p) => p.trim()).find((p) => p.startsWith('q='));
+    return !q || Number(q.slice(2)) > 0;
+  });
+}
+
+/**
+ * A validator for a body. Weak, because the same bytes go out both plain and
+ * gzipped and a weak tag is allowed to name both; a strong one would have to
+ * differ per encoding.
+ */
+function etagFor(data) {
+  return `W/"${crypto.createHash('sha1').update(data).digest('base64url').slice(0, 20)}"`;
+}
+
+/** Whether an If-None-Match header names this tag. Weak comparison, per RFC 9110. */
+function etagMatches(header, tag) {
+  if (!header) return false;
+  if (header.trim() === '*') return true;
+  const bare = (t) => t.trim().replace(/^W\//, '');
+  return header.split(',').some((candidate) => bare(candidate) === bare(tag));
 }
 
 function readBody(req) {
