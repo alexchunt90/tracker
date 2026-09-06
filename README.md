@@ -133,11 +133,19 @@ species up:
 | **Former scientific names** | names it has been retired from |
 
 The middle one exists because a field guide and iNaturalist can simply
-disagree. *Mushrooms of the Pacific Northwest* files the western matsutake
-under *Tricholoma magnivelare*; iNaturalist splits it out as *T. murrillianum*.
-Searching only the guide's name finds a single record in the whole region;
-searching both finds several hundred. All three fields are searched, and
-iNaturalist unions the results.
+disagree about what to call one organism. The 2022 edition confirms *Agrocybe
+pediades* and *A. semiorbicularis* are the same mushroom and files it under the
+first; this library holds it under the second. Both are current, both are in
+use, and a search for either has to find the record. All three fields are
+searched, and iNaturalist unions the results.
+
+The matsutake used to be the example here, and it was the wrong one. *Mushrooms
+of the Pacific Northwest* files the western matsutake under *Tricholoma
+magnivelare*, but that is the eastern North American species; the western one
+is *T. murrillianum*, and iNaturalist keeps both active — 370 records against
+1783. Two names for two organisms is not a synonym, it is a **Closely related**
+species, and filing it as the former would have unioned somebody else's
+observations into this record. Which is the trap the next field is about.
 
 **Closely related** is the one list that is not a name. A guide's entry is
 rarely about a single fungus: it names the rest of the genus in a closing
@@ -392,9 +400,33 @@ the guide named beside it.
 ]
 ```
 
+**An excerpt is two passages, not one**: the guide's treatment of the species,
+then its genus or group section, each under the book's own heading in bold. The
+book prints them the other way round — the genus essay opens the chapter and
+the species follow it — but a record is read one species at a time, so the
+species entry leads and the essay sits underneath as background.
+That shape exists because a guide does not repeat itself. It describes a genus
+once and writes each species against it, so the species paragraph is only half
+the account — the entry for *Cystoderma terreyi* never mentions the granular
+veil remnants on its cap, the barely attached gills or the ring, because the
+genus section states all three once for every cystoderma. Tagging from the
+species paragraph alone lost every one of those facts.
+
+A section is only attached to a species it actually describes. Where a book
+files an entry under a neighbouring genus — the 2022 edition puts *Gyroporus
+borealis* under "Genus Leccinum", because the boletes are grouped by look —
+the passage is left out rather than crediting this mushroom with scaber-stalks
+it does not have. A genus a species has since been moved out of still counts:
+*Thaxterogaster montanus* was *Cortinarius montanus*, and the older guide's
+Cortinarius section is a description of this mushroom under the name that
+guide used.
+
 Reading a second book adds a second excerpt rather than overwriting the first,
 so two guides that disagree are visibly two guides disagreeing instead of a
-field that quietly took the newer answer. `source` is the natural key: one
+field that quietly took the newer answer. Two *editions* of one book are a
+different case: where both the 2009 and 2022 Trudell & Ammirati were held, the
+2009 text was dropped, because the revised edition is the same authors saying
+it again. `source` is the natural key: one
 excerpt per guide, and a scraping pass that revisits a book should replace the
 excerpt carrying that source rather than appending a near-duplicate. Nothing
 enforces it — a duplicate source is untidy, not corrupt.

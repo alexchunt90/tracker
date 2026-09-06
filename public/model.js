@@ -283,6 +283,19 @@ const Model = (() => {
     blackish: { of: 'black', swatch: '#2e2e2e' },
     purplish: { of: 'purple', swatch: '#8a6a9a' },
     orangish: { of: 'orange', swatch: '#d9964f' },
+    bluish: { of: 'blue', swatch: '#7a97c4' },
+    /*
+     * Shades the tagging passes met in the guides and the vocabulary did not
+     * hold. Each names the core colour it reads as, which is the whole of what
+     * a secondary has to say.
+     */
+    violaceous: { of: 'purple', swatch: '#7a5090' },
+    creamy: { of: 'cream', swatch: '#f0e6c8' },
+    tobacco: { of: 'brown', swatch: '#7a5230' },
+    navy: { of: 'blue', swatch: '#2c3e6b' },
+    steel: { of: 'grey', swatch: '#7b8794' },
+    lavender: { of: 'purple', swatch: '#b0a0d0' },
+    mahogany: { of: 'brown', swatch: '#6b3a2a' },
   };
 
   // Every named colour's swatch, both tiers. What the chips paint from.
@@ -295,7 +308,15 @@ const Model = (() => {
   const COLOUR_MODIFIERS = new Set([
     'pale', 'dark', 'deep', 'bright', 'dull', 'light', 'faint', 'rich', 'dusky', 'olivaceous',
     'greyish', 'brownish', 'yellowish', 'reddish', 'pinkish', 'greenish', 'blackish', 'whitish',
-    'purplish', 'orangish', 'creamy', 'golden', 'wine', 'medium', 'dingy', 'vivid', 'sordid',
+    'purplish', 'orangish', 'bluish', 'creamy', 'golden', 'wine', 'medium', 'dingy', 'vivid', 'sordid',
+    /*
+     * `watery` stays a modifier and a descriptor but is not a colour of its
+     * own. The guides use it far more often for the substance of latex or
+     * flesh — "watery to milky white latex" — than for a shade, and as a
+     * standalone secondary colour it painted nineteen texture claims as grey
+     * chips. "watery brown" still derives from the modifier.
+     */
+    'rusty', 'pallid', 'darker', 'paler', 'olive', 'silvery', 'smoky', 'watery',
   ]);
 
   /**
@@ -354,11 +375,21 @@ const Model = (() => {
     // to the cup fungi, so they need a form of their own — without one they
     // were being tagged `cup` and matching pezizoid ascomycetes.
     'nidulariaceous', "bird's nest", 'birds nest', 'peridiole',
+    // Structures the guides name that had no form word: the glandular dots on
+    // a Suillus stipe, the veil remnants a Cystoderma carries, the sterile
+    // ridges and pits of a morel's head.
+    'glandular dots', 'veil remnants', 'ring-zone', 'pits', 'subgills', 'warts',
+    'mycelial strands', 'mycelial cords',
   ]);
 
   const DESCRIPTORS = new Set([
     // attachment
     'adnate', 'adnexed', 'decurrent', 'subdecurrent', 'free', 'sinuate', 'emarginate',
+    // The guides' own generic word, used where they decline to say which kind
+    // of attachment it is: "the gills are attached, but not decurrent". Kept
+    // distinct from adnate rather than folded into it, because guessing the
+    // specific form from the generic one invents a fact the book withheld.
+    'attached',
     // spacing and edge
     'crowded', 'close', 'distant', 'subdistant', 'forking', 'branching', 'serrate', 'entire', 'eroded',
     // surface
@@ -395,6 +426,30 @@ const Model = (() => {
     'phenolic', 'sweet', 'fruity', 'fishy', 'garlic', 'rancid', 'sour', 'nutty', 'earthy',
     // habit
     'clustered', 'scattered', 'solitary', 'troops', 'fairy ring', 'caespitose',
+    /*
+     * Terms the guides use constantly that the vocabulary did not hold. Each
+     * arrived as a dashed note from a tagging pass and was used enough times
+     * across the library to be a word rather than a one-off — which is what
+     * the grey tags are for.
+     */
+    // scent and taste
+    'spermatic', 'musty', 'moldy', 'metallic', 'medicinal', 'chlorine', 'unpleasant',
+    'pungent', 'nauseating', 'spicy', 'aromatic', 'soapy', 'cucumber',
+    // texture and substance
+    'thick', 'thin', 'firm', 'stout', 'rigid', 'stocky', 'slender', 'wiry', 'pithy',
+    'chambered', 'watery', 'translucent', 'deliquescent',
+    // surface
+    'silky', 'woolly', 'cottony', 'hairy', 'felty', 'scurfy', 'streaked', 'spotted',
+    'dotted', 'furrowed', 'ribbed', 'wrinkled', 'cracked', 'cracking', 'matte',
+    'granular', 'granulose', 'subviscid', 'shaggy', 'bristly', 'velvety',
+    // shape
+    'cylindrical', 'club-shaped', 'saddle-shaped', 'funnel-shaped', 'vase-shaped',
+    'hemispherical', 'spindle-shaped', 'saucer-shaped', 'hoof-like', 'ear-shaped',
+    'bean-shaped', 'star-shaped', 'elongated', 'rounded', 'pointed', 'obtuse',
+    'flattened', 'curved', 'twisted', 'contorted', 'narrow', 'round',
+    // margin, edge and veil
+    'marginate', 'appendiculate', 'translucent-striate', 'fugacious', 'flaring',
+    'lacerate', 'eroded', 'fading', 'confluent', 'imbricate',
   ]);
 
   const HABITATS = new Set([
@@ -416,6 +471,9 @@ const Model = (() => {
     // Understory, not canopy. Salal turned up twice — once from the field
     // guide pass and once from a find logged in the app.
     'salal',
+    // Trees and substrates the scraping passes met that the list lacked.
+    'tanoak', 'redwood', 'cypress', 'hazel', 'sitka willow', 'snag', 'bark',
+    'sphagnum', 'needle litter', 'plant debris', 'compost', 'disturbed ground', 'urban',
   ]);
 
   /*
@@ -456,14 +514,17 @@ const Model = (() => {
   /**
    * Lower-cased, collapsed whitespace. The form every lookup is keyed on.
    *
-   * American "gray" folds to British "grey". Duplicating every grey entry in
-   * the tables was the alternative, and duplicated tables drift — one spelling
-   * gets a new shade and the other does not. Folding here also means a
-   * specimen tagged "gray" matches a species recorded as "grey", which is the
-   * behaviour anyone would expect of two spellings of one word.
+   * American "gray" folds to British "grey", and "ocher" to "ochre", for the
+   * same reason: duplicating every entry in the tables was the alternative,
+   * and duplicated tables drift — one spelling gets a new shade and the other
+   * does not. Folding here also means a specimen tagged "gray" matches a
+   * species recorded as "grey", which is what anyone would expect of two
+   * spellings of one word. Both guides use the American spellings throughout,
+   * so without this every "ocher-brown" in them landed as an unknown note.
    */
   const normalizeTag = (text) =>
-    String(text || '').trim().replace(/\s+/g, ' ').toLowerCase().replace(/\bgray/g, 'grey');
+    String(text || '').trim().replace(/\s+/g, ' ').toLowerCase()
+      .replace(/\bgray/g, 'grey').replace(/\bocher/g, 'ochre');
 
   /**
    * Guess what kind of thing a tag is.
