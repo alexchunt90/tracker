@@ -3110,6 +3110,12 @@ function buildIdentifySheet(sheet, stored, close) {
    * G. ruber. Those neighbours are deliberately not species records, so the
    * find stays filed under the entry that describes it and carries the
    * relative's name. Shown only when the chosen species lists any.
+   *
+   * Only the ones the library does not describe separately. A relative that
+   * has since acquired its own record is a species you can simply pick above,
+   * and offering it here as well would file the find under the wrong record —
+   * a sylvicola shelved under fissuratus, out of reach of a search for
+   * sylvicola. See `Model.resolveRelatives`.
    */
   const relativePick = el('select');
   relativePick.addEventListener('change', () => { relative = relativePick.value; paintFooter(); });
@@ -3372,9 +3378,11 @@ function buildIdentifySheet(sheet, stored, close) {
     confidenceWrap.hidden = !chosen;
     assign.disabled = !chosen;
     // The relative the find already carries stays on offer even if the record
-    // has since dropped it from the list — otherwise it would have nothing to
-    // sit on and quietly read as the species.
-    const relatives = chosen ? [...new Set([...Model.speciesRelatives(chosen), ...(relative ? [relative] : [])])] : [];
+    // has since dropped it from the list — or since grown its own record —
+    // otherwise it would have nothing to sit on and quietly read as the
+    // species. What the find already says it is outranks the tidying.
+    const offered = chosen ? Model.resolveRelatives(chosen, state.species).undescribed : [];
+    const relatives = chosen ? [...new Set([...offered, ...(relative ? [relative] : [])])] : [];
     relativeWrap.hidden = !relatives.length;
     if (chosen) {
       clear(relativePick);
@@ -3980,13 +3988,37 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
    * Deliberately not part of speciesNames, so none of these names is searched.
    * A relative is a different organism; unioning it into the iNaturalist
    * lookup would quietly return somebody else's observations under this record.
+   *
+   * One that the library has since described in its own right is drawn as a
+   * way through to that record rather than as a bare name, and is no longer
+   * offered on the identification sheet — it is a species to pick, not a
+   * label to hang on a find. It stays in the list: the guide did mention it
+   * here, and removing it is a judgement for whoever is reading, not
+   * something to do behind their back.
    */
-  const relatives = nameListEditor(record.relatives || [], 'A species named alongside this one');
+  const relativeLink = (name) => {
+    const rec = Model.speciesByName(name, state.species, record.id);
+    if (!rec) return el('span', null, name);
+    const link = el('button', 'name-link', name);
+    link.type = 'button';
+    link.title = `Open the ${rec.commonName || rec.scientificName} record`;
+    link.addEventListener('click', () => {
+      // openSheet builds over whatever is up without asking; an unsaved
+      // record would go with it.
+      if (state.sheetDirty && !confirm('Discard unsaved changes?')) return;
+      state.sheetDirty = false;
+      openSpeciesSheet(rec.id);
+    });
+    return link;
+  };
+  const relatives = nameListEditor(record.relatives || [], 'A species named alongside this one',
+    { decorate: relativeLink });
   const relativeWrap = el('div');
   relativeWrap.append(el('span', 'field-label', 'Closely related'), relatives.node);
   relativeWrap.append(el('p', 'field-hint',
     'Another species the guides mention under this one — a different organism, '
-    + 'not another name for it. Not searched.'));
+    + 'not another name for it. Not searched. One with a record of its own links '
+    + 'to it, and is not offered when identifying a find.'));
   relativeWrap.style.marginTop = '10px';
   traits.append(relativeWrap);
 
@@ -4580,8 +4612,15 @@ function excerptsEditor(initial, { defaultSource = '' } = {}) {
   };
 }
 
-/** Chips with a × each, plus a box to add another. */
-function nameListEditor(initial, placeholder) {
+/**
+ * Chips with a × each, plus a box to add another.
+ *
+ * `decorate` renders one name, for a list where a name can mean more than
+ * itself — a relative that turns out to have its own record renders as a way
+ * of getting to it. It affects the drawing only: the values saved back are
+ * the names as typed, whatever they were drawn as.
+ */
+function nameListEditor(initial, placeholder, { decorate } = {}) {
   const values = [...(initial || [])];
   const wrap = el('div');
   const list = el('ul', 'former-names');
@@ -4590,7 +4629,7 @@ function nameListEditor(initial, placeholder) {
     clear(list);
     for (const name of values) {
       const item = el('li');
-      item.append(el('span', null, name));
+      item.append(decorate ? decorate(name) : el('span', null, name));
       const drop = el('button', 'link-button', '×');
       drop.type = 'button';
       drop.setAttribute('aria-label', `Remove ${name}`);
