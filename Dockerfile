@@ -18,6 +18,11 @@ ENV STATE_DIR=/state \
     PORT=4175
 
 EXPOSE 4175
+
+# The directory has to exist and belong to the unprivileged user before the
+# switch below: without a volume mounted over it, the server would otherwise
+# try to create /state itself and be refused. A bind mount replaces it.
+RUN mkdir -p /state && chown node:node /state
 USER node
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
