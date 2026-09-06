@@ -524,6 +524,8 @@ a find*, opens a sheet for that.
 Drop in every photograph. Each is read in the browser and queued **in the
 order it was taken** — the EXIF time, undated files last — with its thumbnail,
 time and fix, while the uploads proceed a couple at a time behind the list.
+Hover a thumbnail and the photograph floats up beside it at a size two similar
+shots can be told apart at.
 Tick the photographs that are one specimen (shift-click takes a run of them)
 and **group them as a find**: they leave the queue and become a card below,
 with its time and location taken from its photographs the same way the entry

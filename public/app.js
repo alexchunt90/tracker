@@ -2136,6 +2136,76 @@ async function saveBatch(observations) {
   }
 }
 
+/*
+ * A photograph at a size you can compare it at, floated beside the thumbnail
+ * under the pointer. Three angles of one specimen and two of its neighbour
+ * look alike at 64 pixels, and the point of the queue is to tell them apart.
+ * One element for the whole page, like the tag tip, shown from the browser's
+ * own preview when there is one — already decoded, so it is instant.
+ */
+let importPeek = null;
+let importPeekTimer = null;
+const IMPORT_PEEK_DELAY = 120;
+
+function importPeekElement() {
+  if (importPeek) return importPeek;
+  const node = el('div', 'import-peek');
+  node.hidden = true;
+  node.append(el('img'), el('div', 'import-peek-caption'));
+  document.body.append(node);
+  importPeek = node;
+  return node;
+}
+
+function hideImportPeek() {
+  clearTimeout(importPeekTimer);
+  if (importPeek) importPeek.hidden = true;
+}
+
+function showImportPeek(anchor, src, caption) {
+  const tip = importPeekElement();
+  const img = tip.querySelector('img');
+  tip.querySelector('.import-peek-caption').textContent = caption;
+  const place = () => {
+    // The pointer moved on before the image arrived.
+    if (img.src !== src || !anchor.isConnected) return;
+    placeBeside(tip, anchor.getBoundingClientRect());
+  };
+  if (img.src === src && img.complete) { place(); return; }
+  tip.hidden = true;
+  img.onload = place;
+  img.src = src;
+}
+
+/**
+ * Beside the box rather than under it: the peek is tall, and under a row
+ * near the bottom of the screen there is no room for it. Right if it fits,
+ * else left, else the usual below-or-above.
+ */
+function placeBeside(tip, box) {
+  tip.hidden = false;
+  const size = tip.getBoundingClientRect();
+  const margin = 8;
+  const gap = 10;
+  let left = box.right + gap;
+  if (left + size.width > window.innerWidth - margin) left = box.left - gap - size.width;
+  if (left < margin) { placeTip(tip, box, { gap }); return; }
+  const top = Math.min(Math.max(margin, box.top + box.height / 2 - size.height / 2), window.innerHeight - size.height - margin);
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+}
+
+/** Arm one thumbnail. Hover to show, anything else to put it away. */
+function armImportPeek(holder, src, caption) {
+  holder.classList.add('is-peekable');
+  holder.addEventListener('mouseenter', () => {
+    clearTimeout(importPeekTimer);
+    importPeekTimer = setTimeout(() => showImportPeek(holder, src, caption), IMPORT_PEEK_DELAY);
+  });
+  holder.addEventListener('mouseleave', hideImportPeek);
+  holder.addEventListener('click', hideImportPeek);
+}
+
 function openImportSheet() {
   openSheet((sheet, close) => buildImportSheet(sheet, close));
 }
@@ -2158,7 +2228,11 @@ function buildImportSheet(sheet, close) {
   const reading = pool(3);
   const storing = pool(2);
 
-  const cleanup = () => { for (const url of locals) URL.revokeObjectURL(url); locals.length = 0; };
+  const cleanup = () => {
+    hideImportPeek();
+    for (const url of locals) URL.revokeObjectURL(url);
+    locals.length = 0;
+  };
   // The sheet's own close, so the previews go however it is shut: the × in
   // the head, Escape, a click on the backdrop, or the save.
   const shut = (opts) => { close(opts); if ($('scrim').hidden) cleanup(); };
@@ -2357,6 +2431,10 @@ function buildImportSheet(sheet, close) {
       img.src = src;
       img.alt = it.name;
       holder.append(img);
+      // The preview is the whole frame at a size that fills the peek; the
+      // stored original is only asked for when the browser could not make one.
+      const large = it.local || fullSrc(it.photo);
+      if (large) armImportPeek(holder, large, it.takenAt ? `${it.name} · ${fmtWhen(it.takenAt)}` : it.name);
     } else {
       holder.append(el('span', 'no-preview', it.status === 'failed' ? '⚠' : '🖼'));
     }
@@ -2407,6 +2485,7 @@ function buildImportSheet(sheet, close) {
   }
 
   function drawQueue() {
+    hideImportPeek();
     const rows = queued();
     const chosen = selected().length;
     toolbar.hidden = !rows.length;
@@ -2477,6 +2556,7 @@ function buildImportSheet(sheet, close) {
   }
 
   function drawFinds() {
+    hideImportPeek();
     clear(findList);
     if (!finds.length) {
       findList.append(el('p', 'import-empty', 'Nothing grouped yet. Tick photographs above and group them.'));
@@ -5143,6 +5223,8 @@ function wire() {
   $('obs-form').addEventListener('submit', submitObservation);
   $('obs-reset').addEventListener('click', () => { resetObsForm(); notice(''); });
   $('obs-bulk').addEventListener('click', openImportSheet);
+  // The peek is fixed to the viewport and the thumbnail is not.
+  $('scrim').addEventListener('scroll', hideImportPeek, { passive: true });
 
   $('filter-q').addEventListener('input', (ev) => { state.filters.q = ev.target.value; render(); });
   $('filter-sp-q').addEventListener('input', (ev) => { state.speciesFilters.q = ev.target.value; renderSpeciesTable(derive().life); });
