@@ -514,6 +514,35 @@ That keeps the gallery from pulling twenty 4 MB originals — and because Safari
 can decode HEIC and nothing else can, a photo added from an iPhone is what
 makes that find visible in every other browser later.
 
+## Importing a walk at once
+
+The entry form is for the thing in your hand. The evening after a long walk
+is a different job: eighty photographs on the phone, most of them three angles
+of the same specimen, all from the same wood. **Import a batch…**, under *Log
+a find*, opens a sheet for that.
+
+Drop in every photograph. Each is read in the browser and queued **in the
+order it was taken** — the EXIF time, undated files last — with its thumbnail,
+time and fix, while the uploads proceed a couple at a time behind the list.
+Hover a thumbnail and the photograph floats up beside it at a size two similar
+shots can be told apart at.
+Tick the photographs that are one specimen (shift-click takes a run of them)
+and **group them as a find**: they leave the queue and become a card below,
+with its time and location taken from its photographs the same way the entry
+form takes them.
+
+Type, place and notes are entered **once, for every find**, and copied into
+each card. A card's own fields can be corrected, and a field you have edited
+by hand keeps its words when the batch's change later, while the untouched
+ones follow. The same rule serves the derived time and fix: take a photograph
+out of a group and the find's time moves, unless you had typed one.
+
+**Log finds** writes the whole batch in one request (`POST
+/api/observations`), which the server lands whole or not at all — a record it
+refuses refuses the lot, so an import never half-arrives. Photographs still in
+the queue are not logged; the sheet says so before it saves, and they are
+swept a few hours later like any upload from a form that was never submitted.
+
 ## Edibility
 
 Marked on the species, not on the find, and it is a **scale rather than a
@@ -782,7 +811,8 @@ Each file in `test/` holds the properties of one idea rather than a walk
 through one function: the two tiers of colour, the shapes a size is written
 in, the excerpt markup being total, the rainfall lattice covering the screen,
 the store refusing a stale token, the EXIF reader against files built byte by
-byte, and the SigV4 signing against vectors captured from the AWS CLI.
+byte, the bulk import's queue order and batch-following, and the SigV4 signing
+against vectors captured from the AWS CLI.
 `test/server.test.js` starts the real server against an empty temporary
 `STATE_DIR` — with the bucket switched off, whatever `.env` says — and drives
 the HTTP surface end to end, as far as each upstream route's validation.

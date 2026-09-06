@@ -222,6 +222,48 @@ test('a find is created, versioned, and refused when stale', async () => {
   assert.equal((await call('DELETE', `/api/observations/${id}`)).status, 404);
 });
 
+test('a batch of finds lands in one write, or not at all', async () => {
+  const mk = (id, over = {}) => ({ id, version: 0, type: 'fungi', speciesId: null, confidence: 'high',
+    characters: {}, observedAt: '2025-10-02T09:00', lat: null, lon: null, photos: [], ...over });
+
+  const saved = await call('POST', '/api/observations', { observations: [mk('test-batch-1'), mk('test-batch-2', { place: 'ridge' })] });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.payload.saved, 2);
+  assert.deepEqual(saved.payload.records.map((r) => r.version), [1, 1]);
+  assert.equal(saved.payload.records[1].place, 'ridge');
+
+  const state = await call('GET', '/api/state');
+  const ids = state.payload.observations.map((o) => o.id);
+  assert.ok(ids.includes('test-batch-1') && ids.includes('test-batch-2'));
+  const before = state.payload.observations.length;
+
+  // A bad record anywhere refuses the whole batch, and says which one.
+  const shapes = [
+    [{ observations: 'nope' }, 400],
+    [{ observations: [] }, 400],
+    [{ observations: [mk('test-batch-3'), 'nope'] }, 400],
+    [{ observations: [mk('test-batch-3'), mk('bad id!')] }, 400],
+    [{ observations: [mk('test-batch-3'), mk('test-batch-3')] }, 400],
+    // An id already in the log is a conflict, not an update.
+    [{ observations: [mk('test-batch-3'), mk('test-batch-1')] }, 409],
+  ];
+  for (const [body, status] of shapes) {
+    const res = await call('POST', '/api/observations', body);
+    assert.equal(res.status, status, `${JSON.stringify(body).slice(0, 60)} → ${res.status}`);
+  }
+  const after_ = await call('GET', '/api/state');
+  assert.equal(after_.payload.observations.length, before);
+  assert.ok(!after_.payload.observations.some((o) => o.id === 'test-batch-3'));
+
+  // Once landed they are ordinary records: versioned, editable, deletable.
+  const edit = await call('PUT', '/api/observations/test-batch-1', { ...mk('test-batch-1'), version: 1, place: 'valley' });
+  assert.equal(edit.status, 200);
+  assert.equal(edit.payload.version, 2);
+  for (const id of ['test-batch-1', 'test-batch-2']) {
+    assert.equal((await call('DELETE', `/api/observations/${id}`)).status, 200);
+  }
+});
+
 test('species are kept sorted by common name, and deleting one counts its orphans', async () => {
   const mk = (id, commonName) => call('PUT', `/api/species/${id}`,
     { id, version: 0, kind: 'fungi', commonName, scientificName: '', photos: [], characters: {} });
