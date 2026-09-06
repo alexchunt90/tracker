@@ -672,7 +672,7 @@ function adoptMetadata(photos) {
   }
 }
 
-function shotCard(shot, onRemove, onOpen) {
+function shotCard(shot, onRemove, onOpen, { cover } = {}) {
   const card = el('div', 'shot' + (shot.status === 'working' ? ' is-busy' : ''));
   // A button only when there is something to enlarge: an upload still being
   // read has nothing behind it, and a dead control that looks alive is worse
@@ -733,6 +733,29 @@ function shotCard(shot, onRemove, onOpen) {
   card.append(meta);
 
   if (shot.status === 'working') card.append(el('div', 'shot-progress'));
+
+  /*
+   * Which photograph stands for the find. The record has no field for it —
+   * the cover is whichever photograph is first, which is what every reader
+   * of the record already assumes — so choosing one means moving it to the
+   * front. A checkbox rather than a radio because it reads as a mark on the
+   * thumbnail, and there is always exactly one: the chosen one cannot be
+   * unticked, only replaced by ticking another.
+   */
+  if (cover && shot.photo) {
+    const mark = el('label', 'shot-cover' + (cover.on ? ' is-on' : ''));
+    mark.title = cover.on ? 'The cover' : 'Use as the cover';
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = cover.on;
+    box.setAttribute('aria-label', `Use ${shot.name} as the cover`);
+    box.addEventListener('change', () => {
+      if (cover.on) { box.checked = true; return; }
+      cover.onPick();
+    });
+    mark.append(box);
+    card.append(mark);
+  }
 
   const drop = el('button', 'shot-drop', '×');
   drop.type = 'button';
@@ -2941,7 +2964,7 @@ function tagSuggestions(spec, query, taken) {
  * The entry form passes in the nodes already present in the markup; the sheets
  * let it build its own.
  */
-function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow = false } = {}) {
+function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow = false, cover = false } = {}) {
   const owned = !zone;
   if (owned) {
     zone = el('div', 'dropzone');
@@ -2960,6 +2983,9 @@ function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow =
 
   const draw = () => {
     clear(strip);
+    // The cover is the first stored photograph — one still uploading has no
+    // record yet, and cannot stand for anything.
+    const first = cover ? shots.find((x) => x.photo) : null;
     for (const shot of shots) {
       strip.append(shotCard(shot, () => {
         shots.splice(shots.indexOf(shot), 1);
@@ -2970,6 +2996,16 @@ function makeTray({ zone, fileInput, strip, existing, onChange, note, addBelow =
         // through from whichever one was clicked.
         const ready = shots.filter((x) => x.photo).map((x) => x.photo);
         openLightbox(ready, ready.indexOf(shot.photo));
+      }, {
+        cover: cover && shot.photo ? {
+          on: shot === first,
+          onPick: () => {
+            shots.splice(shots.indexOf(shot), 1);
+            shots.unshift(shot);
+            draw();
+            onChange?.();
+          },
+        } : null,
       }));
     }
   };
@@ -3302,6 +3338,23 @@ function buildObservationSheet(sheet, stored, close) {
 
   const head = sheetHead(sheet, row.name, row.scientificName, close, { unknown: !row.identified });
 
+  // A named find is one page of a longer story: the species record holds the
+  // characters, the guide excerpts and every other find of it. Follows the
+  // picker below rather than the stored id, as the title does.
+  const entryLink = el('button', 'name-link sheet-entry', 'Read the species entry →');
+  entryLink.type = 'button';
+  entryLink.hidden = true;
+  entryLink.addEventListener('click', () => {
+    const id = speciesPick.value;
+    if (!id || id === NEW_SPECIES) return;
+    // openSheet builds over whatever is up without asking; an unsaved edit
+    // would go with it.
+    if (state.sheetDirty && !confirm('Discard unsaved changes?')) return;
+    state.sheetDirty = false;
+    openSpeciesSheet(id);
+  });
+  head.sub.after(entryLink);
+
   // --- photographs
   const shown = sheetSection(sheet);
   const factsHolder = el('div');
@@ -3373,6 +3426,8 @@ function buildObservationSheet(sheet, stored, close) {
     head.title.textContent = preview;
     head.title.classList.toggle('is-unknown', !chosen);
     head.sub.textContent = relative ? `Filed under ${chosen.scientificName}` : chosen?.scientificName || '';
+    entryLink.hidden = !chosen;
+    if (chosen) entryLink.title = `Open the ${chosen.commonName || chosen.scientificName} record`;
     relativeNote.hidden = !relative;
     if (relative) {
       relativeNote.textContent = `Identified as ${relative}, a species the ${chosen.commonName || chosen.scientificName} entry names alongside. Re-identify to change which; choosing another species above drops it.`;
@@ -3496,8 +3551,11 @@ function buildObservationSheet(sheet, stored, close) {
   sync();
 
   // --- photographs, editable
-  const tray = makeTray({ existing: row.photos || [], onChange: markDirty, note: 'Another angle, the underside, the spore print.' });
-  const photoEdit = sheetSection(sheet, 'Photographs', 'The first one is the cover.');
+  const tray = makeTray({
+    existing: row.photos || [], onChange: markDirty, addBelow: true, cover: true,
+    note: 'Another angle, the underside, the spore print.',
+  });
+  const photoEdit = sheetSection(sheet, 'Photographs');
   photoEdit.append(tray.node);
 
   // --- what the camera said
