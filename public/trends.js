@@ -34,6 +34,12 @@ const Trends = (() => {
   // person's Saturday. Said as "too few" rather than guessed at.
   const MIN_PEAK_COUNT = 8;
 
+  // Nothing before this year is shown. iNaturalist's early years are a few
+  // records each — too few to place a peak in — and a season a decade old
+  // says less about the next one than a recent one does. Overridable from
+  // config.
+  const SINCE_YEAR = 2020;
+
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -112,30 +118,35 @@ const Trends = (() => {
     return true;
   }
 
-  /** Every year with at least one dated record, newest first. */
-  function yearsOf(rows) {
+  /** Every year since the cut-off with at least one dated record, newest first. */
+  function yearsOf(rows, { since = SINCE_YEAR } = {}) {
     const seen = new Set();
     for (const r of rows || []) {
       const d = dayOfYear(r.on);
-      if (d) seen.add(d.year);
+      if (d && d.year >= since) seen.add(d.year);
     }
     return [...seen].sort((a, b) => b - a);
   }
 
+  /** Whether a year is one of those asked for: any since the cut-off, or a chosen few. */
+  const yearWanted = (year, years, since) => year >= since && (!years || !years.length || years.includes(year));
+
   /**
-   * Weekly counts per cohort, for one year or for every year folded together.
+   * Weekly counts per cohort, for a chosen few years or for every year since
+   * the cut-off, folded together.
    *
    * Returns the cohorts with their counts, plus how many records were left
    * out and why, because a chart that quietly dropped a third of its evidence
-   * would be lying by omission.
+   * would be lying by omission. Records from before the cut-off or outside
+   * the chosen years are not evidence here and are not counted at all.
    */
-  function aggregate(rows, { edges = DEFAULT_BANDS, year = null, maxAccuracy = MAX_ACCURACY_M } = {}) {
+  function aggregate(rows, { edges = DEFAULT_BANDS, years = null, since = SINCE_YEAR, maxAccuracy = MAX_ACCURACY_M } = {}) {
     const list = bands(edges).map((b) => ({ ...b, counts: new Array(WEEKS).fill(0), total: 0 }));
     let undated = 0, unplaced = 0, dated = 0;
     for (const r of rows || []) {
       const d = dayOfYear(r.on);
       if (!d) { undated++; continue; }
-      if (year != null && d.year !== year) continue;
+      if (!yearWanted(d.year, years, since)) continue;
       dated++;
       if (!placeable(r, maxAccuracy)) { unplaced++; continue; }
       const i = bandIndex(r.metres, edges);
@@ -191,12 +202,12 @@ const Trends = (() => {
    * a single busy weekend cannot swing. Years newest first; a cohort with too
    * little in it that year gets null for both.
    */
-  function peaks(rows, { edges = DEFAULT_BANDS, maxAccuracy = MAX_ACCURACY_M, minCount = MIN_PEAK_COUNT } = {}) {
+  function peaks(rows, { edges = DEFAULT_BANDS, since = SINCE_YEAR, maxAccuracy = MAX_ACCURACY_M, minCount = MIN_PEAK_COUNT } = {}) {
     const list = bands(edges);
     const byYear = new Map();
     for (const r of rows || []) {
       const d = dayOfYear(r.on);
-      if (!d || !placeable(r, maxAccuracy)) continue;
+      if (!d || d.year < since || !placeable(r, maxAccuracy)) continue;
       const i = bandIndex(r.metres, edges);
       if (i < 0) continue;
       if (!byYear.has(d.year)) byYear.set(d.year, list.map(() => []));
@@ -214,7 +225,7 @@ const Trends = (() => {
   }
 
   return {
-    DEFAULT_BANDS, MAX_ACCURACY_M, WEEKS, MIN_PEAK_COUNT,
+    DEFAULT_BANDS, MAX_ACCURACY_M, WEEKS, MIN_PEAK_COUNT, SINCE_YEAR,
     bands, bandIndex, dayOfYear, weekOf, dayLabel, weekLabel, placeable, yearsOf,
     aggregate, smooth, peakWeek, medianDay, peaks,
   };

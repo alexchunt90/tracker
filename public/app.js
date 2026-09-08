@@ -53,7 +53,7 @@ const state = {
   // the server sent for it. `loadedFor` says whose rows they are, so a
   // species picked while an earlier answer is in flight cannot be shown the
   // wrong season.
-  trends: { speciesId: trendFromUrl(), year: 'all', measure: 'count', rows: [], bands: null, region: null,
+  trends: { speciesId: trendFromUrl(), years: [], measure: 'count', rows: [], bands: null, region: null, since: null,
             status: null, progress: [], problem: null, syncedAt: null, loadedFor: null, loading: false,
             taxa: null, timer: null },
   sheetDirty: false,
@@ -2098,6 +2098,7 @@ function loadTrends() {
       state.trends.rows = (payload.rows || []).map(([on, metres, acc, obscured]) =>
         ({ on, metres: Number.isFinite(metres) ? metres : null, acc: Number.isFinite(acc) ? acc : null, obscured: !!obscured }));
       state.trends.bands = payload.bands || null;
+      state.trends.since = Number.isInteger(payload.since) ? payload.since : null;
       state.trends.region = payload.region || null;
       state.trends.status = payload.status || 'ready';
       state.trends.progress = payload.progress || [];
@@ -2151,7 +2152,7 @@ function renderTrends() {
     options: choices.map((sp) => ({ id: sp.id, label: speciesLabel(sp) })),
     onPick: (id) => {
       state.trends.speciesId = id;
-      state.trends.year = 'all';
+      state.trends.years = [];
       history.pushState(routeState(), '', routeUrl());
       loadTrends();
       render();
@@ -2159,22 +2160,16 @@ function renderTrends() {
   }));
 
   const rows = trendRows();
-  const years = Trends.yearsOf(rows);
-  const year = years.includes(Number(t.year)) ? Number(t.year) : null;
+  const since = t.since || Trends.SINCE_YEAR;
+  const years = Trends.yearsOf(rows, { since });
   const edges = t.bands || Trends.DEFAULT_BANDS;
   const totals = new Map();
   for (const r of rows) {
     const d = Trends.dayOfYear(r.on);
     if (d) totals.set(d.year, (totals.get(d.year) || 0) + 1);
   }
-  yearSet.append(choiceDropdown({
-    name: 'trend-year', label: 'Year', current: year == null ? 'all' : String(year),
-    options: [
-      { id: 'all', label: 'All years', count: rows.length },
-      ...years.map((y) => ({ id: String(y), label: String(y), count: totals.get(y) || 0 })),
-    ],
-    onPick: (id) => { state.trends.year = id; render(); },
-  }));
+  yearSet.append(trendYearDropdown(years, totals, () => render()));
+  const chosenYears = t.years.filter((y) => years.includes(y));
   measureSet.append(choiceDropdown({
     name: 'trend-measure', label: 'Measure', current: t.measure,
     options: [
@@ -2186,12 +2181,68 @@ function renderTrends() {
 
   status.textContent = trendStatusText();
 
-  const agg = Trends.aggregate(rows, { edges, year });
+  const agg = Trends.aggregate(rows, { edges, years: chosenYears, since });
   drawTrendChart(chart, agg, { measure: t.measure });
   renderTrendLegend(legend, agg);
-  renderTrendPeaks(rows, edges, year);
-  renderTrendVerdict(verdict, species, agg, rows);
+  renderTrendPeaks(rows, edges, chosenYears, since);
+  renderTrendVerdict(verdict, species, agg, rows, since);
 }
+
+/**
+ * The years to blend, as a checkbox dropdown.
+ *
+ * A single year is one season and a good question; so is "the last three"
+ * — which is why these are boxes and not radios. Nothing ticked means every
+ * year since the cut-off, said as "All years" rather than as an empty filter,
+ * because there is no view of no years worth having.
+ */
+function trendYearDropdown(years, totals, onChange) {
+  const chosen = state.trends.years.filter((y) => years.includes(y));
+  const all = !chosen.length;
+  const wrap = el('div', 'dropdown');
+  const button = el('button', 'dropdown-button');
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'true');
+  button.setAttribute('aria-expanded', 'false');
+  const label = all ? 'All years'
+    : chosen.length <= 3 ? chosen.slice().sort((a, b) => b - a).join(', ')
+      : plural(chosen.length, 'year');
+  button.setAttribute('aria-label', 'Years: ' + label);
+  button.append(el('span', 'dropdown-label', label));
+  const shown = all ? years : chosen;
+  button.append(el('span', 'count', String(shown.reduce((n, y) => n + (totals.get(y) || 0), 0))));
+  button.append(el('span', 'dropdown-caret', '▾'));
+  wrap.append(button);
+
+  const menu = el('div', 'dropdown-menu');
+  menu.hidden = true;
+  for (const y of years) {
+    const row = el('label', 'dropdown-option');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = chosen.includes(y);
+    box.addEventListener('change', () => {
+      const next = new Set(chosen);
+      if (box.checked) next.add(y); else next.delete(y);
+      state.trends.years = years.filter((o) => next.has(o));
+      onChange();
+    });
+    row.append(box, el('span', 'dropdown-option-label', String(y)), el('span', 'count', String(totals.get(y) || 0)));
+    menu.append(row);
+  }
+  if (!all) {
+    const clearAll = el('button', 'dropdown-all');
+    clearAll.type = 'button';
+    clearAll.textContent = 'All years';
+    clearAll.addEventListener('click', () => { state.trends.years = []; onChange(); });
+    menu.append(clearAll);
+  }
+  wrap.append(menu);
+  wireDropdown(wrap, button, menu);
+  return wrap;
+}
+
+
 
 /** What the server is doing, in a few words, or nothing when it is done. */
 function trendStatusText() {
@@ -2402,9 +2453,9 @@ function renderTrendLegend(node, agg) {
   }
 }
 
-/** The peaks table: a row per year, a column per cohort. */
-function renderTrendPeaks(rows, edges, year) {
-  const list = Trends.peaks(rows, { edges });
+/** The peaks table: a row per year, a column per cohort. The years on the chart are lit. */
+function renderTrendPeaks(rows, edges, years, since) {
+  const list = Trends.peaks(rows, { edges, since });
   const block = $('trend-peaks-block');
   block.hidden = !list.length;
   if (!list.length) return;
@@ -2418,7 +2469,7 @@ function renderTrendPeaks(rows, edges, year) {
 
   const body = clear($('trend-peaks'));
   for (const entry of list) {
-    const row = el('tr', entry.year === year ? 'is-current' : null);
+    const row = el('tr', years.includes(entry.year) ? 'is-current' : null);
     row.append(el('td', 'nowrap', String(entry.year)));
     entry.cohorts.forEach((c, i) => {
       const cell = el('td', 'nowrap');
@@ -2437,7 +2488,7 @@ function renderTrendPeaks(rows, edges, year) {
   }
 }
 
-function renderTrendVerdict(node, species, agg, rows) {
+function renderTrendVerdict(node, species, agg, rows, since) {
   const t = state.trends;
   if (t.problem) {
     node.append(el('strong', null, t.problem));
@@ -2455,7 +2506,7 @@ function renderTrendVerdict(node, species, agg, rows) {
     ? `between ${Math.abs(region.swlat).toFixed(1)}° and ${Math.abs(region.nelat).toFixed(1)}°${region.nelat < 0 ? 'S' : 'N'}, ${Math.abs(region.swlng).toFixed(1)}° to ${Math.abs(region.nelng).toFixed(1)}°${region.nelng < 0 ? 'W' : 'E'}`
     : 'across the home region';
   const strong = el('strong', null, plural(agg.dated, 'research-grade record'));
-  node.append(strong, document.createTextNode(` of ${speciesLabel(species)} on iNaturalist ${where}, ${agg.placed} of them placed on a hillside.`));
+  node.append(strong, document.createTextNode(` of ${speciesLabel(species)} on iNaturalist ${where} since ${since}, ${agg.placed} of them placed on a hillside.`));
   if (agg.unplaced) {
     node.append(document.createTextNode(` ${plural(agg.unplaced, 'record')} could not be: obscured, placed to worse than ${Trends.MAX_ACCURACY_M / 1000} km, or off the terrain model.`));
   }

@@ -756,8 +756,12 @@ quarter of the records, most of them obscured — foragers hide their patches.
 
 The chart is weekly counts through the year, one line per cohort, as the
 three-week average the peak is taken from, so what is drawn is what is
-measured. **All years** lays every year on top of one another; a single year
-shows that season alone. **Records a week** is the honest y-axis and the
+measured. Years are a set of boxes: none ticked lays every year since 2020 on
+top of one another, one ticked shows that season alone, and a few ticked blend
+them. Nothing earlier is shown — iNaturalist's early years are a handful of
+records each, and a season a decade old says less about the next one than a
+recent one does; `trends.since` in `config.json` moves the cut-off. **Records
+a week** is the honest y-axis and the
 lowland cohort dominates it, because that is where the people are; **share of
 each cohort's peak** scales every line to its own top, which is the view that
 answers whether the passes come later than the coast. The marker on each line

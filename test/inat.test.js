@@ -77,6 +77,14 @@ test('ground keys round to about a hundred metres', () => {
   assert.strictEqual(inat.groundKey(47.6126, -122.3346), inat.groundKey(47.6134, -122.3349));
 });
 
+test('the first year shown comes from config or the fallback, never from junk', () => {
+  assert.strictEqual(inat.sinceYear({ trends: { since: 2018 } }, 2020), 2018);
+  assert.strictEqual(inat.sinceYear({ trends: { since: '2018' } }, 2020), 2018);
+  assert.strictEqual(inat.sinceYear({ trends: { since: 'recent' } }, 2020), 2020);
+  assert.strictEqual(inat.sinceYear({ trends: { since: 20.5 } }, 2020), 2020);
+  assert.strictEqual(inat.sinceYear({}, 2020), 2020);
+});
+
 test('cohort edges come from config or the fallback, never from junk', () => {
   assert.deepStrictEqual(inat.bandEdges({ trends: { bands: [500, 1000] } }, [1]), [500, 1000]);
   assert.deepStrictEqual(inat.bandEdges({ trends: { bands: ['x', -1] } }, [1]), [1]);

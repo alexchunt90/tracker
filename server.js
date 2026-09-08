@@ -22,7 +22,7 @@ const { loadEnv } = require('./lib/env.js');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
 const { IMAGE_TYPES, PHOTO_MIME, PHOTO_NAME, mintPhotoName, referencedPhotos } = require('./lib/photos.js');
 const { rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
-const { groundKey, regionBox, bandEdges, contains, inside, archiveNeed, taxonIds } = require('./lib/inat.js');
+const { groundKey, regionBox, bandEdges, sinceYear, contains, inside, archiveNeed, taxonIds } = require('./lib/inat.js');
 // The cohort edges the Trends view falls back to. Shared with the browser.
 const Trends = require('./public/trends.js');
 
@@ -1381,7 +1381,7 @@ const server = http.createServer(async (req, res) => {
         if (archive?.syncedAt && (!syncedAt || archive.syncedAt < syncedAt)) syncedAt = archive.syncedAt;
       }
       return json(res, 200, {
-        enabled: true, region, bands: bandEdges(config, Trends.DEFAULT_BANDS),
+        enabled: true, region, bands: bandEdges(config, Trends.DEFAULT_BANDS), since: sinceYear(config, Trends.SINCE_YEAR),
         status: syncing ? 'syncing' : 'ready', progress, problem, syncedAt, rows,
       });
     }

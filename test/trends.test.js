@@ -69,11 +69,28 @@ test('an obscured or loosely placed record is counted but not put on a hillside'
   assert.strictEqual(agg.bands[0].counts[Trends.weekOf(283)], 2);
 });
 
-test('one year can be pulled out of the pile, and the years are listed newest first', () => {
+test('years can be pulled out of the pile, and the years are listed newest first', () => {
   const rows = [row('2021-09-01', 50), row('2023-09-01', 50), row('2023-09-02', 50), row('2022-09-01', 50)];
   assert.deepStrictEqual(Trends.yearsOf(rows), [2023, 2022, 2021]);
-  assert.strictEqual(Trends.aggregate(rows, { year: 2023 }).placed, 2);
+  assert.strictEqual(Trends.aggregate(rows, { years: [2023] }).placed, 2);
+  assert.strictEqual(Trends.aggregate(rows, { years: [2023, 2021] }).placed, 3);
+  assert.strictEqual(Trends.aggregate(rows, { years: [] }).placed, 4);
   assert.strictEqual(Trends.aggregate(rows).placed, 4);
+});
+
+test('nothing before the cut-off is shown, counted, or given a peak', () => {
+  const rows = [row('2019-10-01', 50), row('2012-10-01', 50), row('2023-10-01', 50)];
+  assert.deepStrictEqual(Trends.yearsOf(rows), [2023]);
+  assert.deepStrictEqual(Trends.yearsOf(rows, { since: 2010 }), [2023, 2019, 2012]);
+  const agg = Trends.aggregate(rows);
+  assert.strictEqual(agg.dated, 1);
+  assert.strictEqual(agg.placed, 1);
+  assert.strictEqual(Trends.aggregate(rows, { since: 2019 }).dated, 2);
+  // Asking for an old year by name does not reach past the cut-off either.
+  assert.strictEqual(Trends.aggregate(rows, { years: [2019] }).dated, 0);
+  assert.deepStrictEqual(Trends.peaks(rows).map((y) => y.year), [2023]);
+  assert.deepStrictEqual(Trends.peaks(rows, { since: 2000 }).map((y) => y.year), [2023, 2019, 2012]);
+  assert.strictEqual(Trends.SINCE_YEAR, 2020);
 });
 
 test('the peak is the top of a smoothed run, and too thin a run has none', () => {
@@ -103,6 +120,8 @@ test('peaks come per year and per cohort, with the median beside each', () => {
   for (let i = 0; i < 10; i++) rows.push(row(`2023-10-${String(10 + i).padStart(2, '0')}`, 900));
   // 2022: three records only, which is not a season.
   rows.push(row('2022-10-01', 100), row('2022-10-02', 100), row('2022-10-03', 100));
+  // 2015: before the cut-off, and not a row at all.
+  rows.push(row('2015-10-01', 100));
   const out = Trends.peaks(rows);
   assert.deepStrictEqual(out.map((y) => y.year), [2023, 2022]);
   const [y23, y22] = out;
