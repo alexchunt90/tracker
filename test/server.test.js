@@ -376,6 +376,15 @@ test('elevation, taxa search and the photo proxy refuse bad input without asking
   assert.equal((await call('GET', '/api/inat/photo?url=http://static.inaturalist.org/a.jpg')).status, 403);
 });
 
+test('the trends archive wants real taxon ids, and not too many, before it asks upstream', async () => {
+  assert.equal((await call('GET', '/api/trends')).status, 400);
+  assert.equal((await call('GET', '/api/trends?taxon_id=')).status, 400);
+  assert.equal((await call('GET', '/api/trends?taxon_id=chanterelle')).status, 400);
+  assert.equal((await call('GET', '/api/trends?taxon_id=1,2,3,4,5,6,7')).status, 400);
+  // The map's own route is unchanged in what it refuses.
+  assert.equal((await call('GET', '/api/inat/observations?taxon_id=1')).status, 400);
+});
+
 // --- widgets ----------------------------------------------------------------
 
 test('the map widget carries every placed find and the tile contract', async () => {

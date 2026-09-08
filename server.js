@@ -22,6 +22,9 @@ const { loadEnv } = require('./lib/env.js');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
 const { IMAGE_TYPES, PHOTO_MIME, PHOTO_NAME, mintPhotoName, referencedPhotos } = require('./lib/photos.js');
 const { rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
+const { groundKey, regionBox, bandEdges, sinceYear, contains, inside, sameBox, archiveNeed, taxonIds } = require('./lib/inat.js');
+// The cohort edges the Trends view falls back to. Shared with the browser.
+const Trends = require('./public/trends.js');
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -621,6 +624,406 @@ function slimTaxon(t) {
   };
 }
 
+// --- the iNaturalist archive ---
+
+/*
+ * Every research-grade record of a taxon across the home region, kept on
+ * disk.
+ *
+ * Two things want it. The Trends view needs years of records at once and
+ * cannot page through iNaturalist on every visit; and the map, which used to
+ * ask afresh for every pan, can answer from disk whenever the viewport is
+ * inside the region and the taxon has been archived. Neither is served a
+ * stale-by-months copy: an archive is topped up with anything newer once a
+ * day, and rebuilt from nothing once a month, which is what catches records
+ * that were deleted, re-identified or promoted to research grade after they
+ * were first seen.
+ *
+ * One file per taxon, written after every page, so a sync that is interrupted
+ * — the laptop closed — resumes where it stopped. Records carry their stated
+ * positional accuracy alongside the fields the map draws, because the
+ * altitude cohorts have to know how far a point can be trusted. Ground
+ * elevations are shared across taxa in one further file keyed by rounded
+ * coordinate: chanterelles and matsutake grow on the same hills.
+ *
+ * Elevations come from Open-Meteo rather than the USGS model the finds use.
+ * That one answers a point in twenty seconds; this one answers a hundred in
+ * one round trip, from a 90m global model, which is the right tool for five
+ * thousand points that only need placing in a band several hundred metres
+ * wide.
+ */
+const INAT_DIR = path.join(STATE_DIR, 'inat');
+const GROUND_FILE = path.join(INAT_DIR, 'ground.json');
+const archiveFile = (taxonId) => path.join(INAT_DIR, `${taxonId}.json`);
+
+const INAT_PAGE = 200;
+// iNaturalist asks for no more than about one request a second and sixty a
+// minute. A page a second stays inside that, with room left for the map.
+const INAT_PAGE_GAP_MS = 1100;
+// Per run, not per taxon: a bigger archive carries on next time it is asked
+// for. Thirty thousand records is many times any fungus worth foraging.
+const INAT_MAX_PAGES = 150;
+// A failed sync is not retried on the next page load. It waits.
+const INAT_RETRY_MS = 60 * 1000;
+
+const OPEN_METEO_ELEVATION_URL = 'https://api.open-meteo.com/v1/elevation';
+// Open-Meteo takes up to a hundred coordinates in one request — but counts
+// each coordinate against its limit of six hundred a minute, which a batch
+// every three hundred milliseconds found out in six batches. Eleven seconds a
+// batch is five hundred and fifty a minute: a three-thousand-record taxon is
+// four minutes of background work, once.
+const GROUND_BATCH = 100;
+const GROUND_GAP_MS = 11000;
+// Told to slow down, wait this long and try again, a few times.
+const RATE_LIMIT_WAIT_MS = 60 * 1000;
+const RATE_LIMIT_ATTEMPTS = 3;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const readJson = (file, fallback) => fsp.readFile(file, 'utf8').then(JSON.parse).catch(() => fallback);
+
+/** Write a file whole or not at all, the way the store does. */
+async function writeJson(file, value) {
+  await fsp.mkdir(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  await fsp.writeFile(tmp, JSON.stringify(value));
+  await fsp.rename(tmp, file);
+}
+
+const readArchive = (taxonId) => readJson(archiveFile(taxonId), null);
+const readGround = () => readJson(GROUND_FILE, {});
+
+/**
+ * An upstream JSON call that takes a 429 as an instruction rather than an
+ * answer: wait as long as asked, or a minute, and go again. Anything else
+ * still fails at once — a service that is down is not one to keep knocking
+ * on.
+ */
+async function patientJson(url) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await upstream(url).then((r) => r.json());
+    } catch (err) {
+      if (err.upstream !== 429 || attempt >= RATE_LIMIT_ATTEMPTS) throw err;
+      await sleep(RATE_LIMIT_WAIT_MS);
+    }
+  }
+}
+
+/** The map's slim record, plus how far the point can be trusted. */
+function archiveRecord(o) {
+  const slim = slimObservation(o);
+  if (!slim) return null;
+  const acc = Number(o.positional_accuracy);
+  return { ...slim, acc: Number.isFinite(acc) && acc >= 0 ? Math.round(acc) : null };
+}
+
+// Syncs in flight or recently failed, by taxon, so the map and the Trends view
+// asking about the same taxon share one. `progress` is what a client polling
+// meanwhile is shown.
+const inatSyncs = new Map();
+// One upstream conversation at a time across every taxon: politeness is a
+// property of the server, not of a request.
+let inatQueue = Promise.resolve();
+
+/** Whether every unobscured record in a list has a ground elevation on file. */
+function groundComplete(observations, ground) {
+  return observations.every((o) => o.obscured || Number.isFinite(ground[groundKey(o.lat, o.lon)]));
+}
+
+/**
+ * The archive for one taxon as it stands now, and the sync bringing it up to
+ * date if one is needed. Starts that sync — in the background, queued behind
+ * any other — but never waits on it: a client asks again in a moment and is
+ * shown what has landed so far.
+ *
+ * `archive` is null when what is on disk is for a different region or too old
+ * to trust, which is when a rebuild begins.
+ *
+ * The ground under the records is looked up only when asked for. The map
+ * has no use for it, and a bird picked on the map can have thirty thousand
+ * records in the region — more coordinates than Open-Meteo allows in a day,
+ * spent on a question nobody asked.
+ */
+async function ensureArchive(taxonId, region, { wantGround = false } = {}) {
+  let held = await readArchive(taxonId);
+  const wanting = async () => {
+    const need = archiveNeed(held, region);
+    if (need !== 'none' || !wantGround || !held) return need;
+    return groundComplete(held.observations, await readGround()) ? 'none' : 'ground';
+  };
+  let need = await wanting();
+
+  const running = inatSyncs.get(taxonId);
+  if (running?.error && Date.now() - running.failedAt >= INAT_RETRY_MS) inatSyncs.delete(taxonId);
+  // A copy that is stale here may be fresh in the bucket — another instance
+  // may have built it since. Worth one look before fetching it all again,
+  // and it is one look: a sync then starts, or the copy is fresh, and either
+  // way the next request does not look again.
+  if (need !== 'none' && !inatSyncs.has(taxonId)) {
+    const adopted = await adoptFromBucket(taxonId, held, region);
+    if (adopted !== held) { held = adopted; need = await wanting(); }
+  }
+  if (need !== 'none' && !inatSyncs.has(taxonId)) startSync(taxonId, region, need, held, wantGround);
+
+  const sync = inatSyncs.get(taxonId);
+  return { archive: need === 'full' ? null : held, sync: sync ? sync.progress : null };
+}
+
+function startSync(taxonId, region, need, held, wantGround) {
+  const progress = {
+    taxonId, phase: 'records',
+    fetched: need === 'full' ? 0 : held.observations.length, total: null,
+    ground: 0, groundTotal: 0, error: null,
+  };
+  const entry = { progress, error: null, failedAt: 0 };
+  inatSyncs.set(taxonId, entry);
+  const run = inatQueue
+    .then(() => syncArchive(taxonId, region, need, held, progress, wantGround))
+    .then(() => { inatSyncs.delete(taxonId); })
+    .catch((err) => {
+      // Left in place, marked, so the next request does not immediately try
+      // again against a service that just refused.
+      progress.error = err.message;
+      entry.error = err.message;
+      entry.failedAt = Date.now();
+      console.error(`iNaturalist archive for taxon ${taxonId}: ${err.message}`);
+    });
+  inatQueue = run;
+}
+
+/**
+ * Fetch, in id order and a page at a time, everything the archive does not
+ * yet hold; then the ground under it.
+ *
+ * Ascending by id with `id_above` is the one way through iNaturalist's index
+ * that has no ceiling — offset paging stops at ten thousand — and it makes a
+ * top-up the same loop as a first fetch, started from the last id seen.
+ */
+async function syncArchive(taxonId, region, need, held, progress, wantGround) {
+  const archive = need === 'full'
+    ? { taxonId, region, startedAt: new Date().toISOString(), syncedAt: null, complete: false, maxId: 0, observations: [] }
+    : { ...held, observations: held.observations.slice() };
+
+  if (need !== 'ground') {
+    archive.complete = false;
+    const known = new Set(archive.observations.map((o) => o.id));
+    let idAbove = archive.maxId || 0;
+    for (let page = 0; page < INAT_MAX_PAGES; page++) {
+      const query = new URLSearchParams({
+        swlat: String(region.swlat), swlng: String(region.swlng), nelat: String(region.nelat), nelng: String(region.nelng),
+        taxon_id: String(taxonId),
+        quality_grade: 'research', photos: 'true', geo: 'true',
+        order_by: 'id', order: 'asc', per_page: String(INAT_PAGE), id_above: String(idAbove),
+      });
+      const payload = await patientJson(`${INAT_BASE}/observations?${query}`);
+      const results = payload.results || [];
+      if (progress.total == null) progress.total = archive.observations.length + (Number(payload.total_results) || results.length);
+      for (const o of results) {
+        if (Number.isFinite(o.id)) idAbove = Math.max(idAbove, o.id);
+        const record = archiveRecord(o);
+        if (record && !known.has(record.id)) {
+          known.add(record.id);
+          archive.observations.push(record);
+        }
+      }
+      archive.maxId = idAbove;
+      progress.fetched = archive.observations.length;
+      const done = results.length < INAT_PAGE;
+      if (done) {
+        archive.complete = true;
+        archive.syncedAt = new Date().toISOString();
+      }
+      await writeJson(archiveFile(taxonId), archive);
+      if (done) break;
+      await sleep(INAT_PAGE_GAP_MS);
+    }
+    if (archive.complete) {
+      await pushArchive(archive).catch((err) => console.error(`iNaturalist archive for taxon ${taxonId}: bucket ${err.message}`));
+    }
+  }
+
+  if (wantGround) {
+    progress.phase = 'ground';
+    await groundUnder(archive.observations, progress);
+  }
+  progress.phase = 'done';
+}
+
+/**
+ * Ground elevations for every unobscured record that lacks one, a hundred
+ * coordinates a request, written down after each batch so nothing is asked
+ * twice. An obscured record's point is deliberately wrong and is not looked
+ * up: it would be the elevation of somewhere else.
+ */
+async function groundUnder(observations, progress) {
+  const ground = await readGround();
+  const wanted = [];
+  const seen = new Set();
+  for (const o of observations) {
+    if (o.obscured) continue;
+    const key = groundKey(o.lat, o.lon);
+    if (Number.isFinite(ground[key]) || seen.has(key)) continue;
+    seen.add(key);
+    wanted.push(key);
+  }
+  progress.groundTotal = wanted.length;
+  progress.ground = 0;
+
+  for (let i = 0; i < wanted.length; i += GROUND_BATCH) {
+    const batch = wanted.slice(i, i + GROUND_BATCH);
+    const lats = [], lons = [];
+    for (const key of batch) {
+      const [lat, lon] = key.split('_');
+      lats.push(lat);
+      lons.push(lon);
+    }
+    const query = new URLSearchParams({ latitude: lats.join(','), longitude: lons.join(',') });
+    const payload = await patientJson(`${OPEN_METEO_ELEVATION_URL}?${query}`);
+    const answers = Array.isArray(payload?.elevation) ? payload.elevation : [];
+    if (answers.length !== batch.length) throw new Error('elevation service answered the wrong number of points');
+    batch.forEach((key, j) => {
+      const metres = Number(answers[j]);
+      if (Number.isFinite(metres)) ground[key] = Math.round(metres);
+    });
+    await writeJson(GROUND_FILE, ground);
+    progress.ground = Math.min(wanted.length, i + batch.length);
+    if (i + GROUND_BATCH < wanted.length) await sleep(GROUND_GAP_MS);
+  }
+  // Pushed whether or not anything was new: the ground under an archive
+  // that was built before the bucket held one has to get there somehow, and
+  // a daily merge of a small file is the cheap way.
+  await pushGround(ground).catch((err) => console.error(`iNaturalist ground elevations: bucket ${err.message}`));
+}
+
+// --- sharing the archive through the bucket ---
+
+/*
+ * With a bucket, the archive lives there and inat/ on disk is a cache, the
+ * way photos/ is: the bucket is the truth, but a copy already on disk is read
+ * at disk speed and the bucket is consulted only when that copy is stale by
+ * the archive's own daily rule. So a second instance — the laptop, after the
+ * container built the archive — gets a species in one GET rather than four
+ * minutes of upstream fetching, and both spend one Open-Meteo allowance on
+ * the same hills rather than two.
+ *
+ * Pages land on disk as they arrive, as before. The bucket sees an archive
+ * only once its records are complete, and the ground once that phase is done,
+ * so another instance never adopts a half-built copy. Two instances building
+ * the same taxon at once is settled by the store's conditional put: the loser
+ * reads what won and keeps it if it is the fuller copy.
+ *
+ * Without a bucket none of this runs, and inat/ is simply where the archive
+ * is.
+ */
+const SHARED = store.kind === 's3';
+const archiveDoc = (taxonId) => `inat/${taxonId}.json`;
+const GROUND_DOC = 'inat/ground.json';
+
+/**
+ * Whether one copy of an archive is worth more than another: complete beats
+ * partial, a later sync beats an earlier one, and more records beat fewer
+ * while both are still being built. Nothing beats a copy for another region.
+ */
+function fuller(candidate, held, region) {
+  if (!candidate || !sameBox(candidate.region, region)) return false;
+  if (!held || !sameBox(held.region, region)) return true;
+  if (!!candidate.complete !== !!held.complete) return !!candidate.complete;
+  if (candidate.complete) return (candidate.syncedAt || '') > (held.syncedAt || '');
+  return (candidate.maxId || 0) > (held.maxId || 0);
+}
+
+/**
+ * The bucket's copy of an archive, adopted onto disk when it is the fuller
+ * one; otherwise what was held. The ground under it comes along, because a
+ * record without its elevation is a record the Trends view cannot place.
+ */
+async function adoptFromBucket(taxonId, held, region) {
+  if (!SHARED) return held;
+  try {
+    const { value: remote } = await store.read(archiveDoc(taxonId));
+    if (!fuller(remote, held, region)) return held;
+    await writeJson(archiveFile(taxonId), remote);
+    await pullGround();
+    return remote;
+  } catch (err) {
+    // The bucket being unreachable is not a reason to stop: the copy on
+    // disk, or a fresh fetch, still answers.
+    console.error(`iNaturalist archive for taxon ${taxonId}: bucket ${err.message}`);
+    return held;
+  }
+}
+
+/** The bucket's ground elevations, folded into the copy on disk. */
+async function pullGround() {
+  const { value: remote } = await store.read(GROUND_DOC);
+  if (!remote || typeof remote !== 'object') return;
+  const local = await readGround();
+  await writeJson(GROUND_FILE, { ...remote, ...local });
+}
+
+/**
+ * Put a finished archive in the bucket, unless what is there is fuller —
+ * another instance finished first, and the next request adopts its copy.
+ */
+async function pushArchive(archive) {
+  if (!SHARED) return;
+  const key = archiveDoc(archive.taxonId);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { value: remote, token } = await store.read(key);
+    if (fuller(remote, archive, archive.region)) return;
+    try {
+      await store.write(key, archive, token);
+      return;
+    } catch (err) {
+      if (!(err instanceof StoreConflict) || attempt === 3) throw err;
+    }
+  }
+}
+
+/**
+ * Put the ground elevations in the bucket, as a union with whatever is there:
+ * two instances looking up different hills are both right.
+ */
+async function pushGround(ground) {
+  if (!SHARED) return;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { value: remote, token } = await store.read(GROUND_DOC);
+    const merged = { ...(remote && typeof remote === 'object' ? remote : {}), ...ground };
+    try {
+      await store.write(GROUND_DOC, merged, token);
+      return;
+    } catch (err) {
+      if (!(err instanceof StoreConflict) || attempt === 3) throw err;
+    }
+  }
+}
+
+
+/**
+ * The map's answer from the archive: the newest records inside a viewport,
+ * for taxa whose archives are complete. Null when any is not, which sends the
+ * request upstream the way it always went — and warms the archive for next
+ * time, because asking is what starts a sync.
+ */
+async function fromArchive(ids, box, region, perPage) {
+  const out = [];
+  const seen = new Set();
+  for (const id of ids) {
+    const { archive } = await ensureArchive(id, region);
+    if (!archive?.complete) return null;
+    for (const o of archive.observations) {
+      if (seen.has(o.id) || !inside(box, o.lat, o.lon)) continue;
+      seen.add(o.id);
+      const { acc, ...slim } = o;
+      out.push(slim);
+    }
+  }
+  // Newest first, undated last: the order iNaturalist's own `observed_on`
+  // sort gives the map.
+  out.sort((a, b) => (b.observedOn || '').localeCompare(a.observedOn || ''));
+  return { total: out.length, results: out.slice(0, perPage) };
+}
+
 // --- widgets ----------------------------------------------------------------
 /*
  * What a phone's home screen needs, already decided.
@@ -1039,6 +1442,19 @@ const server = http.createServer(async (req, res) => {
       const taxonId = url.searchParams.get('taxon_id');
       if (taxonId) query.set('taxon_id', taxonId);
 
+      // A taxon that has been archived for this region is answered from disk
+      // when the viewport is inside it. Asking is also what starts the
+      // archive, so a species looked at on the map is one the Trends view
+      // will find ready.
+      const ids = taxonId ? taxonIds(taxonId) : null;
+      if (ids) {
+        const region = regionBox(config);
+        if (contains(region, box)) {
+          const served = await fromArchive(ids, box, region, Number(query.get('per_page'))).catch(() => null);
+          if (served) return json(res, 200, { enabled: true, total: served.total, results: served.results, source: 'archive' });
+        }
+      }
+
       try {
         const payload = await inatGet(`/observations?${query}`);
         const results = (payload.results || []).map(slimObservation).filter(Boolean);
@@ -1047,6 +1463,55 @@ const server = http.createServer(async (req, res) => {
         // A soft failure: the map still has your own pins on it.
         return json(res, 200, { enabled: true, results: [], problem: `iNaturalist unavailable: ${err.message}` });
       }
+    }
+
+    // Years of records for a taxon at once, from the archive — with the
+    // ground elevation under each, which is what the Trends view sorts them
+    // by. Answers at once with whatever has landed and says how far along the
+    // sync is, so the chart fills in while the first fetch runs.
+    if (pathname === '/api/trends' && req.method === 'GET') {
+      const config = await readConfig();
+      if (config.inaturalist?.enabled === false) return json(res, 200, { enabled: false, rows: [] });
+      const ids = taxonIds(url.searchParams.get('taxon_id'));
+      if (!ids) return json(res, 400, { error: 'taxon_id must name one or more iNaturalist taxa' });
+      if (ids.length > 6) return json(res, 400, { error: 'at most 6 taxa at once' });
+
+      const region = regionBox(config);
+      const rows = [];
+      const seen = new Set();
+      const progress = [];
+      let syncing = false;
+      let syncedAt = null;
+      let problem = null;
+      const archives = [];
+      for (const id of ids) {
+        const { archive, sync } = await ensureArchive(id, region, { wantGround: true });
+        archives.push(archive);
+        if (sync) {
+          progress.push(sync);
+          if (sync.error) problem = `iNaturalist unavailable: ${sync.error}`;
+          else syncing = true;
+        } else if (!archive?.complete) {
+          syncing = true;
+        }
+        if (archive?.syncedAt && (!syncedAt || archive.syncedAt < syncedAt)) syncedAt = archive.syncedAt;
+      }
+      // Read after the archives, which may just have pulled the ground in
+      // from the bucket along with them.
+      const ground = await readGround();
+      for (const archive of archives) {
+        for (const o of archive?.observations || []) {
+          if (seen.has(o.id)) continue;
+          seen.add(o.id);
+          const metres = o.obscured ? null : ground[groundKey(o.lat, o.lon)];
+          // Compact on purpose: a few thousand of these per species.
+          rows.push([o.observedOn, Number.isFinite(metres) ? metres : null, o.acc, o.obscured ? 1 : 0]);
+        }
+      }
+      return json(res, 200, {
+        enabled: true, region, bands: bandEdges(config, Trends.DEFAULT_BANDS), since: sinceYear(config, Trends.SINCE_YEAR),
+        status: syncing ? 'syncing' : 'ready', progress, problem, syncedAt, rows,
+      });
     }
 
     // iNaturalist photographs, proxied like everything else.

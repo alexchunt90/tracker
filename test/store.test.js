@@ -41,6 +41,19 @@ describe('the filesystem backend', () => {
     assert.equal(await fsp.readFile(path.join(root, KEYS.config), 'utf8'), serialize({ version: 1 }));
   });
 
+  test('a document may be named by its path, and only a path of the right shape', async () => {
+    assert.deepEqual(await store.read('inat/120443.json'), { value: undefined, token: null });
+    const { token } = await store.write('inat/120443.json', { taxonId: 120443 }, null);
+    assert.deepEqual((await store.read('inat/120443.json')).value, { taxonId: 120443 });
+    await assert.rejects(store.write('inat/120443.json', {}, null), StoreConflict);
+    assert.ok(await fsp.stat(path.join(root, 'inat', '120443.json')));
+    await store.write('inat/120443.json', { taxonId: 120443, more: true }, token);
+    // A path is checked, not trusted: an id arrives in a query string.
+    for (const bad of ['../escape.json', 'inat/../config.json', 'inat/1.txt', 'inat/', 'config.json', 'a b/c.json']) {
+      await assert.rejects(store.read(bad), /not a document the store knows/);
+    }
+  });
+
   test('a write must present the token of what it is replacing', async () => {
     const first = await store.write('observations', [], null);
     // Creating something that already exists is a conflict.
@@ -121,6 +134,13 @@ describe('the S3 backend', () => {
     assert.equal(calls[0].url, 'https://my-log.s3.us-west-2.amazonaws.com/notes/config.json');
     assert.equal(calls[0].method, 'GET');
     assert.match(calls[0].headers.authorization, /^AWS4-HMAC-SHA256 Credential=AKIAEXAMPLE\/\d{8}\/us-west-2\/s3\/aws4_request/);
+  });
+
+  test('a document named by its path sits under the prefix like the four', async () => {
+    const store = createStore(ENV, '/tmp', '/tmp/photos');
+    await store.read('inat/ground.json');
+    assert.equal(calls[0].url, 'https://my-log.s3.us-west-2.amazonaws.com/notes/inat/ground.json');
+    await assert.rejects(store.read('inat/../config.json'), /not a document the store knows/);
   });
 
   test('a custom endpoint goes path-style, which is what R2 and MinIO speak', async () => {

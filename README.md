@@ -699,6 +699,29 @@ panning re-asks constantly and their terms ask callers to be gentle. Set
 `TRACKER_USER_AGENT` in `.env` to something with your contact address, which is
 what they ask for.
 
+**The archive.** Picking a species on the map also starts something longer: the
+server fetches every research-grade record of that taxon across the home
+region — a few degrees around the map's default coordinate, or the box
+`trends.region` names in `config.json` — and keeps it under `inat/`, one file
+per taxon. Once that is complete, a map viewport inside the region is answered
+from disk rather than from iNaturalist, and the Trends view below has years of
+records to work with. The fetch runs a page a second in the background, is
+written down after every page so an interrupted one resumes rather than
+restarts, and is topped up with anything newer once a day and rebuilt once a
+month — which is what catches records deleted, re-identified or promoted to
+research grade since. Delete `inat/` to start over.
+
+With a bucket, the archive lives there too — `<prefix>/inat/` — and `inat/` on
+disk becomes a cache, the way `photos/` does. A copy on disk is read at disk
+speed for as long as the daily rule calls it fresh; only a stale or missing
+one looks to the bucket, and adopts what it finds there when that is the
+fuller copy. The bucket sees an archive once its records are complete and the
+ground once that phase is done, so a second instance never picks up a
+half-built one, and it gets a species in one GET rather than minutes of
+upstream fetching. Two instances building the same taxon at once are settled
+by the same conditional put as the log itself; ground elevations merge, since
+two instances looking up different hills are both right.
+
 **The clock button under the umbrella** narrows the map to the past month —
 their records and your own alike. Research-grade observations go back years and the map draws them all,
 faded with age, which answers "where does this species grow" well and "is
@@ -714,6 +737,55 @@ is a filter you would eventually lose a find to.
 
 If iNaturalist is unreachable the map says so quietly and carries on. Your own
 pins are unaffected.
+
+## Trends
+
+When a choice edible peaks, by the records everyone else has posted — and
+whether it peaks later up the hill. The Trends tab offers the species marked
+*Choice edible* in the library, the Pacific golden chanterelle by default, and
+draws one season for each of four altitude cohorts.
+
+The evidence is the iNaturalist archive above. Each record is placed on a
+hillside by the ground elevation under its coordinate, from Open-Meteo's
+90m terrain model rather than the USGS one the finds use: that one answers a
+point in twenty seconds, this one a hundred in a round trip, which is the
+right tool for three thousand points that only need sorting into bands a few
+hundred metres wide. Elevations are shared across taxa in `inat/ground.json`,
+keyed by coordinate rounded to about a hundred metres, and looked up at five
+hundred and fifty a minute because that is what Open-Meteo allows. The first
+look at a species is a few minutes of background work; the chart draws when
+the ground arrives and every look after is instant.
+
+The cohorts are `trends.bands` in `config.json` — metres, the edges between
+bands, `[300, 700, 1200]` by default, sized for the Cascades and the Olympics.
+A record is placed in a band only when it can be: one obscured on iNaturalist
+has a point that is deliberately wrong by up to a couple of tenths of a degree,
+and one whose stated accuracy is worse than two kilometres could be on the
+valley floor or the ridge above it. Those are counted and said to be unplaced
+rather than guessed at. For the golden chanterelle around Seattle that is a
+quarter of the records, most of them obscured — foragers hide their patches.
+
+The chart is weekly counts through the year, one line per cohort, as the
+three-week average the peak is taken from, so what is drawn is what is
+measured. Years are a set of boxes: none ticked lays every year since 2020 on
+top of one another, one ticked shows that season alone, and a few ticked blend
+them. Nothing earlier is shown — iNaturalist's early years are a handful of
+records each, and a season a decade old says less about the next one than a
+recent one does; `trends.since` in `config.json` moves the cut-off. **Records
+a week** is the honest y-axis and the
+lowland cohort dominates it, because that is where the people are; **share of
+each cohort's peak** scales every line to its own top, which is the view that
+answers whether the passes come later than the coast. The marker on each line
+is its peak week. Hovering gives the raw counts for a week.
+
+Below it, the peak of the season year by year: the week each cohort topped out,
+with the median date — the day by which half that year's records were in — on
+hover. A cohort with fewer than eight records that year is *too few* rather
+than a peak, because eight is one person's Saturday.
+
+Counts follow where people walk and how many were posting that year as much as
+where the fungus fruits. The timing of a peak is the number to read, not its
+height.
 
 ## Links, and widgets on a phone
 
@@ -772,6 +844,7 @@ lib/
   store.js           where the state lives: files, or an S3 bucket
   photos.js          what a stored photograph is called, and what it may be
   rain.js            the lattice the rainfall layer samples on
+  inat.js            the iNaturalist archive's region and its staleness
   env.js             the .env reader the server and the scripts share
 public/
   index.html         every view, hidden and shown by tab
@@ -779,8 +852,9 @@ public/
   exif.js            EXIF reader — JPEG, HEIC, TIFF
   model.js           the log's rules. No DOM
   map.js             the slippy map. No dependency
+  trends.js          weeks, altitude cohorts and peaks. No DOM
   app.js             views and wiring
-config.json          theme, map source, iNaturalist and elevation switches
+config.json          theme, map source, iNaturalist, elevation and trend cohorts
 data/
   observations.json  the finds
   species.json       the library
@@ -793,7 +867,9 @@ photos/              uploads, named by a minted id
 tiles/               cached basemap
 elevation/           cached ground elevations, one file per coordinate
 rain/                cached rainfall, one file per lattice cell
-state/               the same five, for a containerised run
+inat/                the iNaturalist archive, one file per taxon, and the ground under it
+                     (a cache, when the bucket holds it)
+state/               the same, for a containerised run
 ```
 
 ## Tests
@@ -811,8 +887,9 @@ Each file in `test/` holds the properties of one idea rather than a walk
 through one function: the two tiers of colour, the shapes a size is written
 in, the excerpt markup being total, the rainfall lattice covering the screen,
 the store refusing a stale token, the EXIF reader against files built byte by
-byte, the bulk import's queue order and batch-following, and the SigV4 signing
-against vectors captured from the AWS CLI.
+byte, the bulk import's queue order and batch-following, the season's weeks and
+cohorts and where a run of counts peaks, the archive's region and when it is
+stale, and the SigV4 signing against vectors captured from the AWS CLI.
 `test/server.test.js` starts the real server against an empty temporary
 `STATE_DIR` — with the bucket switched off, whatever `.env` says — and drives
 the HTTP surface end to end, as far as each upstream route's validation.

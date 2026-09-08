@@ -18,6 +18,11 @@ elevation/
 # when the date rolls over.
 rain/
 
+# The iNaturalist archive: every research-grade record of a taxon across the
+# home region, one file per taxon, plus the ground elevations under them.
+# Rebuilt on demand.
+inat/
+
 # The Docker volume: config, data, photos and caches for a containerised run.
 state/
 

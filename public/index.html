@@ -46,6 +46,7 @@
 <nav class="tabs" role="tablist">
   <button role="tab" class="tab is-active" data-view="log">Log</button>
   <button role="tab" class="tab" data-view="species">Species</button>
+  <button role="tab" class="tab" data-view="trends">Trends</button>
   <button role="tab" class="tab" data-view="glossary">Glossary</button>
   <span class="tab-status" id="save-status" role="status"></span>
 </nav>
@@ -178,6 +179,41 @@
 </main>
 
 <!-- ===================================================================== -->
+<main class="frame" id="view-trends" hidden>
+
+  <!-- When a choice edible peaks, by the records everyone else has posted,
+       split by how high up the hill they were. Built in script: the species
+       on offer come from the library, and the chart is drawn to the width it
+       has. -->
+  <section class="block" id="trends-block">
+    <div class="filter-row">
+      <div class="filter-set" id="trends-species"></div>
+      <div class="filter-set" id="trends-year"></div>
+      <div class="filter-set" id="trends-measure"></div>
+      <span class="filter-note" id="trends-status" role="status"></span>
+    </div>
+    <div class="trend-chart" id="trend-chart"></div>
+    <div class="legend" id="trend-legend"></div>
+    <p class="verdict" id="trend-verdict"></p>
+  </section>
+
+  <section class="block" id="trend-peaks-block" hidden>
+    <div class="block-head">
+      <span class="eyebrow">Peak of the season</span>
+      <p class="block-note">The week each cohort's records topped out, year by year, after a three-week
+        average. Hover a date for the median — the day by which half that year's records were in.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="ledger trend-peaks">
+        <thead id="trend-peaks-head"></thead>
+        <tbody id="trend-peaks"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================================================================== -->
 <main class="frame" id="view-glossary" hidden>
 
   <section class="block">
@@ -221,6 +257,7 @@
 <script src="exif.js"></script>
 <script src="model.js"></script>
 <script src="map.js"></script>
+<script src="trends.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
