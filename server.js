@@ -22,7 +22,7 @@ const { loadEnv } = require('./lib/env.js');
 const { createStore, StoreConflict, KEYS: STORE_KEYS } = require('./lib/store.js');
 const { IMAGE_TYPES, PHOTO_MIME, PHOTO_NAME, mintPhotoName, referencedPhotos } = require('./lib/photos.js');
 const { rainSpacing, latticePoints, rainKey } = require('./lib/rain.js');
-const { groundKey, regionBox, bandEdges, sinceYear, contains, inside, archiveNeed, taxonIds } = require('./lib/inat.js');
+const { groundKey, regionBox, bandEdges, sinceYear, contains, inside, sameBox, archiveNeed, taxonIds } = require('./lib/inat.js');
 // The cohort edges the Trends view falls back to. Shared with the browser.
 const Trends = require('./public/trends.js');
 
@@ -744,13 +744,25 @@ function groundComplete(observations, ground) {
  * records in the region — more coordinates than Open-Meteo allows in a day,
  * spent on a question nobody asked.
  */
-async function ensureArchive(taxonId, region, ground, { wantGround = false } = {}) {
-  const held = await readArchive(taxonId);
-  let need = archiveNeed(held, region);
-  if (need === 'none' && wantGround && held && !groundComplete(held.observations, ground)) need = 'ground';
+async function ensureArchive(taxonId, region, { wantGround = false } = {}) {
+  let held = await readArchive(taxonId);
+  const wanting = async () => {
+    const need = archiveNeed(held, region);
+    if (need !== 'none' || !wantGround || !held) return need;
+    return groundComplete(held.observations, await readGround()) ? 'none' : 'ground';
+  };
+  let need = await wanting();
 
   const running = inatSyncs.get(taxonId);
   if (running?.error && Date.now() - running.failedAt >= INAT_RETRY_MS) inatSyncs.delete(taxonId);
+  // A copy that is stale here may be fresh in the bucket — another instance
+  // may have built it since. Worth one look before fetching it all again,
+  // and it is one look: a sync then starts, or the copy is fresh, and either
+  // way the next request does not look again.
+  if (need !== 'none' && !inatSyncs.has(taxonId)) {
+    const adopted = await adoptFromBucket(taxonId, held, region);
+    if (adopted !== held) { held = adopted; need = await wanting(); }
+  }
   if (need !== 'none' && !inatSyncs.has(taxonId)) startSync(taxonId, region, need, held, wantGround);
 
   const sync = inatSyncs.get(taxonId);
@@ -825,6 +837,9 @@ async function syncArchive(taxonId, region, need, held, progress, wantGround) {
       if (done) break;
       await sleep(INAT_PAGE_GAP_MS);
     }
+    if (archive.complete) {
+      await pushArchive(archive).catch((err) => console.error(`iNaturalist archive for taxon ${taxonId}: bucket ${err.message}`));
+    }
   }
 
   if (wantGround) {
@@ -874,7 +889,115 @@ async function groundUnder(observations, progress) {
     progress.ground = Math.min(wanted.length, i + batch.length);
     if (i + GROUND_BATCH < wanted.length) await sleep(GROUND_GAP_MS);
   }
+  // Pushed whether or not anything was new: the ground under an archive
+  // that was built before the bucket held one has to get there somehow, and
+  // a daily merge of a small file is the cheap way.
+  await pushGround(ground).catch((err) => console.error(`iNaturalist ground elevations: bucket ${err.message}`));
 }
+
+// --- sharing the archive through the bucket ---
+
+/*
+ * With a bucket, the archive lives there and inat/ on disk is a cache, the
+ * way photos/ is: the bucket is the truth, but a copy already on disk is read
+ * at disk speed and the bucket is consulted only when that copy is stale by
+ * the archive's own daily rule. So a second instance — the laptop, after the
+ * container built the archive — gets a species in one GET rather than four
+ * minutes of upstream fetching, and both spend one Open-Meteo allowance on
+ * the same hills rather than two.
+ *
+ * Pages land on disk as they arrive, as before. The bucket sees an archive
+ * only once its records are complete, and the ground once that phase is done,
+ * so another instance never adopts a half-built copy. Two instances building
+ * the same taxon at once is settled by the store's conditional put: the loser
+ * reads what won and keeps it if it is the fuller copy.
+ *
+ * Without a bucket none of this runs, and inat/ is simply where the archive
+ * is.
+ */
+const SHARED = store.kind === 's3';
+const archiveDoc = (taxonId) => `inat/${taxonId}.json`;
+const GROUND_DOC = 'inat/ground.json';
+
+/**
+ * Whether one copy of an archive is worth more than another: complete beats
+ * partial, a later sync beats an earlier one, and more records beat fewer
+ * while both are still being built. Nothing beats a copy for another region.
+ */
+function fuller(candidate, held, region) {
+  if (!candidate || !sameBox(candidate.region, region)) return false;
+  if (!held || !sameBox(held.region, region)) return true;
+  if (!!candidate.complete !== !!held.complete) return !!candidate.complete;
+  if (candidate.complete) return (candidate.syncedAt || '') > (held.syncedAt || '');
+  return (candidate.maxId || 0) > (held.maxId || 0);
+}
+
+/**
+ * The bucket's copy of an archive, adopted onto disk when it is the fuller
+ * one; otherwise what was held. The ground under it comes along, because a
+ * record without its elevation is a record the Trends view cannot place.
+ */
+async function adoptFromBucket(taxonId, held, region) {
+  if (!SHARED) return held;
+  try {
+    const { value: remote } = await store.read(archiveDoc(taxonId));
+    if (!fuller(remote, held, region)) return held;
+    await writeJson(archiveFile(taxonId), remote);
+    await pullGround();
+    return remote;
+  } catch (err) {
+    // The bucket being unreachable is not a reason to stop: the copy on
+    // disk, or a fresh fetch, still answers.
+    console.error(`iNaturalist archive for taxon ${taxonId}: bucket ${err.message}`);
+    return held;
+  }
+}
+
+/** The bucket's ground elevations, folded into the copy on disk. */
+async function pullGround() {
+  const { value: remote } = await store.read(GROUND_DOC);
+  if (!remote || typeof remote !== 'object') return;
+  const local = await readGround();
+  await writeJson(GROUND_FILE, { ...remote, ...local });
+}
+
+/**
+ * Put a finished archive in the bucket, unless what is there is fuller —
+ * another instance finished first, and the next request adopts its copy.
+ */
+async function pushArchive(archive) {
+  if (!SHARED) return;
+  const key = archiveDoc(archive.taxonId);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { value: remote, token } = await store.read(key);
+    if (fuller(remote, archive, archive.region)) return;
+    try {
+      await store.write(key, archive, token);
+      return;
+    } catch (err) {
+      if (!(err instanceof StoreConflict) || attempt === 3) throw err;
+    }
+  }
+}
+
+/**
+ * Put the ground elevations in the bucket, as a union with whatever is there:
+ * two instances looking up different hills are both right.
+ */
+async function pushGround(ground) {
+  if (!SHARED) return;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { value: remote, token } = await store.read(GROUND_DOC);
+    const merged = { ...(remote && typeof remote === 'object' ? remote : {}), ...ground };
+    try {
+      await store.write(GROUND_DOC, merged, token);
+      return;
+    } catch (err) {
+      if (!(err instanceof StoreConflict) || attempt === 3) throw err;
+    }
+  }
+}
+
 
 /**
  * The map's answer from the archive: the newest records inside a viewport,
@@ -883,11 +1006,10 @@ async function groundUnder(observations, progress) {
  * time, because asking is what starts a sync.
  */
 async function fromArchive(ids, box, region, perPage) {
-  const ground = await readGround();
   const out = [];
   const seen = new Set();
   for (const id of ids) {
-    const { archive } = await ensureArchive(id, region, ground);
+    const { archive } = await ensureArchive(id, region);
     if (!archive?.complete) return null;
     for (const o of archive.observations) {
       if (seen.has(o.id) || !inside(box, o.lat, o.lon)) continue;
@@ -1355,15 +1477,16 @@ const server = http.createServer(async (req, res) => {
       if (ids.length > 6) return json(res, 400, { error: 'at most 6 taxa at once' });
 
       const region = regionBox(config);
-      const ground = await readGround();
       const rows = [];
       const seen = new Set();
       const progress = [];
       let syncing = false;
       let syncedAt = null;
       let problem = null;
+      const archives = [];
       for (const id of ids) {
-        const { archive, sync } = await ensureArchive(id, region, ground, { wantGround: true });
+        const { archive, sync } = await ensureArchive(id, region, { wantGround: true });
+        archives.push(archive);
         if (sync) {
           progress.push(sync);
           if (sync.error) problem = `iNaturalist unavailable: ${sync.error}`;
@@ -1371,6 +1494,12 @@ const server = http.createServer(async (req, res) => {
         } else if (!archive?.complete) {
           syncing = true;
         }
+        if (archive?.syncedAt && (!syncedAt || archive.syncedAt < syncedAt)) syncedAt = archive.syncedAt;
+      }
+      // Read after the archives, which may just have pulled the ground in
+      // from the bucket along with them.
+      const ground = await readGround();
+      for (const archive of archives) {
         for (const o of archive?.observations || []) {
           if (seen.has(o.id)) continue;
           seen.add(o.id);
@@ -1378,7 +1507,6 @@ const server = http.createServer(async (req, res) => {
           // Compact on purpose: a few thousand of these per species.
           rows.push([o.observedOn, Number.isFinite(metres) ? metres : null, o.acc, o.obscured ? 1 : 0]);
         }
-        if (archive?.syncedAt && (!syncedAt || archive.syncedAt < syncedAt)) syncedAt = archive.syncedAt;
       }
       return json(res, 200, {
         enabled: true, region, bands: bandEdges(config, Trends.DEFAULT_BANDS), since: sinceYear(config, Trends.SINCE_YEAR),

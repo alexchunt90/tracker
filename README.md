@@ -711,6 +711,17 @@ restarts, and is topped up with anything newer once a day and rebuilt once a
 month — which is what catches records deleted, re-identified or promoted to
 research grade since. Delete `inat/` to start over.
 
+With a bucket, the archive lives there too — `<prefix>/inat/` — and `inat/` on
+disk becomes a cache, the way `photos/` does. A copy on disk is read at disk
+speed for as long as the daily rule calls it fresh; only a stale or missing
+one looks to the bucket, and adopts what it finds there when that is the
+fuller copy. The bucket sees an archive once its records are complete and the
+ground once that phase is done, so a second instance never picks up a
+half-built one, and it gets a species in one GET rather than minutes of
+upstream fetching. Two instances building the same taxon at once are settled
+by the same conditional put as the log itself; ground elevations merge, since
+two instances looking up different hills are both right.
+
 **The clock button under the umbrella** narrows the map to the past month —
 their records and your own alike. Research-grade observations go back years and the map draws them all,
 faded with age, which answers "where does this species grow" well and "is
@@ -857,6 +868,7 @@ tiles/               cached basemap
 elevation/           cached ground elevations, one file per coordinate
 rain/                cached rainfall, one file per lattice cell
 inat/                the iNaturalist archive, one file per taxon, and the ground under it
+                     (a cache, when the bucket holds it)
 state/               the same, for a containerised run
 ```
 
