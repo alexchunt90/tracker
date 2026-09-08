@@ -2076,7 +2076,7 @@ function loadTrends() {
   if (!species || state.config?.inaturalist?.enabled === false) return;
   if (state.trends.loadedFor !== species.id) {
     state.trends = { ...state.trends, loadedFor: species.id, rows: [], status: null, progress: [], problem: null,
-      syncedAt: null, loading: true, taxa: null };
+      syncedAt: null, loading: true, taxa: null, stale: false };
   }
 
   (async () => {
@@ -2104,14 +2104,21 @@ function loadTrends() {
       state.trends.problem = payload.problem || null;
       state.trends.syncedAt = payload.syncedAt || null;
       state.trends.loading = false;
-      if (state.trends.problem) {
+      if (state.trends.problem && !state.trends.stale) {
         state.trends.timer = setTimeout(loadTrends, TRENDS_RETRY_MS);
       } else if (state.trends.status === 'syncing') {
         state.trends.timer = setTimeout(loadTrends, TRENDS_POLL_MS);
       }
     } catch (err) {
       if (trendSpecies()?.id !== species.id) return;
-      state.trends = { ...state.trends, loading: false, status: 'ready', problem: err.message };
+      // A 404 here is not a missing record: it is a server that predates
+      // this view, still running while the page in front of it is new. The
+      // container reads server.js only when it starts.
+      const stale = err.status === 404;
+      const problem = stale
+        ? 'The server does not know this route yet. Restart it (a container needs "docker compose restart tracker") and reload.'
+        : err.message;
+      state.trends = { ...state.trends, loading: false, status: 'ready', problem, stale };
     } finally {
       if (state.view === 'trends') render();
     }
@@ -2433,8 +2440,8 @@ function renderTrendPeaks(rows, edges, year) {
 function renderTrendVerdict(node, species, agg, rows) {
   const t = state.trends;
   if (t.problem) {
-    node.append(el('strong', null, t.problem),
-      document.createTextNode(rows.length ? ' What had landed is drawn; the rest is tried again shortly.' : ' Tried again shortly.'));
+    node.append(el('strong', null, t.problem));
+    if (!t.stale) node.append(document.createTextNode(rows.length ? ' What had landed is drawn; the rest is tried again shortly.' : ' Tried again shortly.'));
     if (!rows.length) return;
   }
   if (!rows.length) {
