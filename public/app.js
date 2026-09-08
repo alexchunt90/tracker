@@ -10,7 +10,7 @@
 
 'use strict';
 
-const VIEWS = ['log', 'species', 'glossary'];
+const VIEWS = ['log', 'species', 'trends', 'glossary'];
 const MODES = ['finds', 'map'];
 
 const state = {
@@ -49,6 +49,13 @@ const state = {
   // about the log.
   rain: { on: false, cells: [], spacing: 0, loading: false, problem: null, box: null,
           days: 7, from: null, to: null, tooWide: false },
+  // The Trends view: which choice edible, which year, and the archive rows
+  // the server sent for it. `loadedFor` says whose rows they are, so a
+  // species picked while an earlier answer is in flight cannot be shown the
+  // wrong season.
+  trends: { speciesId: trendFromUrl(), year: 'all', measure: 'count', rows: [], bands: null, region: null,
+            status: null, progress: [], problem: null, syncedAt: null, loadedFor: null, loading: false,
+            taxa: null, timer: null },
   sheetDirty: false,
   closeSheet: null,
   // The record the open sheet is showing, and so the record the URL names:
@@ -440,6 +447,12 @@ function routeUrl() {
   } else {
     url.searchParams.delete('tag');
   }
+  // Likewise the species the Trends view is on.
+  if (state.view === 'trends' && state.trends.speciesId) {
+    url.searchParams.set('trend', state.trends.speciesId);
+  } else {
+    url.searchParams.delete('trend');
+  }
   // At most one record is ever open, so both keys are cleared before the one
   // that applies is set — otherwise a species link would still carry the find
   // you were looking at a moment ago.
@@ -806,6 +819,7 @@ function render() {
   renderMasthead(d);
   if (state.view === 'log') renderLog(d);
   else if (state.view === 'glossary') renderGlossary(d);
+  else if (state.view === 'trends') renderTrends(d);
   else renderSpecies(d);
 }
 
@@ -1993,6 +2007,454 @@ function loadInat() {
       if (state.view === 'log') render();
     }
   }, 400);
+}
+
+// --- the trends view --------------------------------------------------------
+
+/*
+ * When a choice edible peaks, by everyone else's records.
+ *
+ * The evidence is the iNaturalist archive the server keeps for the home
+ * region: every research-grade record of the species, with the ground
+ * elevation under each. This view sorts them into altitude cohorts and draws
+ * a season for each, because a mushroom that is over on the coast is often
+ * only starting in the passes, and one chart of the whole region would
+ * average the two into a peak that happens nowhere.
+ *
+ * The rules — what a week is, which records can be placed, where a run of
+ * counts tops out — live in trends.js. This file draws them.
+ */
+
+// The cohort colours, lowest band first. Categorical, not a ramp: the bands
+// are read against the legend, and four hues a reader can tell apart under
+// any colour vision beat four steps of one hue that they cannot. Checked
+// against the card surface for exactly that.
+const COHORT_COLOURS = ['#3D8BD0', '#C9822A', '#A06FD0', '#64A44A'];
+const cohortColour = (i) => COHORT_COLOURS[i % COHORT_COLOURS.length];
+
+// How often to ask again while the server is still fetching — and, when an
+// upstream has refused, how long to leave it before asking whether the
+// server has managed since. The server waits a minute itself before it
+// tries again, so this is half a minute of not making things worse.
+const TRENDS_POLL_MS = 2500;
+const TRENDS_RETRY_MS = 30 * 1000;
+
+/** The species the Trends view is showing, named in the URL so it can be linked. */
+function trendFromUrl() {
+  return (new URLSearchParams(location.search).get('trend') || '').trim();
+}
+
+/** The choice edibles, which are the only species on offer here. */
+const trendChoices = () => state.species.filter((sp) => Model.isChoice(sp))
+  .sort((a, b) => speciesLabel(a).localeCompare(speciesLabel(b)));
+
+/**
+ * The species to show: the one asked for, else the golden chanterelle, else
+ * the first choice edible there is. Null with nothing to choose from.
+ */
+function trendSpecies() {
+  const choices = trendChoices();
+  const asked = choices.find((sp) => sp.id === state.trends.speciesId);
+  if (asked) return asked;
+  return choices.find((sp) => /golden chanterelle/i.test(speciesLabel(sp)))
+    || choices.find((sp) => /chanterelle/i.test(speciesLabel(sp)))
+    || choices[0] || null;
+}
+
+/** The rows the server sent, as the objects trends.js reads. */
+const trendRows = () => state.trends.rows;
+
+/**
+ * Fetch the archive for the species on show, and keep asking while the
+ * server is still building it. A slow answer for a species you have since
+ * moved off is dropped rather than drawn.
+ */
+function loadTrends() {
+  clearTimeout(state.trends.timer);
+  state.trends.timer = null;
+  const species = trendSpecies();
+  if (!species || state.config?.inaturalist?.enabled === false) return;
+  if (state.trends.loadedFor !== species.id) {
+    state.trends = { ...state.trends, loadedFor: species.id, rows: [], status: null, progress: [], problem: null,
+      syncedAt: null, loading: true, taxa: null };
+  }
+
+  (async () => {
+    try {
+      const taxa = state.trends.taxa || await resolveTaxa(species);
+      if (trendSpecies()?.id !== species.id) return;
+      state.trends.taxa = taxa;
+      if (!taxa.length) {
+        state.trends = { ...state.trends, loading: false, status: 'ready', rows: [],
+          problem: `iNaturalist has no exact match for ${species.scientificName || 'this species'}.` };
+        return;
+      }
+      const payload = await request(`api/trends?taxon_id=${taxa.join(',')}`, 'GET');
+      if (trendSpecies()?.id !== species.id) return;
+      if (payload.enabled === false) {
+        state.trends = { ...state.trends, loading: false, status: 'ready', rows: [], problem: 'iNaturalist is switched off in config.json.' };
+        return;
+      }
+      state.trends.rows = (payload.rows || []).map(([on, metres, acc, obscured]) =>
+        ({ on, metres: Number.isFinite(metres) ? metres : null, acc: Number.isFinite(acc) ? acc : null, obscured: !!obscured }));
+      state.trends.bands = payload.bands || null;
+      state.trends.region = payload.region || null;
+      state.trends.status = payload.status || 'ready';
+      state.trends.progress = payload.progress || [];
+      state.trends.problem = payload.problem || null;
+      state.trends.syncedAt = payload.syncedAt || null;
+      state.trends.loading = false;
+      if (state.trends.problem) {
+        state.trends.timer = setTimeout(loadTrends, TRENDS_RETRY_MS);
+      } else if (state.trends.status === 'syncing') {
+        state.trends.timer = setTimeout(loadTrends, TRENDS_POLL_MS);
+      }
+    } catch (err) {
+      if (trendSpecies()?.id !== species.id) return;
+      state.trends = { ...state.trends, loading: false, status: 'ready', problem: err.message };
+    } finally {
+      if (state.view === 'trends') render();
+    }
+  })();
+}
+
+function renderTrends() {
+  const t = state.trends;
+  const species = trendSpecies();
+  const choices = trendChoices();
+
+  const speciesSet = clear($('trends-species'));
+  const yearSet = clear($('trends-year'));
+  const measureSet = clear($('trends-measure'));
+  const status = $('trends-status');
+  const chart = clear($('trend-chart'));
+  const legend = clear($('trend-legend'));
+  const verdict = clear($('trend-verdict'));
+  $('trend-peaks-block').hidden = true;
+
+  if (!species) {
+    status.textContent = '';
+    chart.append(el('p', 'trend-empty', 'No choice edibles in the library yet. Mark a species "Choice edible" and it will be offered here.'));
+    return;
+  }
+  if (t.loadedFor !== species.id && !t.timer) loadTrends();
+
+  speciesSet.append(choiceDropdown({
+    name: 'trend-species', label: 'Species', current: species.id,
+    options: choices.map((sp) => ({ id: sp.id, label: speciesLabel(sp) })),
+    onPick: (id) => {
+      state.trends.speciesId = id;
+      state.trends.year = 'all';
+      history.pushState(routeState(), '', routeUrl());
+      loadTrends();
+      render();
+    },
+  }));
+
+  const rows = trendRows();
+  const years = Trends.yearsOf(rows);
+  const year = years.includes(Number(t.year)) ? Number(t.year) : null;
+  const edges = t.bands || Trends.DEFAULT_BANDS;
+  const totals = new Map();
+  for (const r of rows) {
+    const d = Trends.dayOfYear(r.on);
+    if (d) totals.set(d.year, (totals.get(d.year) || 0) + 1);
+  }
+  yearSet.append(choiceDropdown({
+    name: 'trend-year', label: 'Year', current: year == null ? 'all' : String(year),
+    options: [
+      { id: 'all', label: 'All years', count: rows.length },
+      ...years.map((y) => ({ id: String(y), label: String(y), count: totals.get(y) || 0 })),
+    ],
+    onPick: (id) => { state.trends.year = id; render(); },
+  }));
+  measureSet.append(choiceDropdown({
+    name: 'trend-measure', label: 'Measure', current: t.measure,
+    options: [
+      { id: 'count', label: 'Records a week' },
+      { id: 'share', label: 'Share of each cohort’s peak' },
+    ],
+    onPick: (id) => { state.trends.measure = id; render(); },
+  }));
+
+  status.textContent = trendStatusText();
+
+  const agg = Trends.aggregate(rows, { edges, year });
+  drawTrendChart(chart, agg, { measure: t.measure });
+  renderTrendLegend(legend, agg);
+  renderTrendPeaks(rows, edges, year);
+  renderTrendVerdict(verdict, species, agg, rows);
+}
+
+/** What the server is doing, in a few words, or nothing when it is done. */
+function trendStatusText() {
+  const t = state.trends;
+  if (t.problem) return '';
+  if (t.loading && !t.rows.length) return 'Asking iNaturalist…';
+  if (t.status !== 'syncing') return '';
+  const sum = (key) => t.progress.reduce((n, p) => n + (Number(p[key]) || 0), 0);
+  const grounding = t.progress.some((p) => p.phase === 'ground');
+  if (grounding && t.progress.every((p) => p.phase !== 'records')) {
+    const total = sum('groundTotal');
+    return total ? `Looking up ground elevations… ${sum('ground')} of ${total}` : 'Looking up ground elevations…';
+  }
+  const total = sum('total');
+  return total ? `Fetching records from iNaturalist… ${sum('fetched')} of ${total}` : 'Fetching records from iNaturalist…';
+}
+
+/**
+ * The chart: one line per cohort across the year, drawn to the width it has.
+ *
+ * Lines are the three-week average the peak is taken from, so what is drawn
+ * is what is measured; the tooltip carries the raw count for the week. The
+ * y-axis is either records a week or each cohort's share of its own peak —
+ * the second is the one that answers "does it come later up the hill",
+ * because the lowland cohort has ten times the observers and would otherwise
+ * flatten everything above it against the baseline.
+ */
+function drawTrendChart(container, agg, { measure }) {
+  // A phone's width is real and drawn to; a container that has no width
+  // yet — the view was hidden — gets a sensible one rather than nothing.
+  const width = Math.max(240, container.clientWidth || 800);
+  const height = 260;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs = {}) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) if (v != null) n.setAttribute(k, v);
+    return n;
+  };
+
+  const series = agg.bands.map((band, i) => {
+    const smoothed = Trends.smooth(band.counts);
+    const peak = Math.max(...smoothed);
+    const values = measure === 'share' ? smoothed.map((v) => (peak > 0 ? v / peak : 0)) : smoothed;
+    return { band, i, smoothed, values, peak, colour: cohortColour(i), peakAt: Trends.peakWeek(band.counts) };
+  });
+  const shown = series.filter((s) => s.band.total > 0);
+  const yMax = measure === 'share' ? 1 : niceCeiling(Math.max(1, ...shown.map((s) => s.peak)));
+
+  // Headroom for the peak labels. Cohorts that peak within a label's width
+  // of each other stack their labels, and in the share view every peak sits
+  // at the very top, so the top margin is sized for the tallest stack rather
+  // than clipping it.
+  const LABEL_STEP = 12;
+  const LABEL_WIDTH = 40;
+  const pad = { top: 18, right: 16, bottom: 26, left: 40 };
+  const plotW = width - pad.left - pad.right;
+  const peakXs = shown.map((s) => s.peakAt).filter((w) => w != null).map((w) => ((w * 7 + 3) / 365) * plotW);
+  const tallest = Math.max(0, ...peakXs.map((x) => peakXs.filter((o) => Math.abs(o - x) < LABEL_WIDTH).length));
+  pad.top += LABEL_STEP * Math.max(0, tallest - 1);
+  const plotH = height - pad.top - pad.bottom;
+
+  const xOfDay = (day) => pad.left + ((day - 1) / 365) * plotW;
+  const xOfWeek = (w) => xOfDay(w * 7 + 4);
+  const yOf = (v) => pad.top + plotH - (v / yMax) * plotH;
+
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height, class: 'trend-svg', role: 'img',
+    'aria-label': 'Records a week through the year, one line per altitude cohort' });
+
+  // Gridlines and the y-axis, recessive.
+  const grid = svgEl('g', { class: 'trend-grid' });
+  const ticks = measure === 'share' ? [0, 0.25, 0.5, 0.75, 1] : niceTicks(yMax);
+  for (const v of ticks) {
+    grid.append(svgEl('line', { x1: pad.left, x2: width - pad.right, y1: yOf(v), y2: yOf(v) }));
+    const label = svgEl('text', { x: pad.left - 6, y: yOf(v) + 3.5, 'text-anchor': 'end' });
+    label.textContent = measure === 'share' ? `${Math.round(v * 100)}%` : String(v);
+    grid.append(label);
+  }
+  svg.append(grid);
+
+  // Month ticks along the bottom. On a phone twelve names do not fit, so
+  // every other month is named and the ticks between still mark the rest.
+  const axis = svgEl('g', { class: 'trend-axis' });
+  const monthStarts = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const nameEvery = plotW < 420 ? 2 : 1;
+  monthStarts.forEach((day, i) => {
+    const x = xOfDay(day);
+    axis.append(svgEl('line', { x1: x, x2: x, y1: pad.top + plotH, y2: pad.top + plotH + 4 }));
+    if (i % nameEvery) return;
+    const label = svgEl('text', { x: x + 3, y: height - 8 });
+    label.textContent = months[i];
+    axis.append(label);
+  });
+  axis.append(svgEl('line', { class: 'trend-baseline', x1: pad.left, x2: width - pad.right, y1: pad.top + plotH, y2: pad.top + plotH }));
+  svg.append(axis);
+
+  // The lines, lowest cohort drawn first so the sparser upper ones sit on top.
+  for (const s of shown) {
+    const d = s.values.map((v, w) => `${w ? 'L' : 'M'}${xOfWeek(w).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ');
+    svg.append(svgEl('path', { class: 'trend-line', d, stroke: s.colour }));
+  }
+  // Each cohort's peak, marked and dated. The one label a line gets. Two
+  // cohorts peaking the same week — which is the usual case as the share
+  // view lines every peak up at the top — stack their labels rather than
+  // print one over the other.
+  const placed = [];
+  for (const s of shown) {
+    const w = s.peakAt;
+    if (w == null) continue;
+    const x = xOfWeek(w), y = yOf(s.values[w]);
+    svg.append(svgEl('circle', { class: 'trend-peak', cx: x, cy: y, r: 4.5, fill: s.colour }));
+    let ly = y - 9;
+    while (placed.some((p) => Math.abs(p.x - x) < LABEL_WIDTH && Math.abs(p.y - ly) < LABEL_STEP)) ly -= LABEL_STEP;
+    placed.push({ x, y: ly });
+    const label = svgEl('text', { class: 'trend-peak-label', x, y: ly, 'text-anchor': 'middle' });
+    label.textContent = Trends.weekLabel(w);
+    svg.append(label);
+  }
+
+  if (!shown.length) {
+    const note = svgEl('text', { class: 'trend-note', x: width / 2, y: pad.top + plotH / 2, 'text-anchor': 'middle' });
+    note.textContent = state.trends.loading || state.trends.status === 'syncing' ? 'Waiting for records…' : 'No records to draw.';
+    svg.append(note);
+  }
+
+  // The hover layer: a cursor on the nearest week, a dot on every line, and
+  // a tooltip with the raw counts.
+  const cursor = svgEl('g', { class: 'trend-cursor' });
+  cursor.setAttribute('visibility', 'hidden');
+  const cursorLine = svgEl('line', { y1: pad.top, y2: pad.top + plotH });
+  cursor.append(cursorLine);
+  const dots = shown.map((s) => {
+    const dot = svgEl('circle', { r: 4, fill: s.colour });
+    cursor.append(dot);
+    return dot;
+  });
+  svg.append(cursor);
+
+  const tip = el('div', 'trend-tip');
+  tip.hidden = true;
+  const hit = svgEl('rect', { x: pad.left, y: pad.top, width: plotW, height: plotH, fill: 'transparent' });
+  const show = (clientX) => {
+    const rect = svg.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * width;
+    const w = Math.max(0, Math.min(Trends.WEEKS - 1, Math.round(((x - pad.left) / plotW) * 365 / 7 - 0.5)));
+    const cx = xOfWeek(w);
+    cursorLine.setAttribute('x1', cx);
+    cursorLine.setAttribute('x2', cx);
+    shown.forEach((s, i) => { dots[i].setAttribute('cx', cx); dots[i].setAttribute('cy', yOf(s.values[w])); });
+    cursor.setAttribute('visibility', 'visible');
+
+    clear(tip);
+    const end = Math.min(365, w * 7 + 7);
+    tip.append(el('div', 'trend-tip-title', `${Trends.weekLabel(w)} – ${Trends.dayLabel(end)}`));
+    for (const s of shown) {
+      const row = el('div', 'trend-tip-row');
+      const key = el('span', 'trend-swatch');
+      key.style.background = s.colour;
+      row.append(key, el('span', 'trend-tip-label', s.band.label),
+        el('span', 'trend-tip-value', String(s.band.counts[w])));
+      tip.append(row);
+    }
+    tip.hidden = false;
+    const left = (cx / width) * rect.width;
+    tip.style.left = `${Math.min(rect.width - tip.offsetWidth - 4, Math.max(4, left + 12))}px`;
+    tip.style.top = `${pad.top}px`;
+  };
+  hit.addEventListener('mousemove', (ev) => show(ev.clientX));
+  hit.addEventListener('touchstart', (ev) => { if (ev.touches[0]) show(ev.touches[0].clientX); }, { passive: true });
+  hit.addEventListener('touchmove', (ev) => { if (ev.touches[0]) show(ev.touches[0].clientX); }, { passive: true });
+  hit.addEventListener('mouseleave', () => { cursor.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+  svg.append(hit);
+
+  container.append(svg, tip);
+}
+
+/** The next round number at or above a value: 7 → 8, 23 → 25, 140 → 150. */
+function niceCeiling(v) {
+  if (v <= 4) return Math.ceil(v);
+  const mag = 10 ** Math.floor(Math.log10(v));
+  for (const step of [1, 2, 2.5, 5, 10]) if (v <= step * mag) return step * mag;
+  return 10 * mag;
+}
+
+/** Four or five evenly spaced ticks up to a ceiling niceCeiling produced. */
+function niceTicks(max) {
+  const step = max <= 4 ? 1 : max / (max % 4 === 0 ? 4 : 5);
+  const out = [];
+  for (let v = 0; v <= max + 1e-9; v += step) out.push(Number(v.toFixed(2)));
+  return out;
+}
+
+function renderTrendLegend(node, agg) {
+  agg.bands.forEach((band, i) => {
+    const item = el('span', 'legend-item' + (band.total ? '' : ' is-zero'));
+    const key = el('span', 'trend-swatch');
+    key.style.background = cohortColour(i);
+    item.append(key, el('span', null, band.label), el('span', 'legend-value', String(band.total)));
+    const w = Trends.peakWeek(band.counts);
+    if (w != null) item.append(el('span', 'legend-peak', `peaks ${Trends.weekLabel(w)}`));
+    node.append(item);
+  });
+  if (agg.unplaced) {
+    const item = el('span', 'legend-item is-zero');
+    item.title = 'Obscured on iNaturalist, placed too loosely to put on a hillside, or off the terrain model.';
+    item.append(el('span', null, 'Not placed'), el('span', 'legend-value', String(agg.unplaced)));
+    node.append(item);
+  }
+}
+
+/** The peaks table: a row per year, a column per cohort. */
+function renderTrendPeaks(rows, edges, year) {
+  const list = Trends.peaks(rows, { edges });
+  const block = $('trend-peaks-block');
+  block.hidden = !list.length;
+  if (!list.length) return;
+  const bands = Trends.bands(edges);
+
+  const head = clear($('trend-peaks-head'));
+  const tr = el('tr');
+  tr.append(el('th', 'nowrap', 'Year'));
+  for (const b of bands) tr.append(el('th', 'nowrap', b.label));
+  head.append(tr);
+
+  const body = clear($('trend-peaks'));
+  for (const entry of list) {
+    const row = el('tr', entry.year === year ? 'is-current' : null);
+    row.append(el('td', 'nowrap', String(entry.year)));
+    entry.cohorts.forEach((c, i) => {
+      const cell = el('td', 'nowrap');
+      if (c.week == null) {
+        cell.append(el('span', 'trend-thin', c.count ? `${c.count} — too few` : '—'));
+        cell.title = c.count ? `${plural(c.count, 'record')}: fewer than ${Trends.MIN_PEAK_COUNT} is too few to call a peak.` : 'No records placed in this cohort that year.';
+      } else {
+        const key = el('span', 'trend-swatch is-dot');
+        key.style.background = cohortColour(i);
+        cell.append(key, el('span', 'trend-peak-date', Trends.weekLabel(c.week)), ' ', el('span', 'trend-peak-count', String(c.count)));
+        cell.title = `Median ${Trends.dayLabel(c.median)}, ${plural(c.count, 'record')}.`;
+      }
+      row.append(cell);
+    });
+    body.append(row);
+  }
+}
+
+function renderTrendVerdict(node, species, agg, rows) {
+  const t = state.trends;
+  if (t.problem) {
+    node.append(el('strong', null, t.problem),
+      document.createTextNode(rows.length ? ' What had landed is drawn; the rest is tried again shortly.' : ' Tried again shortly.'));
+    if (!rows.length) return;
+  }
+  if (!rows.length) {
+    node.textContent = t.loading || t.status === 'syncing'
+      ? 'The first look at a species fetches every research-grade record in the region a page a second, then the ground under each. The chart draws once the ground arrives.'
+      : `No research-grade records of ${speciesLabel(species)} in the region.`;
+    return;
+  }
+  const region = t.region;
+  const where = region
+    ? `between ${Math.abs(region.swlat).toFixed(1)}° and ${Math.abs(region.nelat).toFixed(1)}°${region.nelat < 0 ? 'S' : 'N'}, ${Math.abs(region.swlng).toFixed(1)}° to ${Math.abs(region.nelng).toFixed(1)}°${region.nelng < 0 ? 'W' : 'E'}`
+    : 'across the home region';
+  const strong = el('strong', null, plural(agg.dated, 'research-grade record'));
+  node.append(strong, document.createTextNode(` of ${speciesLabel(species)} on iNaturalist ${where}, ${agg.placed} of them placed on a hillside.`));
+  if (agg.unplaced) {
+    node.append(document.createTextNode(` ${plural(agg.unplaced, 'record')} could not be: obscured, placed to worse than ${Trends.MAX_ACCURACY_M / 1000} km, or off the terrain model.`));
+  }
+  node.append(document.createTextNode(' Counts follow where people walk and how many were posting that year as much as where it fruits; read the timing of the peak, not its height.'));
+  if (t.syncedAt) node.append(document.createTextNode(` Archive refreshed ${fmtDate(t.syncedAt.slice(0, 10))}.`));
+  if (t.status === 'syncing') node.append(document.createTextNode(' Still fetching.'));
 }
 
 // --- the entry form ---------------------------------------------------------
@@ -5306,6 +5768,7 @@ function wire() {
     // Set these first: setView renders, and would otherwise draw the old ones.
     state.mode = modeFromUrl();
     state.speciesFilters.tag = tagFromUrl();
+    state.trends.speciesId = trendFromUrl();
     setView(viewFromUrl(), { push: false });
     syncOpenSheet();
   });
@@ -5340,6 +5803,12 @@ function wire() {
     if (open) $('obs-drop').focus();
   });
   wireSortHeaders('species-head', state.speciesSort, () => render());
+  // The trend chart is drawn to its width, so a resize redraws it.
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (state.view === 'trends') render(); }, 150);
+  });
 
   $('scrim').addEventListener('click', (ev) => {
     // Only a click on the backdrop itself closes; one that started inside the

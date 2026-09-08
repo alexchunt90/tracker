@@ -32,5 +32,8 @@
   "inaturalist": {
     "enabled": true,
     "perPage": 80
+  },
+  "trends": {
+    "bands": [300, 700, 1200]
   }
 }

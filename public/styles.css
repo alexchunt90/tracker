@@ -1943,3 +1943,45 @@ button.chosen-shot { border: 1px solid var(--rule); }
   .sheet { border: none; border-radius: 0; min-height: 100%; }
   .entry-row label.grow { flex: 1 1 100%; }
 }
+
+/* --- trends -------------------------------------------------------------- */
+
+.filter-note { font-size: 12.5px; color: var(--ink-faint); }
+
+.trend-chart { position: relative; margin-top: 2px; }
+.trend-svg { display: block; width: 100%; height: auto; }
+.trend-grid line { stroke: var(--rule-soft); stroke-width: 1; }
+.trend-grid text, .trend-axis text { font-family: var(--mono); font-size: 11px; fill: var(--ink-faint); }
+.trend-axis line { stroke: var(--rule); stroke-width: 1; }
+.trend-axis .trend-baseline { stroke: var(--rule); }
+.trend-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+/* A surface ring, so a peak sitting on another line stays a dot. */
+.trend-peak { stroke: var(--card); stroke-width: 2; }
+.trend-peak-label, .trend-note { font-family: var(--mono); font-size: 11px; fill: var(--ink-soft); }
+.trend-note { fill: var(--ink-faint); font-family: var(--body); font-size: 13px; }
+.trend-cursor line { stroke: var(--ink-faint); stroke-width: 1; }
+.trend-cursor circle { stroke: var(--card); stroke-width: 2; }
+.trend-empty { margin: 30px 0; text-align: center; color: var(--ink-soft); font-size: 14px; }
+
+.trend-tip {
+  position: absolute; z-index: 5; pointer-events: none;
+  min-width: 170px; padding: 7px 9px;
+  background: var(--card-raised); border: 1px solid var(--rule); border-radius: var(--radius);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  font-size: 12.5px; color: var(--ink);
+}
+.trend-tip-title { font-family: var(--display); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; }
+.trend-tip-row { display: flex; align-items: center; gap: 7px; padding: 1px 0; }
+.trend-tip-label { flex: 1; color: var(--ink-soft); }
+.trend-tip-value { font-family: var(--mono); color: var(--ink); }
+
+/* A short length of line, not a square: it is what the mark on the chart is. */
+.trend-swatch { display: inline-block; width: 14px; height: 3px; border-radius: 2px; flex: none; }
+.trend-swatch.is-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.legend-peak { color: var(--ink-faint); font-size: 12px; }
+
+.trend-peaks td { padding: 7px 10px; height: auto; border-top: 1px solid var(--rule-soft); }
+.trend-peaks tr.is-current td { background: var(--card-sunk); }
+.trend-peak-date { color: var(--ink); }
+.trend-peak-count { margin-left: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+.trend-thin { color: var(--ink-faint); }
