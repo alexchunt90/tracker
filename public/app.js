@@ -4266,7 +4266,8 @@ function buildIdentifySheet(sheet, stored, close) {
   let fields = [];
   if (canTag) {
     const charSection = sheetSection(sheet, 'What you can see',
-      'Tag the specimen in front of you. Every tag narrows the list below. A number is a size in centimetres.');
+      'Tag the specimen in front of you. Every tag narrows the list below. A number is a size in centimetres, '
+      + 'and a tag written !volva is one you looked for and did not find.');
     const grid = el('div', 'characters');
     fields = Model.FUNGI_CHARACTERS.map((spec) => {
       const f = tagField(spec, Model.character(draftObs, spec.id), () => { collect(); redraw(); });
@@ -4467,7 +4468,7 @@ function buildIdentifySheet(sheet, stored, close) {
       body.append(chips);
     }
     for (const clash of match.conflicts) {
-      body.append(el('p', 'candidate-conflict', `You tagged “${clash.tag.text}” under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
+      body.append(el('p', 'candidate-conflict', `You tagged “${Model.tagLabel(clash.tag)}” under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
     }
     card.append(body);
 
@@ -5576,9 +5577,14 @@ function tagChip(tag, { onRemove, tip = true } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
 
+  // A denial is a claim about what was not there, so it says so in words and
+  // is drawn as struck through. No swatch on one either: a filled dot beside
+  // "no blue" reads as the colour being present, which is the opposite.
+  if (tag.negated) chip.classList.add('is-negated');
+
   // A colour paints a dot of itself; a secondary colour a ring, so the two
   // tiers read apart at a glance while the shade still shows.
-  if (tag.category === 'colour' || tag.category === 'secondary') {
+  if (!tag.negated && (tag.category === 'colour' || tag.category === 'secondary')) {
     const swatch = el('span', 'tag-swatch');
     const paint = Model.tagSwatch(tag.text);
     if (paint) swatch.style.setProperty('--swatch', paint);
@@ -5591,13 +5597,13 @@ function tagChip(tag, { onRemove, tip = true } = {}) {
   // No `title` here: the browser's own tooltip fires on roughly the same delay
   // as the glossary one and lands on top of it, hiding the definition behind
   // the category — which the glossary tooltip already names at its foot.
-  const label = el('span', 'tag-text', tag.text);
+  const label = el('span', 'tag-text', Model.tagLabel(tag));
   chip.append(label);
 
   if (onRemove) {
     const drop = el('button', 'tag-drop', '×');
     drop.type = 'button';
-    drop.setAttribute('aria-label', `Remove ${tag.text}`);
+    drop.setAttribute('aria-label', `Remove ${Model.tagLabel(tag)}`);
     drop.addEventListener('click', onRemove);
     chip.append(drop);
   }
@@ -5677,8 +5683,16 @@ function tagField(spec, value, onChange) {
       const { tags: read, error } = Model.tagsFrom(text, spec);
       if (error) { notice(error); continue; }
       for (const tag of read) {
-        if (tags.some((t) => Model.normalizeTag(t.text) === Model.normalizeTag(tag.text))) continue;
-        tags.push(tag);
+        const at = tags.findIndex((t) => Model.normalizeTag(t.text) === Model.normalizeTag(tag.text));
+        if (at === -1) { tags.push(tag); continue; }
+        /*
+         * The same term twice is nothing to do. The same term with the other
+         * polarity is a correction — you looked again — so it replaces what is
+         * there. Keeping the first would leave the field showing the opposite
+         * of what was just typed, with no sign that anything was ignored.
+         */
+        if (!tags[at].negated === !tag.negated) continue;
+        tags[at] = tag;
       }
     }
     changed();
@@ -5701,17 +5715,23 @@ function tagField(spec, value, onChange) {
   root.append(wrap);
 
   function drawSuggestions() {
-    const groups = tagSuggestions(spec, box.value, tags);
+    // A denial is suggested from the term it denies: typing `!vol` should still
+    // find volva, and picking it keeps the `!` the typing already committed to.
+    const { negated, text: typed } = Model.splitNegation(box.value);
+    const groups = tagSuggestions(spec, typed, tags);
     clear(suggestions);
+    // Whatever Enter is going to refuse, said before it is pressed rather than
+    // after — an oversized size, or a size somebody tried to deny.
+    const refused = Model.tagsFrom(box.value, spec).error;
+    if (refused) {
+      suggestions.append(el('p', 'tag-suggest-empty', refused));
+      return;
+    }
     // A number is a size. There is nothing to suggest for one — every whole
     // centimetre is valid — so the popover shows what Enter will record
-    // instead: the chip it becomes, or the reason it will be refused.
-    const measure = Model.parseMeasure(box.value);
+    // instead: the chip it becomes.
+    const measure = Model.parseMeasure(typed);
     if (measure) {
-      if (measure.error) {
-        suggestions.append(el('p', 'tag-suggest-empty', measure.error));
-        return;
-      }
       const row = el('div', 'tag-suggest-group');
       row.append(el('span', 'tag-suggest-label', spec.measured ? 'Size — press Enter' : 'Size — press Enter (usually recorded under Fruit body, Cap or Stipe)'));
       const chips = el('div', 'tag-list is-static');
@@ -5744,7 +5764,7 @@ function tagField(spec, value, onChange) {
         // handler commits whatever half-typed text is sitting in it.
         chip.addEventListener('mousedown', (ev) => {
           ev.preventDefault();
-          box.value = term.text;
+          box.value = negated ? `!${term.text}` : term.text;
           commit();
           drawSuggestions();
         });

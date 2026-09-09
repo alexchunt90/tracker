@@ -1134,6 +1134,13 @@ fieldset.trait-set legend {
 }
 .tag-list.is-static .tag { padding: 2px 8px; }
 
+/* A denial: something looked for and not found. Dashed rather than solid, so a
+   claim about an absence cannot be mistaken at a glance for one about a
+   presence, and the word struck through so it reads as a negative even where
+   the border is too fine to notice. */
+.tag.is-negated { border-style: dashed; opacity: 0.9; }
+.tag.is-negated .tag-text { text-decoration: line-through; text-decoration-thickness: 1px; }
+
 .tag-text {
   background: none; border: none; padding: 0; margin: 0;
   font: inherit; color: inherit; cursor: pointer;
