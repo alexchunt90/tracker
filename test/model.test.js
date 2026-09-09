@@ -432,3 +432,46 @@ describe('denied tags', () => {
     assert.equal(Model.observedTagCount(withStipe([{ text: '!volva' }])), 1);
   });
 });
+
+describe('rebaseTerms', () => {
+  const base = { gills: { definition: 'plates' }, cap: { category: 'cap' } };
+  const defineCap = (terms) => { terms.cap = { ...terms.cap, definition: 'the top' }; return terms; };
+
+  test('replays an edit on a copy where a different term changed', () => {
+    const theirs = { ...base, gills: { definition: 'thin plates' }, stipe: { added: true } };
+    assert.deepStrictEqual(Model.rebaseTerms(base, defineCap, theirs), {
+      gills: { definition: 'thin plates' },
+      cap: { category: 'cap', definition: 'the top' },
+      stipe: { added: true },
+    });
+  });
+
+  test('refuses when the other copy changed the same term', () => {
+    const theirs = { ...base, cap: { category: 'cap', definition: 'the pileus' } };
+    assert.strictEqual(Model.rebaseTerms(base, defineCap, theirs), null);
+  });
+
+  test('refuses when the other copy removed the term being edited', () => {
+    const { cap, ...theirs } = base;
+    assert.strictEqual(Model.rebaseTerms(base, defineCap, theirs), null);
+  });
+
+  test('a removal replays, and is a conflict only if the other side touched it', () => {
+    const dropGills = (terms) => { delete terms.gills; return terms; };
+    assert.deepStrictEqual(Model.rebaseTerms(base, dropGills, { ...base, stipe: {} }), { cap: base.cap, stipe: {} });
+    assert.strictEqual(Model.rebaseTerms(base, dropGills, { ...base, gills: { definition: 'x' } }), null);
+  });
+
+  test('key order in the stored copy does not read as a change', () => {
+    const theirs = { gills: { definition: 'plates' }, cap: { category: 'cap' } };
+    const reordered = { cap: { category: 'cap' }, gills: { definition: 'plates' } };
+    assert.ok(Model.rebaseTerms(reordered, defineCap, theirs));
+  });
+
+  test('does not touch the maps it was handed', () => {
+    const theirs = { ...base, stipe: {} };
+    Model.rebaseTerms(base, defineCap, theirs);
+    assert.deepStrictEqual(base.cap, { category: 'cap' });
+    assert.deepStrictEqual(theirs.cap, { category: 'cap' });
+  });
+});

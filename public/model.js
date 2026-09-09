@@ -1759,6 +1759,27 @@ const Model = (() => {
     return next;
   }
 
+  /**
+   * Replay a glossary edit on top of a copy that changed underneath it.
+   *
+   * The glossary is one versioned document, but an edit touches one term, and
+   * two tabs each editing a different term are not in conflict — the second
+   * to save has only been told so because the version it echoed is stale.
+   * Given the terms the edit started from, the edit itself as a function of a
+   * terms map, and the terms now stored, this returns the stored terms with
+   * the edit applied — or null when the edit touches a term the other copy
+   * also changed, which is the one case where somebody's work would be lost.
+   */
+  function rebaseTerms(base, change, theirs) {
+    const canon = (entry) => (entry == null ? null
+      : JSON.stringify(Object.fromEntries(Object.entries(entry).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))));
+    const mine = change({ ...base });
+    const touched = [...new Set([...Object.keys(base), ...Object.keys(mine)])]
+      .filter((term) => canon(base[term]) !== canon(mine[term]));
+    if (touched.some((term) => canon(base[term]) !== canon(theirs[term]))) return null;
+    return change({ ...theirs });
+  }
+
   return {
     TYPES, TYPE_IDS, UNIDENTIFIED, EDIBILITY, EDIBILITY_IDS, FUNGI_CHARACTERS, NUTRITION,
     TAG_CATEGORIES, COLOURS, PRIMARY_COLOURS, SECONDARY_COLOURS, primaryOf, guessPrimary, wordGroup,
@@ -1777,6 +1798,7 @@ const Model = (() => {
     excerpts, richText,
     photoElevation, recordedElevation, formatElevation,
     importOrder, deriveFind, followBatch,
+    rebaseTerms,
   };
 })();
 

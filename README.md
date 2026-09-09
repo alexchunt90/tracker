@@ -803,6 +803,20 @@ out of a tab are the same string, and a back gesture closes the sheet rather
 than leaving the log. A link to a record that has since been deleted says so
 and leaves you on the view it named, rather than on the wrong thing.
 
+The places that lead somewhere — the tabs, a species name in the library, the
+*uses* count on a Glossary row, the chosen species on the identification sheet
+— are real links carrying these URLs. A plain click stays on the page as it
+always did; a ⌘-click, a middle click or *open in new tab* does what it does
+everywhere else, so every use of a term can sit in a tab of its own beside the
+Glossary you were reading.
+
+Two tabs can also edit the Glossary at once. It is saved as one document with
+one version, so the second tab to save is told the copy changed underneath it.
+When the two edits touched different terms — the usual case — that tab replays
+its own edit on top of the stored copy and saves again, and both survive. Only
+two edits to the same term are a real conflict, and that one still reloads and
+says so.
+
 `widgets/` holds three [Scriptable](https://scriptable.app) scripts for an
 iPhone home screen:
 
