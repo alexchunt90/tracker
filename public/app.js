@@ -5204,7 +5204,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
    */
   const lookalikePick = el('textarea');
   lookalikePick.value = record.lookalikes || '';
-  lookalikePick.placeholder = 'False chanterelle; Jack-o’-lantern — and how to tell them apart.';
+  lookalikePick.placeholder = '–';
 
   const rowB = el('div', 'entry-row');
   rowB.append(
