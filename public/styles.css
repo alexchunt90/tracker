@@ -938,6 +938,19 @@ a.shot-credit:hover { color: var(--accent); text-decoration: underline; }.shot-m
 .facts dd.mono { font-family: var(--mono); font-size: 13px; }
 .facts a { color: var(--accent); }
 
+/* A photograph's own fix, with the offer to move the find onto it. A find
+   holds the position of one photograph, so on a record shot from two spots
+   this row is where the two can be told apart and reconciled. */
+.fact-where { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.fact-action, .fact-note {
+  font-family: var(--display); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.fact-action { padding: 0; border: 0; background: none; cursor: pointer; color: var(--accent); }
+.fact-action:hover { text-decoration: underline; }
+/* Stated, not offered: this is the photograph the pin already stands on. */
+.fact-note { color: var(--ink-faint); }
+
 .former-names { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .former-names li {
   font-size: 12.5px; font-style: italic; color: var(--ink-soft);
@@ -1121,6 +1134,13 @@ fieldset.trait-set legend {
 }
 .tag-list.is-static .tag { padding: 2px 8px; }
 
+/* A denial: something looked for and not found. Dashed rather than solid, so a
+   claim about an absence cannot be mistaken at a glance for one about a
+   presence, and the word struck through so it reads as a negative even where
+   the border is too fine to notice. */
+.tag.is-negated { border-style: dashed; opacity: 0.9; }
+.tag.is-negated .tag-text { text-decoration: line-through; text-decoration-thickness: 1px; }
+
 .tag-text {
   background: none; border: none; padding: 0; margin: 0;
   font: inherit; color: inherit; cursor: pointer;
@@ -1301,6 +1321,25 @@ button.tag-text:hover { text-decoration: underline dotted; }
   margin-top: 6px; font-family: var(--display); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn);
 }
+
+/* A reference photograph enlarged from a thumbnail. The same family as the pin
+   tooltip, and for the same reason: on a list of brown mushrooms the picture is
+   the identifying thing, and a thumbnail is not enough of it to decide on. */
+.shot-tip {
+  position: fixed; z-index: 150; pointer-events: none;
+  width: 320px; padding: 0; overflow: hidden;
+  background: var(--card-raised); color: var(--ink);
+  border: 1px solid var(--accent-dim); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+.shot-tip[hidden] { display: none; }
+/* Contained, not cropped: a lookalike is often told by its stem or its margin,
+   and a square crop is exactly what removes those. */
+.shot-tip img {
+  display: block; width: 100%; height: auto; max-height: 360px;
+  object-fit: contain; background: var(--card-sunk);
+}
+.shot-tip-name { padding: 7px 10px 8px; font-size: 13px; line-height: 1.25; }
 
 /* --- the full-size photograph ------------------------------------------- */
 /* Above the sheet, which is already above the page: a photograph opened for a

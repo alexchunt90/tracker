@@ -3807,8 +3807,14 @@ function photoViewer(photos, onSelect) {
   return wrap;
 }
 
-/** What the camera recorded, as opposed to what the log says. */
-function photoFacts(photo) {
+/**
+ * What the camera recorded, as opposed to what the log says.
+ *
+ * Given `onAdopt`, the position reads as something you can act on rather than
+ * only read: it says whether the pin is standing on this photograph, and
+ * offers to move it here if it is not.
+ */
+function photoFacts(photo, { onAdopt, current } = {}) {
   const list = el('dl', 'facts');
   const add = (term, value, { mono } = {}) => {
     if (value == null || value === '') return;
@@ -3835,7 +3841,31 @@ function photoFacts(photo) {
     anchor.href = link;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
-    add('Camera position', anchor, { mono: true });
+    const where = el('div', 'fact-where');
+    where.append(anchor);
+    /*
+     * A find keeps the fix of whichever photograph was adopted first, so a
+     * record shot from two spots holds one position while the viewer shows
+     * another — far enough apart, on a steep trail, to put the pin on the
+     * wrong side of it. Saying which photograph the pin stands on is what
+     * makes that visible at all; the button is the one-off correction.
+     *
+     * Coordinates are carried across at full stored precision. The line above
+     * is rounded for reading, and adopting what it displays would move the
+     * find by metres of its own accord.
+     */
+    if (onAdopt) {
+      if (current && current.lat === photo.lat && current.lon === photo.lon) {
+        where.append(el('div', 'fact-note', 'The find is placed here'));
+      } else {
+        const use = el('button', 'fact-action', 'Place the find here');
+        use.type = 'button';
+        use.title = 'Move this find to the spot this photograph was taken from';
+        use.addEventListener('click', () => onAdopt(photo));
+        where.append(use);
+      }
+    }
+    add('Camera position', where, { mono: true });
   } else {
     add('Camera position', photo.hasExif ? 'not recorded' : 'no EXIF');
   }
@@ -3876,12 +3906,13 @@ function buildObservationSheet(sheet, stored, close) {
   head.sub.after(entryLink);
 
   // --- photographs
+  //
+  // Built here so it keeps its place at the top of the sheet, but not wired up
+  // until the coordinate fields exist further down: the viewer shows its first
+  // photograph the moment it is handed one, and the facts panel that answers
+  // it needs somewhere to write.
   const shown = sheetSection(sheet);
   const factsHolder = el('div');
-  shown.append(photoViewer(row.photos || [], (photo) => {
-    clear(factsHolder).append(photoFacts(photo));
-  }));
-  if (!(row.photos || []).length) clear(factsHolder).append(photoFacts(null));
 
   // --- the record
   const editor = sheetSection(sheet, 'The record');
@@ -4070,6 +4101,34 @@ function buildObservationSheet(sheet, stored, close) {
 
   sync();
 
+  /*
+   * The photographs, now that there is something for them to write into.
+   *
+   * `adoptMetadata` fills a blank find from the first placed photograph and
+   * then leaves it alone, so that a typed correction survives dropping a
+   * second photograph in. The cost is that a record whose shots were taken
+   * from different spots keeps the first fix for good, and the only way back
+   * was to read six decimal places off the panel below and retype them. This
+   * is that correction, done in one click and without the transcription.
+   */
+  let shownPhoto = null;
+  const paintFacts = () => {
+    clear(factsHolder).append(photoFacts(shownPhoto, {
+      current: { lat: coordValue(latPick.value, 90), lon: coordValue(lonPick.value, 180) },
+      onAdopt: (photo) => {
+        latPick.value = photo.lat;
+        lonPick.value = photo.lon;
+        markDirty();
+        paintFacts();
+      },
+    }));
+  };
+  // Typing in the fields by hand changes the answer to "is the pin here", so
+  // the panel has to follow them and not only its own button.
+  for (const pick of [latPick, lonPick]) pick.addEventListener('input', paintFacts);
+  shown.append(photoViewer(row.photos || [], (photo) => { shownPhoto = photo; paintFacts(); }));
+  if (!(row.photos || []).length) paintFacts();
+
   // --- photographs, editable
   const tray = makeTray({
     existing: row.photos || [], onChange: markDirty, addBelow: true, cover: true,
@@ -4207,7 +4266,8 @@ function buildIdentifySheet(sheet, stored, close) {
   let fields = [];
   if (canTag) {
     const charSection = sheetSection(sheet, 'What you can see',
-      'Tag the specimen in front of you. Every tag narrows the list below. A number is a size in centimetres.');
+      'Tag the specimen in front of you. Every tag narrows the list below. A number is a size in centimetres, '
+      + 'and a tag written !volva is one you looked for and did not find.');
     const grid = el('div', 'characters');
     fields = Model.FUNGI_CHARACTERS.map((spec) => {
       const f = tagField(spec, Model.character(draftObs, spec.id), () => { collect(); redraw(); });
@@ -4305,7 +4365,16 @@ function buildIdentifySheet(sheet, stored, close) {
     markDirty();
   }
 
-  function redraw() {
+  /*
+   * `keepScroll` when nothing about the order changed.
+   *
+   * A new tag reranks the list, so the box goes back to the top: the best
+   * match is the first row and leaving the box where it was hides it. Picking
+   * a species reranks nothing — it moves a highlight — and a list of four
+   * hundred names that jumps to the top every time you choose one throws away
+   * the scrolling it took to reach the choice.
+   */
+  function redraw({ keepScroll = false } = {}) {
     const { rows, anyTags, pool } = Model.rankCandidates(draftObs, state.species);
     const tagCount = Model.observedTagCount(draftObs);
 
@@ -4322,15 +4391,19 @@ function buildIdentifySheet(sheet, stored, close) {
     const ruledOut = rows.filter((m) => m.contradicted);
     const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
 
+    // Every row is rebuilt here, so a preview left open would be anchored to a
+    // thumbnail that is no longer in the document.
+    hideShotTip();
+    const wasAt = candScroll.scrollTop;
     clear(candList);
     for (const match of candidates) candList.append(candidateRow(match));
     if (!candidates.length) {
       candList.append(el('div', 'empty-state',
         rows.length ? 'Every species is ruled out by these tags.' : 'No species of this type on file yet.'));
     }
-    // Scrolled back to the top: after a new tag the best match is the first
-    // row, and leaving the box where it was hides it.
-    candScroll.scrollTop = 0;
+    // Written either way: emptying the box can clamp the scroll to nothing by
+    // itself, so holding a position means putting it back, not leaving it be.
+    candScroll.scrollTop = keepScroll ? wasAt : 0;
 
     clear(candFoot);
     if (ruledOut.length) {
@@ -4367,13 +4440,15 @@ function buildIdentifySheet(sheet, stored, close) {
     if (chosen && chosen.id === sp.id) card.classList.add('is-chosen');
 
     const shot = el('div', 'candidate-shot');
-    const src = thumbSrc(coverOf(sp));
+    const cover = coverOf(sp);
+    const src = thumbSrc(cover);
     if (src) {
       const img = el('img');
       img.src = src;
       img.alt = '';
       img.loading = 'lazy';
       shot.append(img);
+      armShotTip(shot, cover, sp.commonName || sp.scientificName || 'Unnamed');
     } else {
       shot.append(el('span', 'no-preview', Model.typeGlyph(sp.kind)));
     }
@@ -4393,7 +4468,7 @@ function buildIdentifySheet(sheet, stored, close) {
       body.append(chips);
     }
     for (const clash of match.conflicts) {
-      body.append(el('p', 'candidate-conflict', `You tagged “${clash.tag.text}” under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
+      body.append(el('p', 'candidate-conflict', `You tagged “${Model.tagLabel(clash.tag)}” under ${clash.character.label} — this species is recorded as: ${clash.reason}.`));
     }
     card.append(body);
 
@@ -4408,7 +4483,7 @@ function buildIdentifySheet(sheet, stored, close) {
       // Re-choosing the species the find is already filed under keeps the
       // relative it was identified as; any other species starts as itself.
       relative = chosen && chosen.id === stored.speciesId ? Model.relativeOf(stored, chosen) || '' : '';
-      redraw();
+      redraw({ keepScroll: true });
     });
     return card;
   }
@@ -5383,6 +5458,98 @@ function placeTip(tip, box, { gap = 6, centre = false } = {}) {
   tip.style.top = `${Math.round(Math.max(margin, top))}px`;
 }
 
+/* ---------------------------------------------------------------------------
+ * A photograph, enlarged on hover.
+ *
+ * The candidate list is a column of small squares, which is enough to tell a
+ * bracket from a gilled mushroom and nothing like enough to tell two brown
+ * ones apart. The reference photograph is the thing actually being compared
+ * against the specimen in your hand, and reaching it should not cost a click
+ * into the species record and a click back out to the list.
+ * ------------------------------------------------------------------------- */
+
+// Shorter than the glossary's: a thumbnail is a deliberate target, and this
+// answers "which one is that" rather than explaining a word.
+const SHOT_TIP_DELAY = 220;
+let shotTipTimer = null;
+let shotTipNode = null;
+/*
+ * Which showing is the current one.
+ *
+ * `placeTip` reveals what it places, and the photograph is placed a second
+ * time when it decodes — so without this, a preview dismissed during that wait
+ * comes back by itself a moment later. Bumping the token on every hide and
+ * every new hover is what tells a late arrival that nobody is waiting for it.
+ */
+let shotTipShowing = 0;
+
+function hideShotTip() {
+  clearTimeout(shotTipTimer);
+  shotTipShowing++;
+  if (shotTipNode) shotTipNode.hidden = true;
+}
+
+function showShotTip(src, fallback, anchor, caption) {
+  if (!shotTipNode) {
+    shotTipNode = el('div', 'shot-tip');
+    shotTipNode.hidden = true;
+    document.body.append(shotTipNode);
+  }
+  const tip = clear(shotTipNode);
+  const mine = ++shotTipShowing;
+  const img = el('img');
+  img.src = src;
+  img.alt = '';
+  tip.append(img);
+  if (caption) tip.append(el('div', 'shot-tip-name', caption));
+
+  /*
+   * A record can hold a thumbnail whose full file has gone missing. Falling
+   * back to the preview shows the species rather than an empty frame, and if
+   * that is gone too there is nothing here worth hovering, so the tip stands
+   * down instead of hanging about as a blank rectangle.
+   */
+  img.addEventListener('error', () => {
+    if (mine !== shotTipShowing) return;
+    if (fallback && img.getAttribute('src') !== fallback) { img.src = fallback; return; }
+    hideShotTip();
+  });
+
+  /*
+   * Placed now and again when the photograph lands. Until it has decoded, the
+   * box has no height to speak of, and a tip measured empty is one that
+   * decided it fitted below the cursor when the full picture does not.
+   *
+   * The second placing only counts while this is still the showing on screen:
+   * a cursor moved on, or moved to another thumbnail, has already answered the
+   * question this photograph was being fetched to answer.
+   */
+  const place = () => {
+    if (mine !== shotTipShowing) return;
+    placeTip(tip, anchor.getBoundingClientRect(), { gap: 10, centre: true });
+  };
+  place();
+  img.addEventListener('load', place, { once: true });
+}
+
+/** Arm one thumbnail. Hover to enlarge, anything else to put it away. */
+function armShotTip(node, photo, caption) {
+  // The full file, falling back to the thumbnail: enlarging a thumbnail to
+  // three hundred pixels is still better than nothing, and some records have
+  // only the preview.
+  const src = fullSrc(photo);
+  const preview = thumbSrc(photo);
+  if (!src && !preview) return;
+  node.addEventListener('mouseenter', () => {
+    clearTimeout(shotTipTimer);
+    shotTipTimer = setTimeout(() => showShotTip(src || preview, preview, node, caption), SHOT_TIP_DELAY);
+  });
+  node.addEventListener('mouseleave', hideShotTip);
+  // Choosing a species rebuilds the row under the cursor, and a tip left open
+  // would be anchored to an element no longer in the document.
+  node.addEventListener('click', hideShotTip);
+}
+
 /** Arm one chip. Hover to show, anything else to put it away. */
 function armTagTip(chip, tag) {
   chip.addEventListener('mouseenter', () => {
@@ -5410,9 +5577,14 @@ function tagChip(tag, { onRemove, tip = true } = {}) {
   const chip = el('span', 'tag');
   chip.dataset.category = tag.category;
 
+  // A denial is a claim about what was not there, so it says so in words and
+  // is drawn as struck through. No swatch on one either: a filled dot beside
+  // "no blue" reads as the colour being present, which is the opposite.
+  if (tag.negated) chip.classList.add('is-negated');
+
   // A colour paints a dot of itself; a secondary colour a ring, so the two
   // tiers read apart at a glance while the shade still shows.
-  if (tag.category === 'colour' || tag.category === 'secondary') {
+  if (!tag.negated && (tag.category === 'colour' || tag.category === 'secondary')) {
     const swatch = el('span', 'tag-swatch');
     const paint = Model.tagSwatch(tag.text);
     if (paint) swatch.style.setProperty('--swatch', paint);
@@ -5425,13 +5597,13 @@ function tagChip(tag, { onRemove, tip = true } = {}) {
   // No `title` here: the browser's own tooltip fires on roughly the same delay
   // as the glossary one and lands on top of it, hiding the definition behind
   // the category — which the glossary tooltip already names at its foot.
-  const label = el('span', 'tag-text', tag.text);
+  const label = el('span', 'tag-text', Model.tagLabel(tag));
   chip.append(label);
 
   if (onRemove) {
     const drop = el('button', 'tag-drop', '×');
     drop.type = 'button';
-    drop.setAttribute('aria-label', `Remove ${tag.text}`);
+    drop.setAttribute('aria-label', `Remove ${Model.tagLabel(tag)}`);
     drop.addEventListener('click', onRemove);
     chip.append(drop);
   }
@@ -5511,8 +5683,16 @@ function tagField(spec, value, onChange) {
       const { tags: read, error } = Model.tagsFrom(text, spec);
       if (error) { notice(error); continue; }
       for (const tag of read) {
-        if (tags.some((t) => Model.normalizeTag(t.text) === Model.normalizeTag(tag.text))) continue;
-        tags.push(tag);
+        const at = tags.findIndex((t) => Model.normalizeTag(t.text) === Model.normalizeTag(tag.text));
+        if (at === -1) { tags.push(tag); continue; }
+        /*
+         * The same term twice is nothing to do. The same term with the other
+         * polarity is a correction — you looked again — so it replaces what is
+         * there. Keeping the first would leave the field showing the opposite
+         * of what was just typed, with no sign that anything was ignored.
+         */
+        if (!tags[at].negated === !tag.negated) continue;
+        tags[at] = tag;
       }
     }
     changed();
@@ -5535,17 +5715,23 @@ function tagField(spec, value, onChange) {
   root.append(wrap);
 
   function drawSuggestions() {
-    const groups = tagSuggestions(spec, box.value, tags);
+    // A denial is suggested from the term it denies: typing `!vol` should still
+    // find volva, and picking it keeps the `!` the typing already committed to.
+    const { negated, text: typed } = Model.splitNegation(box.value);
+    const groups = tagSuggestions(spec, typed, tags);
     clear(suggestions);
+    // Whatever Enter is going to refuse, said before it is pressed rather than
+    // after — an oversized size, or a size somebody tried to deny.
+    const refused = Model.tagsFrom(box.value, spec).error;
+    if (refused) {
+      suggestions.append(el('p', 'tag-suggest-empty', refused));
+      return;
+    }
     // A number is a size. There is nothing to suggest for one — every whole
     // centimetre is valid — so the popover shows what Enter will record
-    // instead: the chip it becomes, or the reason it will be refused.
-    const measure = Model.parseMeasure(box.value);
+    // instead: the chip it becomes.
+    const measure = Model.parseMeasure(typed);
     if (measure) {
-      if (measure.error) {
-        suggestions.append(el('p', 'tag-suggest-empty', measure.error));
-        return;
-      }
       const row = el('div', 'tag-suggest-group');
       row.append(el('span', 'tag-suggest-label', spec.measured ? 'Size — press Enter' : 'Size — press Enter (usually recorded under Fruit body, Cap or Stipe)'));
       const chips = el('div', 'tag-list is-static');
@@ -5578,7 +5764,7 @@ function tagField(spec, value, onChange) {
         // handler commits whatever half-typed text is sitting in it.
         chip.addEventListener('mousedown', (ev) => {
           ev.preventDefault();
-          box.value = term.text;
+          box.value = negated ? `!${term.text}` : term.text;
           commit();
           drawSuggestions();
         });

@@ -323,3 +323,112 @@ describe('names and edibility', () => {
     assert.equal(Model.mapLink(null, null), null);
   });
 });
+
+/* ---------------------------------------------------------------------------
+ * Denials: a tag written `!volva` says you looked for the thing and it was not
+ * there. That is a different claim from an untagged character (nobody looked)
+ * and from the N/A tick (there is no such structure at all), and the ranking
+ * has to keep all three apart.
+ * ------------------------------------------------------------------------- */
+describe('denied tags', () => {
+  const stipe = Model.characterSpec('stipe');
+  const withStipe = (tags) => ({ type: 'fungi', characters: { stipe: { na: false, tags } } });
+  const sp = (id, tags) => ({ id, kind: 'fungi', commonName: id, characters: { stipe: { na: false, tags } } });
+  const rank = (obs, list) => Model.rankCandidates(obs, list).rows;
+  const by = (rows, id) => rows.find((r) => r.species.id === id);
+
+  test('a leading ! is read off the text and kept beside the term', () => {
+    assert.deepEqual(Model.readTags('!volva', stipe), [{ text: 'volva', category: 'form', negated: true }]);
+    // The word itself stays clean, so the glossary and the vocabulary still
+    // find it without learning to strip punctuation.
+    assert.equal(Model.readTags('!volva', stipe)[0].text, 'volva');
+    assert.equal(Model.readTags('volva', stipe)[0].negated, undefined);
+    // Whitespace after the mark, and the typographic form, read the same.
+    assert.equal(Model.readTags('! volva', stipe)[0].negated, true);
+    assert.equal(Model.readTags('¬volva', stipe)[0].negated, true);
+  });
+
+  test('the flag survives being stored and read back', () => {
+    const stored = { text: 'volva', category: 'form', negated: true };
+    assert.deepEqual(Model.readTags(stored, stipe), [stored]);
+    // And through a whole character, which re-reads every tag on the way out.
+    const c = Model.character(withStipe([stored]), 'stipe');
+    assert.equal(c.tags.length, 1);
+    assert.equal(c.tags[0].negated, true);
+  });
+
+  test('a denial reads as words, never as punctuation', () => {
+    assert.equal(Model.tagLabel({ text: 'volva', negated: true }), 'no volva');
+    assert.equal(Model.tagLabel({ text: 'volva' }), 'volva');
+  });
+
+  test('a size cannot be denied, and says so rather than dropping the mark', () => {
+    const refused = Model.tagsFrom('!8 cm', stipe);
+    assert.deepEqual(refused.tags, []);
+    assert.match(refused.error, /size cannot be denied/i);
+    // The ordinary size is untouched.
+    assert.equal(Model.tagsFrom('8 cm', stipe).tags[0].text, '8 cm');
+  });
+
+  test('a denial rules out only the species that records the thing denied', () => {
+    const rows = rank(withStipe([{ text: '!volva' }]), [
+      sp('records-it', [{ text: 'volva' }, { text: 'ring' }]),
+      sp('records-other', [{ text: 'ring' }]),
+      { id: 'unwritten', kind: 'fungi', commonName: 'unwritten', characters: {} },
+    ]);
+    assert.equal(by(rows, 'records-it').contradicted, true);
+    // Named in the sentence the card shows, in the library's own wording.
+    assert.equal(by(rows, 'records-it').conflicts[0].reason, 'volva');
+
+    // Silence is not agreement: a species that never mentions a volva is
+    // neither ruled out nor promoted for failing to mention it.
+    const quiet = by(rows, 'records-other');
+    assert.equal(quiet.contradicted, false);
+    assert.equal(quiet.score, 0);
+    assert.equal(quiet.unmatched, 0, 'a denial the library is quiet about is not a miss');
+    assert.equal(by(rows, 'unwritten').contradicted, false);
+  });
+
+  test('a species with no such structure at all is ruled out by the denial', () => {
+    const rows = rank(withStipe([{ text: '!volva' }]), [
+      { id: 'stipeless', kind: 'fungi', commonName: 'stipeless', characters: { stipe: { na: true, tags: [] } } },
+    ]);
+    /*
+     * Denying a feature of a structure says the structure was there to look
+     * at: "no volva" under Stipe is written by someone holding a stipe. A
+     * species that has none is not it. Seeing no stipe at all is the N/A tick,
+     * which is a different thing to say and this field can say it.
+     */
+    assert.equal(by(rows, 'stipeless').contradicted, true);
+    assert.equal(by(rows, 'stipeless').conflicts.length, 1);
+  });
+
+  test('a positive tag still contradicts a species recorded as lacking the structure', () => {
+    const rows = rank(withStipe([{ text: 'volva' }]), [
+      { id: 'stipeless', kind: 'fungi', commonName: 'stipeless', characters: { stipe: { na: true, tags: [] } } },
+    ]);
+    assert.equal(by(rows, 'stipeless').contradicted, true);
+  });
+
+  test('denying and asserting the same term are opposite claims', () => {
+    const denied = rank(withStipe([{ text: '!volva' }]), [sp('a', [{ text: 'volva' }])]);
+    const asserted = rank(withStipe([{ text: 'volva' }]), [sp('a', [{ text: 'volva' }])]);
+    assert.equal(by(denied, 'a').contradicted, true);
+    assert.equal(by(asserted, 'a').contradicted, false);
+    assert.equal(by(asserted, 'a').score, 1);
+  });
+
+  test('a denied body form takes no part in the form-table comparison', () => {
+    // `!bracket` must not be read as "the specimen is a bracket" and rule out
+    // every gilled species, which is what feeding it to the form table would do.
+    const obs = { type: 'fungi', characters: { body: { na: false, tags: [{ text: '!bracket' }] } } };
+    const rows = Model.rankCandidates(obs, [
+      { id: 'gilled', kind: 'fungi', commonName: 'gilled', characters: { body: { na: false, tags: [{ text: 'agaricoid' }] } } },
+    ]).rows;
+    assert.equal(by(rows, 'gilled').contradicted, false);
+  });
+
+  test('a denial counts as a tag that has been written down', () => {
+    assert.equal(Model.observedTagCount(withStipe([{ text: '!volva' }])), 1);
+  });
+});

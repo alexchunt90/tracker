@@ -791,8 +791,33 @@ const Model = (() => {
    * measure is a measure whatever category was stored beside it: the category
    * is a fact about the shape of the text, not a choice.
    */
+  /*
+   * A denial, written with a leading `!`.
+   *
+   * "!volva" is not the absence of a tag — it is a tag, and a stronger claim
+   * than most: you looked at the stipe base for the one feature that separates
+   * an Amanita from everything it is mistaken for, and it was not there. The
+   * N/A tick beside each character cannot say this. That says the whole
+   * structure is missing; this says the structure was there and one named
+   * feature of it was not.
+   *
+   * Stored as a flag beside the term rather than inside the text, so that
+   * everything already keyed on the word — the glossary, the vocabulary, the
+   * colour swatches, termGroup — keeps working on "volva" and does not have to
+   * learn to strip punctuation it has never seen.
+   */
+  const NEGATION = /^\s*(?:!|¬)\s*/;
+  const splitNegation = (text) => {
+    const bare = String(text || '').replace(NEGATION, '').trim();
+    return { negated: NEGATION.test(String(text || '')), text: bare };
+  };
+
   const readTags = (raw, spec) => {
-    const text = String(typeof raw === 'string' ? raw : raw?.text || '').trim();
+    const stored = String(typeof raw === 'string' ? raw : raw?.text || '');
+    const { negated: written, text } = splitNegation(stored);
+    // The flag survives a round-trip whichever way it was written: `!volva`
+    // typed today, or `{ text: 'volva', negated: true }` read back tomorrow.
+    const negated = written || (typeof raw === 'object' && !!raw?.negated);
     if (!text) return [];
     // A size past the limit, stored before there was one, stays a note rather
     // than disappearing: a tag that vanishes on read is a tag nobody can fix.
@@ -801,7 +826,7 @@ const Model = (() => {
     // A stored category is honoured even when the vocabulary disagrees: it was
     // set by hand, and the vocabulary is only ever a guess.
     const category = (typeof raw === 'object' && raw?.category) || classifyTag(text, spec);
-    return [{ text, category }];
+    return [negated ? { text, category, negated: true } : { text, category }];
   };
   const readTag = (raw, spec) => readTags(raw, spec)[0] || { text: '', category: 'note' };
 
@@ -813,10 +838,30 @@ const Model = (() => {
    * field can say so instead of filing it as a note.
    */
   function tagsFrom(text, spec) {
-    const measure = parseMeasure(text);
+    const { negated, text: bare } = splitNegation(text);
+    const measure = parseMeasure(bare);
     if (measure?.error) return { tags: [], error: measure.error };
+    /*
+     * A denied size is refused rather than filed with the `!` quietly dropped,
+     * which would record the opposite of what was typed. There is nothing for
+     * it to mean in any case: a guide's range is typical and not a wall, so a
+     * size outside it already only fails to score rather than ruling anything
+     * out, and "not 8 cm" would rule out nothing at all.
+     */
+    if (negated && measure?.values.length) {
+      return { tags: [], error: 'A size cannot be denied. Record the size you measured instead.' };
+    }
     return { tags: readTags(text, spec), error: null };
   }
+
+  /**
+   * How a tag reads once written down.
+   *
+   * `!` is punctuation you type, not a word anyone reads. Everywhere a tag is
+   * shown — a chip, a removal label, the sentence explaining a contradiction —
+   * a denial says so in words.
+   */
+  const tagLabel = (tag) => (tag?.negated ? `no ${tag.text}` : String(tag?.text ?? ''));
 
   /** Tags with a measure already recorded, so a pasted list cannot double one. */
   const dedupeTags = (tags) => {
@@ -1382,12 +1427,18 @@ const Model = (() => {
     let compared = 0;
 
     for (const spec of FUNGI_CHARACTERS) {
-      const seen = character(observation, spec.id).tags;
-      if (!seen.length) continue;
+      const written = character(observation, spec.id).tags;
+      if (!written.length) continue;
+      // What you saw, and what you looked for and did not see. The two are
+      // read against the library in opposite directions, so they are separated
+      // once here rather than tested for at every turn below.
+      const seen = written.filter((t) => !t.negated);
+      const denied = written.filter((t) => t.negated);
       const known = character(species, spec.id);
 
       // The fruit body is the one character that can rule a species out by
-      // disagreeing rather than by being recorded absent.
+      // disagreeing rather than by being recorded absent. Denials take no part:
+      // "not a bracket" is not a form you saw, and a form table compares forms.
       if (spec.id === 'body' && known.state === 'recorded') {
         const clash = bodyConflict(seen, known.tags);
         if (clash) {
@@ -1398,8 +1449,15 @@ const Model = (() => {
       }
 
       if (known.state === 'absent') {
-        // The specimen has a structure the species is recorded as lacking.
-        for (const tag of seen) conflicts.push({ character: spec, tag, reason: spec.absent });
+        /*
+         * Every tag here is a claim about a structure the species is recorded
+         * as lacking, and a denial is no exception. Writing "no volva" under
+         * Stipe says you had a stipe in front of you and looked at the foot of
+         * it; a species with no stipe at all cannot be what you are holding.
+         * Someone who saw no stipe ticks the character N/A instead, which is
+         * the other thing this field can say and says it precisely.
+         */
+        for (const tag of written) conflicts.push({ character: spec, tag, reason: spec.absent });
         compared += 1;
         continue;
       }
@@ -1430,6 +1488,23 @@ const Model = (() => {
           else unmatched += 1;
         } else if (have.has(termGroup(tag.text))) matched.push({ character: spec, tag });
         else unmatched += 1;
+      }
+
+      /*
+       * A denial rules a species out when the library records the very thing
+       * you looked for and did not find — which is the whole use of it: `!volva`
+       * is what separates an Amanita from the field.
+       *
+       * It cannot do the opposite. A species that never mentions a volva is not
+       * thereby confirmed to lack one, because the library is half-written and
+       * silence is not a claim — the same reason an ordinary tag the species
+       * does not mention is no evidence against it. So a denial the library is
+       * quiet about scores nothing and counts as nothing unmatched: it neither
+       * promotes a species nobody has finished writing up, nor penalises one.
+       */
+      for (const tag of denied) {
+        const clash = known.tags.find((t) => termGroup(t.text) === termGroup(tag.text));
+        if (clash) conflicts.push({ character: spec, tag, reason: clash.text });
       }
     }
 
@@ -1691,7 +1766,7 @@ const Model = (() => {
     findEdibility, edibilityCounts, ageOpacity,
     character, characterValue, characterVocab, nutrition, speciesText,
     matchSpecies, rankCandidates, observedTagCount,
-    classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, readTags, tagsFrom, characterSpec,
+    classifyTag, tagSwatch, tagCategory, normalizeTag, readTag, readTags, tagsFrom, tagLabel, splitNegation, characterSpec,
     MEASURE_MAX_CM, parseMeasure, measureText, measureOf, measureRange, withinRange, displayTags,
     bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup, queryGroups,
     byId, view, viewAll, displayName, relativeOf,

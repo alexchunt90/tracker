@@ -308,6 +308,17 @@ const MapView = (() => {
       // Panning rebuilds every marker, so a hover left open would point at an
       // element that is no longer in the document.
       onHover?.(null);
+      /*
+       * A finger captured by a pin is handed back to the map before that pin
+       * is destroyed. A capture released by its element leaving the document
+       * takes the rest of the pointer's events with it, and the pointerup that
+       * clears `down` would be the one that went missing — the wedged map the
+       * capture exists to prevent.
+       */
+      for (const id of down.keys()) {
+        if (node.hasPointerCapture(id)) continue;
+        try { node.setPointerCapture(id); } catch { /* already gone */ }
+      }
       pinLayer.innerHTML = '';
 
       // Draw the user's own pins last so they sit above the crowd-sourced ones
@@ -455,6 +466,7 @@ const MapView = (() => {
 
     node.addEventListener('pointerdown', (ev) => {
       if (ev.target.closest('.map-controls')) return;
+      const pin = ev.target.closest('.map-pin');
       /*
        * Every finger is captured, not just the first.
        *
@@ -463,11 +475,18 @@ const MapView = (() => {
        * pointerup here, and the entry sits in `down` forever. One stale finger
        * makes the map think two are still on it, and pinch and pan both wedge
        * until the page is reloaded.
+       *
+       * A press that starts on a pin is captured by the pin rather than by the
+       * map. Holding a capture also retargets the click that follows it, so
+       * taking every one of them here quietly ate each pin's own click and a
+       * find could only ever be hovered, never opened. A pin sits inside the
+       * map, so its pointerup still bubbles to the handlers below and no
+       * finger is any likelier to go missing.
        */
-      try { node.setPointerCapture(ev.pointerId); } catch { /* already gone */ }
+      try { (pin || node).setPointerCapture(ev.pointerId); } catch { /* already gone */ }
       down.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (down.size === 2) { startPinch(); return; }
-      if (down.size > 2 || ev.target.closest('.map-pin')) return;
+      if (down.size > 2 || pin) return;
       drag = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, moved: false };
       node.classList.add('is-dragging');
     });
