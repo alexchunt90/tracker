@@ -67,9 +67,10 @@ const MAX_BODY_BYTES = 4 * 1024 * 1024;
 // would stop a bigger one anyway; this makes the refusal say why.
 const MAX_BATCH = 500;
 
-// A photo uploaded from a form that was never submitted has nothing pointing at
-// it, and would be pruned the moment anything else saved. This is the grace
-// period before an unreferenced file is considered abandoned.
+// How long a file may sit with nothing pointing at it before it is considered
+// abandoned. Two things need the room: a photo uploaded into a form that was
+// never submitted, and a photo taken off a record by someone who is about to
+// put it back.
 const ORPHAN_GRACE_MS = 6 * 60 * 60 * 1000;
 
 // Outside services are asked to identify the caller, and iNaturalist's terms
@@ -167,6 +168,25 @@ async function loadPhoto(name) {
   return remote;
 }
 
+/*
+ * When each unreferenced file was first seen with nothing pointing at it.
+ *
+ * The grace period used to be counted from the file's own timestamp, which
+ * gave the room to a photograph uploaded minutes ago and to nothing else. A
+ * photograph that had been on a record for a day was orphaned and swept in the
+ * same second the record let go of it — so taking a photograph off a record
+ * and putting it straight back left the record pointing at bytes that no
+ * longer existed. That is what happened to the blue chanterelle: removed at
+ * 23:55:34, swept at 23:55:35, restored to the record at 23:55:54, and only
+ * the reference came back.
+ *
+ * Counting from the moment a file loses its last reference gives both cases
+ * the same six hours. Held in memory rather than stored: a restart forgets,
+ * and forgetting only postpones a deletion, which costs disk rather than
+ * photographs.
+ */
+const orphanedSince = new Map();
+
 /**
  * Delete stored photos nothing points at any more.
  *
@@ -184,19 +204,27 @@ async function pruneOrphanPhotos() {
     const keep = referencedPhotos(observations, species);
     const now = Date.now();
 
-    for (const { name, modified } of await store.listPhotos()) {
-      if (!PHOTO_NAME.test(name) || keep.has(name)) continue;
-      // Young and unreferenced means "sitting in a form that has not been
-      // submitted yet", not "abandoned".
-      if (now - modified < ORPHAN_GRACE_MS) continue;
+    const listed = (await store.listPhotos()).filter(({ name }) => PHOTO_NAME.test(name));
+    const stored = new Set(listed.map(({ name }) => name));
+
+    for (const { name } of listed) {
+      if (keep.has(name)) { orphanedSince.delete(name); continue; }
+      if (!orphanedSince.has(name)) orphanedSince.set(name, now);
+      if (now - orphanedSince.get(name) < ORPHAN_GRACE_MS) continue;
       await store.deletePhoto(name);
+      orphanedSince.delete(name);
     }
+    // A file that is gone starts its clock again if it ever comes back.
+    for (const name of orphanedSince.keys()) if (!stored.has(name)) orphanedSince.delete(name);
 
     /*
-     * The local cache is swept on the same rule but without the grace period:
-     * a cached copy of something no record points at is dead weight, and
-     * deleting it loses nothing — the bucket still holds the photograph, and
-     * on a versioned bucket it holds the deleted ones too.
+     * The local cache is swept on the same rule, and only for files the bucket
+     * still holds: then deleting the cached copy loses nothing.
+     *
+     * It used to sweep whatever was unreferenced, on the reasoning that the
+     * bucket had the photograph anyway. When the bucket has already lost it,
+     * the cached copy is the only one left — and it was the local cache that
+     * the blue chanterelle's photographs were eventually recovered from.
      */
     if (store.kind !== 'file') {
       const cached = await fsp.readdir(PHOTO_DIR).catch((err) => {
@@ -204,7 +232,7 @@ async function pruneOrphanPhotos() {
         throw err;
       });
       for (const name of cached) {
-        if (!PHOTO_NAME.test(name) || keep.has(name)) continue;
+        if (!PHOTO_NAME.test(name) || keep.has(name) || !stored.has(name)) continue;
         await fsp.unlink(path.join(PHOTO_DIR, name)).catch(() => {});
       }
     }

@@ -348,6 +348,37 @@ test('a photograph goes in as bytes and comes back immutable, by its minted name
   assert.equal(empty.status, 400);
 });
 
+test('a photograph taken off a record and put back keeps its bytes', async () => {
+  const up = await call('POST', '/api/photos', new Uint8Array(PNG), { 'Content-Type': 'image/png' });
+  const shot = { file: up.payload.file, thumb: up.payload.file, name: 'a.png', mime: 'image/png', bytes: PNG.length };
+  const id = 'test-unlink';
+  const find = (version, photos) => call('PUT', `/api/observations/${id}`,
+    { id, version, type: 'fungi', speciesId: null, confidence: 'high', characters: {},
+      observedAt: '2025-10-03T09:00', lat: null, lon: null, photos });
+
+  assert.equal((await find(0, [shot])).status, 200);
+
+  /*
+   * Age the file past the grace period. The sweep used to count that period
+   * from the file's own timestamp, so an established photograph was swept the
+   * instant its record let go of it — and putting it back a moment later
+   * restored the reference to bytes that were already gone.
+   */
+  const onDisk = path.join(stateDir, 'photos', up.payload.file);
+  const old = new Date(Date.now() - 7 * 60 * 60 * 1000);
+  await fsp.utimes(onDisk, old, old);
+
+  // Off the record, then straight back on — two saves, two sweeps.
+  assert.equal((await find(1, [])).status, 200);
+  assert.equal((await find(2, [shot])).status, 200);
+
+  const down = await call('GET', `/photos/${up.payload.file}`);
+  assert.equal(down.status, 200, 'the photograph should survive being removed and restored');
+  assert.ok(Buffer.from(down.payload).equals(PNG));
+
+  await call('DELETE', `/api/observations/${id}`);
+});
+
 // --- upstream routes, as far as their validation ---------------------------
 
 test('tile coordinates are bounds-checked before they become a path', async () => {
