@@ -3807,8 +3807,14 @@ function photoViewer(photos, onSelect) {
   return wrap;
 }
 
-/** What the camera recorded, as opposed to what the log says. */
-function photoFacts(photo) {
+/**
+ * What the camera recorded, as opposed to what the log says.
+ *
+ * Given `onAdopt`, the position reads as something you can act on rather than
+ * only read: it says whether the pin is standing on this photograph, and
+ * offers to move it here if it is not.
+ */
+function photoFacts(photo, { onAdopt, current } = {}) {
   const list = el('dl', 'facts');
   const add = (term, value, { mono } = {}) => {
     if (value == null || value === '') return;
@@ -3835,7 +3841,31 @@ function photoFacts(photo) {
     anchor.href = link;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
-    add('Camera position', anchor, { mono: true });
+    const where = el('div', 'fact-where');
+    where.append(anchor);
+    /*
+     * A find keeps the fix of whichever photograph was adopted first, so a
+     * record shot from two spots holds one position while the viewer shows
+     * another — far enough apart, on a steep trail, to put the pin on the
+     * wrong side of it. Saying which photograph the pin stands on is what
+     * makes that visible at all; the button is the one-off correction.
+     *
+     * Coordinates are carried across at full stored precision. The line above
+     * is rounded for reading, and adopting what it displays would move the
+     * find by metres of its own accord.
+     */
+    if (onAdopt) {
+      if (current && current.lat === photo.lat && current.lon === photo.lon) {
+        where.append(el('div', 'fact-note', 'The find is placed here'));
+      } else {
+        const use = el('button', 'fact-action', 'Place the find here');
+        use.type = 'button';
+        use.title = 'Move this find to the spot this photograph was taken from';
+        use.addEventListener('click', () => onAdopt(photo));
+        where.append(use);
+      }
+    }
+    add('Camera position', where, { mono: true });
   } else {
     add('Camera position', photo.hasExif ? 'not recorded' : 'no EXIF');
   }
@@ -3876,12 +3906,13 @@ function buildObservationSheet(sheet, stored, close) {
   head.sub.after(entryLink);
 
   // --- photographs
+  //
+  // Built here so it keeps its place at the top of the sheet, but not wired up
+  // until the coordinate fields exist further down: the viewer shows its first
+  // photograph the moment it is handed one, and the facts panel that answers
+  // it needs somewhere to write.
   const shown = sheetSection(sheet);
   const factsHolder = el('div');
-  shown.append(photoViewer(row.photos || [], (photo) => {
-    clear(factsHolder).append(photoFacts(photo));
-  }));
-  if (!(row.photos || []).length) clear(factsHolder).append(photoFacts(null));
 
   // --- the record
   const editor = sheetSection(sheet, 'The record');
@@ -4069,6 +4100,34 @@ function buildObservationSheet(sheet, stored, close) {
   };
 
   sync();
+
+  /*
+   * The photographs, now that there is something for them to write into.
+   *
+   * `adoptMetadata` fills a blank find from the first placed photograph and
+   * then leaves it alone, so that a typed correction survives dropping a
+   * second photograph in. The cost is that a record whose shots were taken
+   * from different spots keeps the first fix for good, and the only way back
+   * was to read six decimal places off the panel below and retype them. This
+   * is that correction, done in one click and without the transcription.
+   */
+  let shownPhoto = null;
+  const paintFacts = () => {
+    clear(factsHolder).append(photoFacts(shownPhoto, {
+      current: { lat: coordValue(latPick.value, 90), lon: coordValue(lonPick.value, 180) },
+      onAdopt: (photo) => {
+        latPick.value = photo.lat;
+        lonPick.value = photo.lon;
+        markDirty();
+        paintFacts();
+      },
+    }));
+  };
+  // Typing in the fields by hand changes the answer to "is the pin here", so
+  // the panel has to follow them and not only its own button.
+  for (const pick of [latPick, lonPick]) pick.addEventListener('input', paintFacts);
+  shown.append(photoViewer(row.photos || [], (photo) => { shownPhoto = photo; paintFacts(); }));
+  if (!(row.photos || []).length) paintFacts();
 
   // --- photographs, editable
   const tray = makeTray({
