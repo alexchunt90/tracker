@@ -1315,6 +1315,25 @@ button.tag-text:hover { text-decoration: underline dotted; }
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn);
 }
 
+/* A reference photograph enlarged from a thumbnail. The same family as the pin
+   tooltip, and for the same reason: on a list of brown mushrooms the picture is
+   the identifying thing, and a thumbnail is not enough of it to decide on. */
+.shot-tip {
+  position: fixed; z-index: 150; pointer-events: none;
+  width: 320px; padding: 0; overflow: hidden;
+  background: var(--card-raised); color: var(--ink);
+  border: 1px solid var(--accent-dim); border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+.shot-tip[hidden] { display: none; }
+/* Contained, not cropped: a lookalike is often told by its stem or its margin,
+   and a square crop is exactly what removes those. */
+.shot-tip img {
+  display: block; width: 100%; height: auto; max-height: 360px;
+  object-fit: contain; background: var(--card-sunk);
+}
+.shot-tip-name { padding: 7px 10px 8px; font-size: 13px; line-height: 1.25; }
+
 /* --- the full-size photograph ------------------------------------------- */
 /* Above the sheet, which is already above the page: a photograph opened for a
    closer look must not be behind the thing it was opened from. */

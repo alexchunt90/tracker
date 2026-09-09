@@ -4390,6 +4390,9 @@ function buildIdentifySheet(sheet, stored, close) {
     const ruledOut = rows.filter((m) => m.contradicted);
     const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
 
+    // Every row is rebuilt here, so a preview left open would be anchored to a
+    // thumbnail that is no longer in the document.
+    hideShotTip();
     const wasAt = candScroll.scrollTop;
     clear(candList);
     for (const match of candidates) candList.append(candidateRow(match));
@@ -4436,13 +4439,15 @@ function buildIdentifySheet(sheet, stored, close) {
     if (chosen && chosen.id === sp.id) card.classList.add('is-chosen');
 
     const shot = el('div', 'candidate-shot');
-    const src = thumbSrc(coverOf(sp));
+    const cover = coverOf(sp);
+    const src = thumbSrc(cover);
     if (src) {
       const img = el('img');
       img.src = src;
       img.alt = '';
       img.loading = 'lazy';
       shot.append(img);
+      armShotTip(shot, cover, sp.commonName || sp.scientificName || 'Unnamed');
     } else {
       shot.append(el('span', 'no-preview', Model.typeGlyph(sp.kind)));
     }
@@ -5450,6 +5455,98 @@ function placeTip(tip, box, { gap = 6, centre = false } = {}) {
   if (top + size.height > window.innerHeight - margin) top = box.top - size.height - gap;
   tip.style.left = `${Math.round(left)}px`;
   tip.style.top = `${Math.round(Math.max(margin, top))}px`;
+}
+
+/* ---------------------------------------------------------------------------
+ * A photograph, enlarged on hover.
+ *
+ * The candidate list is a column of small squares, which is enough to tell a
+ * bracket from a gilled mushroom and nothing like enough to tell two brown
+ * ones apart. The reference photograph is the thing actually being compared
+ * against the specimen in your hand, and reaching it should not cost a click
+ * into the species record and a click back out to the list.
+ * ------------------------------------------------------------------------- */
+
+// Shorter than the glossary's: a thumbnail is a deliberate target, and this
+// answers "which one is that" rather than explaining a word.
+const SHOT_TIP_DELAY = 220;
+let shotTipTimer = null;
+let shotTipNode = null;
+/*
+ * Which showing is the current one.
+ *
+ * `placeTip` reveals what it places, and the photograph is placed a second
+ * time when it decodes — so without this, a preview dismissed during that wait
+ * comes back by itself a moment later. Bumping the token on every hide and
+ * every new hover is what tells a late arrival that nobody is waiting for it.
+ */
+let shotTipShowing = 0;
+
+function hideShotTip() {
+  clearTimeout(shotTipTimer);
+  shotTipShowing++;
+  if (shotTipNode) shotTipNode.hidden = true;
+}
+
+function showShotTip(src, fallback, anchor, caption) {
+  if (!shotTipNode) {
+    shotTipNode = el('div', 'shot-tip');
+    shotTipNode.hidden = true;
+    document.body.append(shotTipNode);
+  }
+  const tip = clear(shotTipNode);
+  const mine = ++shotTipShowing;
+  const img = el('img');
+  img.src = src;
+  img.alt = '';
+  tip.append(img);
+  if (caption) tip.append(el('div', 'shot-tip-name', caption));
+
+  /*
+   * A record can hold a thumbnail whose full file has gone missing. Falling
+   * back to the preview shows the species rather than an empty frame, and if
+   * that is gone too there is nothing here worth hovering, so the tip stands
+   * down instead of hanging about as a blank rectangle.
+   */
+  img.addEventListener('error', () => {
+    if (mine !== shotTipShowing) return;
+    if (fallback && img.getAttribute('src') !== fallback) { img.src = fallback; return; }
+    hideShotTip();
+  });
+
+  /*
+   * Placed now and again when the photograph lands. Until it has decoded, the
+   * box has no height to speak of, and a tip measured empty is one that
+   * decided it fitted below the cursor when the full picture does not.
+   *
+   * The second placing only counts while this is still the showing on screen:
+   * a cursor moved on, or moved to another thumbnail, has already answered the
+   * question this photograph was being fetched to answer.
+   */
+  const place = () => {
+    if (mine !== shotTipShowing) return;
+    placeTip(tip, anchor.getBoundingClientRect(), { gap: 10, centre: true });
+  };
+  place();
+  img.addEventListener('load', place, { once: true });
+}
+
+/** Arm one thumbnail. Hover to enlarge, anything else to put it away. */
+function armShotTip(node, photo, caption) {
+  // The full file, falling back to the thumbnail: enlarging a thumbnail to
+  // three hundred pixels is still better than nothing, and some records have
+  // only the preview.
+  const src = fullSrc(photo);
+  const preview = thumbSrc(photo);
+  if (!src && !preview) return;
+  node.addEventListener('mouseenter', () => {
+    clearTimeout(shotTipTimer);
+    shotTipTimer = setTimeout(() => showShotTip(src || preview, preview, node, caption), SHOT_TIP_DELAY);
+  });
+  node.addEventListener('mouseleave', hideShotTip);
+  // Choosing a species rebuilds the row under the cursor, and a tip left open
+  // would be anchored to an element no longer in the document.
+  node.addEventListener('click', hideShotTip);
 }
 
 /** Arm one chip. Hover to show, anything else to put it away. */
