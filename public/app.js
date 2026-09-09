@@ -432,35 +432,66 @@ const sameRoute = (a, b) =>
   (a?.kind ?? null) === (b?.kind ?? null) && (a?.id ?? null) === (b?.id ?? null);
 
 /**
- * Both routing facts in one URL, so neither can drop the other on the way
- * past. The default mode stays out of it — `?view=species&mode=finds` says
- * nothing you could not have guessed.
+ * The URL for a place in the app, described plainly: which tab, which record
+ * is open on it, what the library is filtered to. The default mode stays out
+ * of it — `?view=species&mode=finds` says nothing you could not have guessed.
+ *
+ * Both routing facts go in one URL, so neither can drop the other on the way
+ * past. At most one record is ever open, so both record keys are cleared
+ * before the one that applies is set — otherwise a species link would still
+ * carry the find you were looking at a moment ago.
  */
-function routeUrl() {
+function urlFor({ view = 'log', mode = 'finds', tag = '', trend = '', open = null } = {}) {
   const url = new URL(location.href);
-  url.searchParams.set('view', state.view);
-  if (state.mode === 'finds') url.searchParams.delete('mode');
-  else url.searchParams.set('mode', state.mode);
+  url.searchParams.set('view', view);
+  if (mode === 'finds') url.searchParams.delete('mode');
+  else url.searchParams.set('mode', mode);
   // Only meaningful on the Species view, and only when set.
-  if (state.view === 'species' && state.speciesFilters.tag) {
-    url.searchParams.set('tag', state.speciesFilters.tag);
-  } else {
-    url.searchParams.delete('tag');
-  }
+  if (view === 'species' && tag) url.searchParams.set('tag', tag);
+  else url.searchParams.delete('tag');
   // Likewise the species the Trends view is on.
-  if (state.view === 'trends' && state.trends.speciesId) {
-    url.searchParams.set('trend', state.trends.speciesId);
-  } else {
-    url.searchParams.delete('trend');
-  }
-  // At most one record is ever open, so both keys are cleared before the one
-  // that applies is set — otherwise a species link would still carry the find
-  // you were looking at a moment ago.
+  if (view === 'trends' && trend) url.searchParams.set('trend', trend);
+  else url.searchParams.delete('trend');
   url.searchParams.delete('find');
   url.searchParams.delete('species');
-  if (state.open) url.searchParams.set(state.open.kind, state.open.id);
+  if (open) url.searchParams.set(open.kind, open.id);
   return url;
 }
+
+/** Where the app is right now, as the address bar should state it. */
+function routeUrl() {
+  return urlFor({
+    view: state.view, mode: state.mode, open: state.open,
+    tag: state.speciesFilters.tag, trend: state.trends.speciesId,
+  });
+}
+
+/**
+ * A click the page should answer itself. One with a modifier held, or from
+ * any button but the main one, is the browser's: that is how a link gets
+ * opened in a new tab, and stepping in front of it would take that away.
+ */
+const plainClick = (ev) =>
+  ev.button === 0 && !ev.metaKey && !ev.ctrlKey && !ev.shiftKey && !ev.altKey;
+
+/**
+ * A link into the app. It carries a real href, so a ⌘-click, a middle click
+ * or "open in new tab" has somewhere to go; a plain click stays on the page
+ * and takes the same in-app route every button here does.
+ */
+function pageLink(url, go, cls, text) {
+  const link = el('a', cls, text);
+  link.href = String(url);
+  link.addEventListener('click', (ev) => {
+    if (!plainClick(ev)) return;
+    ev.preventDefault();
+    go();
+  });
+  return link;
+}
+
+/** A species record, on the library it belongs to. */
+const speciesUrl = (id) => urlFor({ view: 'species', open: { kind: 'species', id } });
 
 const routeState = () => ({ view: state.view, mode: state.mode, open: state.open });
 
@@ -3300,7 +3331,9 @@ function renderSpeciesTable(life) {
      */
     const names = el('div', 'sp-names');
     const nameLine = el('div', 'sp-name');
-    nameLine.append(document.createTextNode(sp.displayName));
+    // The whole row opens the record; the name is also a link, so it can be
+    // opened in a new tab.
+    nameLine.append(pageLink(speciesUrl(sp.id), () => openSpeciesSheet(sp.id), 'sp-name-link', sp.displayName));
     /*
      * A tick for a species you have actually met.
      *
@@ -3330,7 +3363,12 @@ function renderSpeciesTable(life) {
     tr.append(cell(sp.habitat || el('span', 'muted', '—'), 'is-wide'));
     tr.append(cell(String(sp.count), 'r nowrap is-wide'));
     tr.append(cell(sp.last ? fmtDate(sp.last) : el('span', 'muted', 'never'), 'nowrap is-wide'));
-    tr.addEventListener('click', () => openSpeciesSheet(sp.id));
+    tr.addEventListener('click', (ev) => {
+      // The name link has already answered, or handed a modified click to
+      // the browser — either way the row must not open the sheet as well.
+      if (ev.target.closest('a')) return;
+      openSpeciesSheet(sp.id);
+    });
     body.append(tr);
   }
 }
@@ -4528,7 +4566,18 @@ function buildIdentifySheet(sheet, stored, close) {
 
     const facts = el('div', 'chosen-facts');
     const chosenHead = el('div', 'chosen-head');
-    chosenHead.append(el('h4', 'chosen-name', sp.commonName || sp.scientificName || 'Unnamed'));
+    const name = el('h4', 'chosen-name');
+    // The name is the way through to the record itself — every find of it,
+    // the excerpts, the photographs past the first three. A plain click
+    // builds over this sheet, so an unsaved identification gets to object;
+    // a ⌘-click opens it alongside and leaves the tags where they are.
+    name.append(pageLink(speciesUrl(sp.id), () => {
+      if (state.sheetDirty && !confirm('Discard unsaved changes?')) return;
+      state.sheetDirty = false;
+      openSpeciesSheet(sp.id);
+    }, 'chosen-name-link', sp.commonName || sp.scientificName || 'Unnamed'));
+    name.title = 'Read the species entry';
+    chosenHead.append(name);
     if (sp.edibility && sp.edibility !== 'unknown') chosenHead.append(edibleBadge(sp.edibility));
     facts.append(chosenHead);
     const sci = sciLine(sp.commonName || sp.scientificName, sp.scientificName, 'chosen-sci sci');
@@ -4908,10 +4957,9 @@ function glossaryRow(t) {
   const useCell = el('td', 'r gl-uses');
   if (t.uses) {
     // The count is the question "which ones?" — so it answers it.
-    const link = el('button', 'uses-link', String(t.uses));
-    link.type = 'button';
+    const link = pageLink(urlFor({ view: 'species', tag: t.term }), () => setSpeciesTag(t.term),
+      'uses-link', String(t.uses));
     link.title = `Show the species tagged “${t.term}”`;
-    link.addEventListener('click', () => setSpeciesTag(t.term));
     useCell.append(link);
   } else {
     useCell.append(document.createTextNode('0'));
@@ -4933,11 +4981,30 @@ function glossaryRow(t) {
   return tr;
 }
 
-async function saveGlossary(terms) {
-  const next = { ...state.glossary, terms };
+/**
+ * Save one edit to the glossary. `change` takes a copy of the terms and
+ * returns them edited — a function rather than the result, because the edit
+ * may have to be made twice.
+ *
+ * The glossary is one document with one version, so a second tab that has
+ * only touched a different term is refused all the same. Rather than throw
+ * its edit away, the refusal carries the stored copy, and the edit is
+ * replayed on top of that and saved again. Only an edit to the very term the
+ * other tab changed is a real conflict, and that one still gets the notice.
+ */
+async function saveGlossary(change) {
+  const put = (held) => request('api/glossary', 'PUT', { ...held, terms: change({ ...held.terms }) });
   status('saving…');
   try {
-    const payload = await request('api/glossary', 'PUT', next);
+    let payload;
+    try {
+      payload = await put(state.glossary);
+    } catch (err) {
+      const theirs = err.status === 409 ? err.payload?.glossary : null;
+      const rebased = theirs && Model.rebaseTerms(state.glossary.terms, change, theirs.terms || {});
+      if (!rebased) throw err;
+      payload = await request('api/glossary', 'PUT', { ...theirs, terms: rebased });
+    }
     state.glossary = payload.glossary;
     Model.applyGlossary(state.glossary);
     notice('');
@@ -4978,20 +5045,21 @@ function pruneTerm(terms, term) {
  * kept only when it differs from what the tables would have said.
  */
 function setTermCategory(term, category, primary) {
-  const terms = { ...state.glossary.terms };
-  const entry = { ...(terms[term] || {}) };
-  const secondary = category === 'secondary';
-  const guessed = category === Model.guessCategory(term, null)
-    && (!secondary || primary === Model.guessPrimary(term));
-  if (guessed) { delete entry.category; delete entry.primary; }
-  else {
-    entry.category = category;
-    if (secondary && primary) entry.primary = primary;
-    else delete entry.primary;
-  }
-  terms[term] = entry;
-  pruneTerm(terms, term);
-  saveGlossary(terms);
+  saveGlossary((terms) => {
+    const entry = { ...(terms[term] || {}) };
+    const secondary = category === 'secondary';
+    const guessed = category === Model.guessCategory(term, null)
+      && (!secondary || primary === Model.guessPrimary(term));
+    if (guessed) { delete entry.category; delete entry.primary; }
+    else {
+      entry.category = category;
+      if (secondary && primary) entry.primary = primary;
+      else delete entry.primary;
+    }
+    terms[term] = entry;
+    pruneTerm(terms, term);
+    return terms;
+  });
 }
 
 /**
@@ -5002,21 +5070,23 @@ function setTermCategory(term, category, primary) {
  */
 function setTermSameAs(term, sameAs) {
   const target = Model.normalizeTag(sameAs);
-  const terms = { ...state.glossary.terms };
-  const entry = { ...(terms[term] || {}) };
-  if (!target || target === Model.normalizeTag(term)) delete entry.sameAs;
-  else entry.sameAs = target;
-  terms[term] = entry;
-  pruneTerm(terms, term);
-  saveGlossary(terms);
+  saveGlossary((terms) => {
+    const entry = { ...(terms[term] || {}) };
+    if (!target || target === Model.normalizeTag(term)) delete entry.sameAs;
+    else entry.sameAs = target;
+    terms[term] = entry;
+    pruneTerm(terms, term);
+    return terms;
+  });
 }
 
 function setTermDefinition(term, definition) {
-  const terms = { ...state.glossary.terms };
-  terms[term] = { ...(terms[term] || {}), definition: definition.trim() };
-  if (!terms[term].definition) delete terms[term].definition;
-  pruneTerm(terms, term);
-  saveGlossary(terms);
+  saveGlossary((terms) => {
+    terms[term] = { ...(terms[term] || {}), definition: definition.trim() };
+    if (!terms[term].definition) delete terms[term].definition;
+    pruneTerm(terms, term);
+    return terms;
+  });
 }
 
 /**
@@ -5030,16 +5100,17 @@ function setTermDefinition(term, definition) {
 function addTerm(text, category, primary) {
   const term = Model.normalizeTag(text);
   if (!term) return false;
-  const terms = { ...state.glossary.terms };
-  const entry = { ...(terms[term] || {}), added: true };
-  // A redundant override is not stored, for the same reason it is not stored
-  // when set from a row: it would freeze the term against the word lists.
-  if (category && category !== Model.guessCategory(term, null)) {
-    entry.category = category;
-    if (category === 'secondary' && primary) entry.primary = primary;
-  }
-  terms[term] = entry;
-  saveGlossary(terms);
+  saveGlossary((terms) => {
+    const entry = { ...(terms[term] || {}), added: true };
+    // A redundant override is not stored, for the same reason it is not stored
+    // when set from a row: it would freeze the term against the word lists.
+    if (category && category !== Model.guessCategory(term, null)) {
+      entry.category = category;
+      if (category === 'secondary' && primary) entry.primary = primary;
+    }
+    terms[term] = entry;
+    return terms;
+  });
   return true;
 }
 
@@ -5059,9 +5130,7 @@ function deleteTerm(t) {
     ? `“${t.term}” is tagged on ${plural(t.uses, 'record')}, so it will stay in the list. Clear its definition and category?`
     : `Remove “${t.term}” from the glossary?`;
   if (!confirm(question)) return;
-  const terms = { ...state.glossary.terms };
-  delete terms[t.term];
-  saveGlossary(terms);
+  saveGlossary((terms) => { delete terms[t.term]; return terms; });
 }
 
 // --- the species sheet ------------------------------------------------------
@@ -6005,8 +6074,13 @@ function nameListEditor(initial, placeholder, { decorate } = {}) {
 // --- wiring -----------------------------------------------------------------
 
 function wire() {
+  // Real links, so a tab can be opened in a new tab; a plain click stays put.
   for (const tab of document.querySelectorAll('.tab')) {
-    tab.addEventListener('click', () => setView(tab.dataset.view));
+    tab.addEventListener('click', (ev) => {
+      if (!plainClick(ev)) return;
+      ev.preventDefault();
+      setView(tab.dataset.view);
+    });
   }
   window.addEventListener('popstate', () => {
     // Set these first: setView renders, and would otherwise draw the old ones.
