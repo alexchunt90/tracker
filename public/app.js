@@ -4364,7 +4364,16 @@ function buildIdentifySheet(sheet, stored, close) {
     markDirty();
   }
 
-  function redraw() {
+  /*
+   * `keepScroll` when nothing about the order changed.
+   *
+   * A new tag reranks the list, so the box goes back to the top: the best
+   * match is the first row and leaving the box where it was hides it. Picking
+   * a species reranks nothing — it moves a highlight — and a list of four
+   * hundred names that jumps to the top every time you choose one throws away
+   * the scrolling it took to reach the choice.
+   */
+  function redraw({ keepScroll = false } = {}) {
     const { rows, anyTags, pool } = Model.rankCandidates(draftObs, state.species);
     const tagCount = Model.observedTagCount(draftObs);
 
@@ -4381,15 +4390,16 @@ function buildIdentifySheet(sheet, stored, close) {
     const ruledOut = rows.filter((m) => m.contradicted);
     const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
 
+    const wasAt = candScroll.scrollTop;
     clear(candList);
     for (const match of candidates) candList.append(candidateRow(match));
     if (!candidates.length) {
       candList.append(el('div', 'empty-state',
         rows.length ? 'Every species is ruled out by these tags.' : 'No species of this type on file yet.'));
     }
-    // Scrolled back to the top: after a new tag the best match is the first
-    // row, and leaving the box where it was hides it.
-    candScroll.scrollTop = 0;
+    // Written either way: emptying the box can clamp the scroll to nothing by
+    // itself, so holding a position means putting it back, not leaving it be.
+    candScroll.scrollTop = keepScroll ? wasAt : 0;
 
     clear(candFoot);
     if (ruledOut.length) {
@@ -4467,7 +4477,7 @@ function buildIdentifySheet(sheet, stored, close) {
       // Re-choosing the species the find is already filed under keeps the
       // relative it was identified as; any other species starts as itself.
       relative = chosen && chosen.id === stored.speciesId ? Model.relativeOf(stored, chosen) || '' : '';
-      redraw();
+      redraw({ keepScroll: true });
     });
     return card;
   }
