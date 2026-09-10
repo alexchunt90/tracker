@@ -98,6 +98,18 @@ function fmtWhen(value, { time = true } = {}) {
 const fmtDate = (value) => fmtWhen(value, { time: false });
 
 /**
+ * "Nov 9 – Nov 24 2025", or "Dec 2 2024 – Mar 3 2025" across a year end, or
+ * a single date when the two ends are the same day.
+ */
+function fmtRange(from, to) {
+  if (!from || !to || from === to) return fmtDate(from || to);
+  const [y1, m1, d1] = String(from).split('-');
+  const [y2] = String(to).split('-');
+  const start = y1 === y2 ? `${MONTHS[Number(m1) - 1] || '?'} ${Number(d1)}` : fmtDate(from);
+  return `${start} \u2013 ${fmtDate(to)}`;
+}
+
+/**
  * "1 find" / "2 finds". `many` is for anything that does not just take an -s;
  * a word that already ends in one is assumed to be its own plural, which is
  * what stops "species" becoming "speciess".
@@ -1363,13 +1375,39 @@ function wireDropdown(wrap, button, menu) {
 
 // --- gallery ----------------------------------------------------------------
 
+/*
+ * The finds in outings, not in one long grid.
+ *
+ * A day with more than five finds is a foray, and gets a heading of its own;
+ * the weeks between forays are one heading with a date range. See
+ * `Model.groupFinds` for the rule. A log that falls into a single group is
+ * drawn without a heading at all — a heading that names the whole log
+ * explains nothing.
+ */
 function renderGallery(shown, rows) {
-  const gallery = clear($('finds-gallery'));
+  const pane = clear($('finds-gallery'));
   if (!shown.length) {
-    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find below.'));
+    pane.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find below.'));
     return;
   }
-  for (const row of shown) gallery.append(findCard(row));
+  const groups = Model.groupFinds(shown, { log: rows });
+  for (const group of groups) {
+    const section = el('section', 'gallery-group');
+    if (groups.length > 1) {
+      const head = el('div', 'gallery-group-head');
+      const label = group.kind === 'undated' ? 'Undated' : fmtRange(group.from, group.to);
+      head.append(el('h3', 'eyebrow', label));
+      head.append(el('span', 'gallery-group-note',
+        group.kind === 'between' && group.from !== group.to
+          ? `${plural(group.rows.length, 'find')} here and there`
+          : plural(group.rows.length, 'find')));
+      section.append(head);
+    }
+    const grid = el('div', 'gallery');
+    for (const row of group.rows) grid.append(findCard(row));
+    section.append(grid);
+    pane.append(section);
+  }
 }
 
 function findCard(row) {
@@ -4324,7 +4362,28 @@ function buildIdentifySheet(sheet, stored, close) {
   const candScroll = el('div', 'candidates-scroll');
   const candList = el('div', 'candidates');
   candScroll.append(candList);
-  candSection.append(candScroll);
+
+  /*
+   * A name filter, for the find whose genus is not in doubt.
+   *
+   * The tags narrow the list by what the specimen looks like, which is the
+   * long way round when you can already say "it is an Amanita" and only want
+   * to know which one. Matched against every name the record answers to —
+   * common, scientific, synonyms, former — so a genus the guide has since
+   * renamed still turns up. It thins the ranked list rather than replacing
+   * the ranking: any tags written still order what is left.
+   */
+  const candFilter = input('search', '', { placeholder: 'Filter by name \u2014 a genus, say\u2026', class: 'candidates-filter' });
+  candFilter.setAttribute('aria-label', 'Filter possible species by name');
+  candFilter.addEventListener('input', () => redraw());
+  // Enter on a single match picks it, so a filter need not end in a click.
+  candFilter.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    const only = candList.querySelectorAll('.candidate');
+    if (only.length === 1 && !only[0].classList.contains('is-chosen')) only[0].click();
+  });
+  candSection.append(candFilter, candScroll);
   const candFoot = el('div', 'candidates-foot');
   candSection.append(candFoot);
   let showRuledOut = false;
@@ -4416,18 +4475,24 @@ function buildIdentifySheet(sheet, stored, close) {
     const { rows, anyTags, pool } = Model.rankCandidates(draftObs, state.species);
     const tagCount = Model.observedTagCount(draftObs);
 
-    const kept = rows.filter((m) => !m.contradicted).length;
+    const q = candFilter.value.trim().toLowerCase();
+    // The library's own search matches the same names — see `speciesText`.
+    const named = q ? rows.filter((m) => Model.speciesText(m.species).includes(q)) : rows;
+
+    const kept = named.filter((m) => !m.contradicted).length;
     candNote.textContent = !pool
       ? `Nothing in the library is ${Model.typeLabel(draftObs.type).toLowerCase()} yet.`
-      : anyTags
-        ? `${plural(kept, 'species')} still possible, ranked against ${plural(tagCount, 'tag')}.`
-        : `${plural(pool, 'species')} on file. Add tags above to narrow this down.`;
+      : q
+        ? `${plural(kept, 'species')} matching \u201c${q}\u201d${anyTags ? `, ranked against ${plural(tagCount, 'tag')}` : ''}.`
+        : anyTags
+          ? `${plural(kept, 'species')} still possible, ranked against ${plural(tagCount, 'tag')}.`
+          : `${plural(pool, 'species')} on file. Add tags above to narrow this down.`;
 
     // Ruled-out species are hidden, not dropped. A contradiction is usually
     // right, but it can also mean the specimen was misread or the library is
     // wrong, so they stay one click away rather than vanishing.
-    const ruledOut = rows.filter((m) => m.contradicted);
-    const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
+    const ruledOut = named.filter((m) => m.contradicted);
+    const candidates = showRuledOut ? named : named.filter((m) => !m.contradicted);
 
     // Every row is rebuilt here, so a preview left open would be anchored to a
     // thumbnail that is no longer in the document.
@@ -4437,7 +4502,10 @@ function buildIdentifySheet(sheet, stored, close) {
     for (const match of candidates) candList.append(candidateRow(match));
     if (!candidates.length) {
       candList.append(el('div', 'empty-state',
-        rows.length ? 'Every species is ruled out by these tags.' : 'No species of this type on file yet.'));
+        !rows.length ? 'No species of this type on file yet.'
+          : !named.length ? `Nothing on file is named like \u201c${q}\u201d.`
+            : q ? `Every species matching \u201c${q}\u201d is ruled out by these tags.`
+              : 'Every species is ruled out by these tags.'));
     }
     // Written either way: emptying the box can clamp the scroll to nothing by
     // itself, so holding a position means putting it back, not leaving it be.
@@ -5204,7 +5272,7 @@ function buildSpeciesSheet(sheet, stored, close, { kind, onCreated, seed } = {})
    */
   const lookalikePick = el('textarea');
   lookalikePick.value = record.lookalikes || '';
-  lookalikePick.placeholder = 'False chanterelle; Jack-o’-lantern — and how to tell them apart.';
+  lookalikePick.placeholder = '–';
 
   const rowB = el('div', 'entry-row');
   rowB.append(

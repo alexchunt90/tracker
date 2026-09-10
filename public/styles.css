@@ -817,6 +817,15 @@ a.shot-credit:hover { color: var(--accent); text-decoration: underline; }.shot-m
 
 /* --- gallery ------------------------------------------------------------- */
 
+/* One section per outing, each with its own grid, so a heading sits on a
+   row of its own rather than as an odd cell in the run of cards. */
+.gallery-group + .gallery-group { margin-top: 22px; }
+.gallery-group-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--rule-soft);
+}
+.gallery-group-note { font-size: 13px; color: var(--ink-soft); }
+
 .gallery {
   display: grid;
   /* Stretch, so cards in a row share a height and their frames line up. */
@@ -1441,6 +1450,16 @@ button.chosen-shot { border: 1px solid var(--rule); }
 }
 
 .candidates { display: grid; gap: 8px; }
+
+/* Above the box, not inside it: the list scrolls and the filter does not, for
+   the same reason the library's search box stays put. */
+.candidates-filter {
+  display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px;
+  height: var(--control-h); padding: 0 9px;
+  font-family: var(--body); font-size: 14px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
 
 .candidates-foot {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;

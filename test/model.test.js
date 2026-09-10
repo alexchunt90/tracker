@@ -138,6 +138,43 @@ describe('summary and life list', () => {
   });
 });
 
+describe('outings', () => {
+  // Six on the 8th makes it a big day; the 1st, 3rd, 12th and 20th are not.
+  const on = (day, n) => Array.from({ length: n }, (_, i) => ({ id: `${day}/${i}`, when: `2025-11-${day}T1${i}:00` }));
+  const log = [...on('01', 1), ...on('03', 2), ...on('08', 6), ...on('12', 1), ...on('20', 1), { id: 'x', when: null }];
+  const shape = (groups) => groups.map((g) => [g.kind, g.from, g.to, g.rows.length]);
+
+  test('a day with more than five finds stands alone; the days between such days are one group', () => {
+    const groups = Model.groupFinds(Model.sortByDate(log));
+    assert.deepEqual(shape(groups), [
+      ['between', '2025-11-12', '2025-11-20', 2],
+      ['day', '2025-11-08', '2025-11-08', 6],
+      ['between', '2025-11-01', '2025-11-03', 3],
+      ['undated', null, null, 1],
+    ]);
+  });
+
+  test('exactly five is not a big day, and adjacent big days stay apart', () => {
+    const five = Model.groupFinds(Model.sortByDate([...on('01', 5), ...on('02', 1)]));
+    assert.deepEqual(shape(five), [['between', '2025-11-01', '2025-11-02', 6]]);
+    const twoBig = Model.groupFinds(Model.sortByDate([...on('01', 6), ...on('02', 6)]));
+    assert.deepEqual(shape(twoBig), [['day', '2025-11-02', '2025-11-02', 6], ['day', '2025-11-01', '2025-11-01', 6]]);
+  });
+
+  test('big days are judged against the whole log, not the rows shown', () => {
+    const shown = Model.sortByDate(log).filter((r) => r.id.startsWith('08/')).slice(0, 2);
+    assert.deepEqual(shape(Model.groupFinds(shown, { log })), [['day', '2025-11-08', '2025-11-08', 2]]);
+    // Without the log, two finds on the 8th are just two ordinary finds.
+    assert.deepEqual(shape(Model.groupFinds(shown)), [['between', '2025-11-08', '2025-11-08', 2]]);
+  });
+
+  test('group order follows row order', () => {
+    const groups = Model.groupFinds(Model.sortByDate(log, 'asc'));
+    assert.deepEqual(groups.map((g) => g.kind), ['between', 'day', 'between', 'undated']);
+    assert.deepEqual([groups[0].from, groups[0].to], ['2025-11-01', '2025-11-03']);
+  });
+});
+
 describe('characters', () => {
   test('absent, recorded and unrecorded never collapse into each other', () => {
     assert.equal(Model.character(SPECIES[1], 'stipe').state, 'absent');

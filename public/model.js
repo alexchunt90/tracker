@@ -200,6 +200,52 @@ const Model = (() => {
     });
   }
 
+  /**
+   * The log cut into outings.
+   *
+   * Grouping by day is too strict for how the log is actually written: a big
+   * foray puts a dozen finds on one date, and the weeks either side of it
+   * hold one or two at a time. So a day with more than `big` finds is a group
+   * of its own, and everything logged between two such days is one group —
+   * however many days it spans. Undated finds, which sort last, are a group of
+   * their own.
+   *
+   * Which days are big is judged against `log`, the whole record, not against
+   * the rows being shown: a filter that leaves three finds of a twelve-find
+   * day should still show them under that day, not fold them into the weeks
+   * around it. Groups come out in the order the rows went in, and `from`/`to`
+   * are the earliest and latest day in each, whichever way that order runs.
+   */
+  function groupFinds(rows, { log = rows, big = 5 } = {}) {
+    const dayOf = (r) => (r.when ? String(r.when).slice(0, 10) : null);
+    const perDay = new Map();
+    for (const r of log) {
+      const day = dayOf(r);
+      if (day) perDay.set(day, (perDay.get(day) || 0) + 1);
+    }
+    const isBig = (day) => (perDay.get(day) || 0) > big;
+
+    const groups = [];
+    let open = null;
+    for (const r of rows) {
+      const day = dayOf(r);
+      const kind = !day ? 'undated' : isBig(day) ? 'day' : 'between';
+      // A big day only continues itself; the stretch between big days
+      // continues across any number of ordinary days.
+      const continues = open && open.kind === kind && (kind !== 'day' || open.from === day);
+      if (!continues) {
+        open = { kind, from: day, to: day, rows: [] };
+        groups.push(open);
+      }
+      open.rows.push(r);
+      if (day) {
+        if (day < open.from) open.from = day;
+        if (day > open.to) open.to = day;
+      }
+    }
+    return groups;
+  }
+
   // --- tags -----------------------------------------------------------------
 
   /*
@@ -1792,7 +1838,7 @@ const Model = (() => {
     bodyGroup, bodyConflict, applyGlossary, synonymsOf, guessCategory, termGroup, queryGroups,
     byId, view, viewAll, displayName, relativeOf,
     summary, latestOf, lifeList,
-    filter, sortByDate,
+    filter, sortByDate, groupFinds,
     fungiTraits, speciesNames, speciesRelatives, resolveRelatives, speciesByName,
     formatCoord, mapLink, bounds,
     excerpts, richText,
