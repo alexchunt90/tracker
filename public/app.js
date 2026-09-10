@@ -98,6 +98,18 @@ function fmtWhen(value, { time = true } = {}) {
 const fmtDate = (value) => fmtWhen(value, { time: false });
 
 /**
+ * "Nov 9 – Nov 24 2025", or "Dec 2 2024 – Mar 3 2025" across a year end, or
+ * a single date when the two ends are the same day.
+ */
+function fmtRange(from, to) {
+  if (!from || !to || from === to) return fmtDate(from || to);
+  const [y1, m1, d1] = String(from).split('-');
+  const [y2] = String(to).split('-');
+  const start = y1 === y2 ? `${MONTHS[Number(m1) - 1] || '?'} ${Number(d1)}` : fmtDate(from);
+  return `${start} \u2013 ${fmtDate(to)}`;
+}
+
+/**
  * "1 find" / "2 finds". `many` is for anything that does not just take an -s;
  * a word that already ends in one is assumed to be its own plural, which is
  * what stops "species" becoming "speciess".
@@ -1363,13 +1375,39 @@ function wireDropdown(wrap, button, menu) {
 
 // --- gallery ----------------------------------------------------------------
 
+/*
+ * The finds in outings, not in one long grid.
+ *
+ * A day with more than five finds is a foray, and gets a heading of its own;
+ * the weeks between forays are one heading with a date range. See
+ * `Model.groupFinds` for the rule. A log that falls into a single group is
+ * drawn without a heading at all — a heading that names the whole log
+ * explains nothing.
+ */
 function renderGallery(shown, rows) {
-  const gallery = clear($('finds-gallery'));
+  const pane = clear($('finds-gallery'));
   if (!shown.length) {
-    gallery.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find below.'));
+    pane.append(el('div', 'empty-state', rows.length ? 'No finds match these filters.' : 'The log is empty. Log a find below.'));
     return;
   }
-  for (const row of shown) gallery.append(findCard(row));
+  const groups = Model.groupFinds(shown, { log: rows });
+  for (const group of groups) {
+    const section = el('section', 'gallery-group');
+    if (groups.length > 1) {
+      const head = el('div', 'gallery-group-head');
+      const label = group.kind === 'undated' ? 'Undated' : fmtRange(group.from, group.to);
+      head.append(el('h3', 'eyebrow', label));
+      head.append(el('span', 'gallery-group-note',
+        group.kind === 'between' && group.from !== group.to
+          ? `${plural(group.rows.length, 'find')} here and there`
+          : plural(group.rows.length, 'find')));
+      section.append(head);
+    }
+    const grid = el('div', 'gallery');
+    for (const row of group.rows) grid.append(findCard(row));
+    section.append(grid);
+    pane.append(section);
+  }
 }
 
 function findCard(row) {

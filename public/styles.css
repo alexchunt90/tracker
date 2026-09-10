@@ -817,6 +817,15 @@ a.shot-credit:hover { color: var(--accent); text-decoration: underline; }.shot-m
 
 /* --- gallery ------------------------------------------------------------- */
 
+/* One section per outing, each with its own grid, so a heading sits on a
+   row of its own rather than as an odd cell in the run of cards. */
+.gallery-group + .gallery-group { margin-top: 22px; }
+.gallery-group-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--rule-soft);
+}
+.gallery-group-note { font-size: 13px; color: var(--ink-soft); }
+
 .gallery {
   display: grid;
   /* Stretch, so cards in a row share a height and their frames line up. */
