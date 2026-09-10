@@ -4324,7 +4324,28 @@ function buildIdentifySheet(sheet, stored, close) {
   const candScroll = el('div', 'candidates-scroll');
   const candList = el('div', 'candidates');
   candScroll.append(candList);
-  candSection.append(candScroll);
+
+  /*
+   * A name filter, for the find whose genus is not in doubt.
+   *
+   * The tags narrow the list by what the specimen looks like, which is the
+   * long way round when you can already say "it is an Amanita" and only want
+   * to know which one. Matched against every name the record answers to —
+   * common, scientific, synonyms, former — so a genus the guide has since
+   * renamed still turns up. It thins the ranked list rather than replacing
+   * the ranking: any tags written still order what is left.
+   */
+  const candFilter = input('search', '', { placeholder: 'Filter by name \u2014 a genus, say\u2026', class: 'candidates-filter' });
+  candFilter.setAttribute('aria-label', 'Filter possible species by name');
+  candFilter.addEventListener('input', () => redraw());
+  // Enter on a single match picks it, so a filter need not end in a click.
+  candFilter.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    const only = candList.querySelectorAll('.candidate');
+    if (only.length === 1 && !only[0].classList.contains('is-chosen')) only[0].click();
+  });
+  candSection.append(candFilter, candScroll);
   const candFoot = el('div', 'candidates-foot');
   candSection.append(candFoot);
   let showRuledOut = false;
@@ -4416,18 +4437,24 @@ function buildIdentifySheet(sheet, stored, close) {
     const { rows, anyTags, pool } = Model.rankCandidates(draftObs, state.species);
     const tagCount = Model.observedTagCount(draftObs);
 
-    const kept = rows.filter((m) => !m.contradicted).length;
+    const q = candFilter.value.trim().toLowerCase();
+    // The library's own search matches the same names — see `speciesText`.
+    const named = q ? rows.filter((m) => Model.speciesText(m.species).includes(q)) : rows;
+
+    const kept = named.filter((m) => !m.contradicted).length;
     candNote.textContent = !pool
       ? `Nothing in the library is ${Model.typeLabel(draftObs.type).toLowerCase()} yet.`
-      : anyTags
-        ? `${plural(kept, 'species')} still possible, ranked against ${plural(tagCount, 'tag')}.`
-        : `${plural(pool, 'species')} on file. Add tags above to narrow this down.`;
+      : q
+        ? `${plural(kept, 'species')} matching \u201c${q}\u201d${anyTags ? `, ranked against ${plural(tagCount, 'tag')}` : ''}.`
+        : anyTags
+          ? `${plural(kept, 'species')} still possible, ranked against ${plural(tagCount, 'tag')}.`
+          : `${plural(pool, 'species')} on file. Add tags above to narrow this down.`;
 
     // Ruled-out species are hidden, not dropped. A contradiction is usually
     // right, but it can also mean the specimen was misread or the library is
     // wrong, so they stay one click away rather than vanishing.
-    const ruledOut = rows.filter((m) => m.contradicted);
-    const candidates = showRuledOut ? rows : rows.filter((m) => !m.contradicted);
+    const ruledOut = named.filter((m) => m.contradicted);
+    const candidates = showRuledOut ? named : named.filter((m) => !m.contradicted);
 
     // Every row is rebuilt here, so a preview left open would be anchored to a
     // thumbnail that is no longer in the document.
@@ -4437,7 +4464,10 @@ function buildIdentifySheet(sheet, stored, close) {
     for (const match of candidates) candList.append(candidateRow(match));
     if (!candidates.length) {
       candList.append(el('div', 'empty-state',
-        rows.length ? 'Every species is ruled out by these tags.' : 'No species of this type on file yet.'));
+        !rows.length ? 'No species of this type on file yet.'
+          : !named.length ? `Nothing on file is named like \u201c${q}\u201d.`
+            : q ? `Every species matching \u201c${q}\u201d is ruled out by these tags.`
+              : 'Every species is ruled out by these tags.'));
     }
     // Written either way: emptying the box can clamp the scroll to nothing by
     // itself, so holding a position means putting it back, not leaving it be.

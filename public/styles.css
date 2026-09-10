@@ -1442,6 +1442,16 @@ button.chosen-shot { border: 1px solid var(--rule); }
 
 .candidates { display: grid; gap: 8px; }
 
+/* Above the box, not inside it: the list scrolls and the filter does not, for
+   the same reason the library's search box stays put. */
+.candidates-filter {
+  display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px;
+  height: var(--control-h); padding: 0 9px;
+  font-family: var(--body); font-size: 14px;
+  background: var(--card-sunk); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+}
+
 .candidates-foot {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
   margin-top: 10px;
