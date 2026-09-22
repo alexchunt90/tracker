@@ -68,6 +68,39 @@ const MapView = (() => {
     return { ...centre, zoom: 0 };
   }
 
+  /*
+   * How far apart two finds can be and still count as the same ground. Two
+   * degrees is a long day's drive, which is the scale of a hunting range; the
+   * far side of a continent is twenty times that.
+   */
+  const CLUSTER_DEGREES = 2;
+
+  /**
+   * The largest group of points that are within reach of one another: each
+   * member is within CLUSTER_DEGREES of some other member, so a region joins
+   * up through its neighbours however it is shaped.
+   *
+   * A week's finds on the far coast used to pull the opening view out until
+   * both coasts fit and neither could be read. The map now opens on the
+   * ground where most of the finds are, and the trip is still there when you
+   * zoom out. A tie goes to the earlier group, so the view does not jump
+   * between two equal candidates from one load to the next.
+   */
+  function mainCluster(points, radius = CLUSTER_DEGREES) {
+    const groups = [];
+    for (const point of points) {
+      const near = (p) => Math.abs(p.lat - point.lat) <= radius && Math.abs(p.lon - point.lon) <= radius;
+      const joined = groups.filter((g) => g.some(near));
+      if (!joined.length) { groups.push([point]); continue; }
+      // A point in reach of two groups bridges them into one.
+      const merged = joined.flat();
+      merged.push(point);
+      for (const g of joined) groups.splice(groups.indexOf(g), 1);
+      groups.push(merged);
+    }
+    return groups.reduce((best, g) => (g.length > best.length ? g : best), []);
+  }
+
   /**
    * Build a map into `node`.
    *
@@ -663,7 +696,7 @@ const MapView = (() => {
     };
   }
 
-  return { create, project, unproject, fitBounds, pinShape };
+  return { create, project, unproject, fitBounds, mainCluster, pinShape };
 })();
 
 if (typeof module !== 'undefined') module.exports = MapView;
