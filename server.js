@@ -501,7 +501,7 @@ async function fetchRainBatch(points, days) {
     precipitation_unit: 'inch',
   });
 
-  const payload = await upstream(`${OPEN_METEO_URL}?${query}`).then((r) => r.json());
+  const payload = await patientJson(`${OPEN_METEO_URL}?${query}`);
   // One location comes back as an object, several as an array. Normalising is
   // cheaper than a special case at every use.
   const series = Array.isArray(payload) ? payload : [payload];
@@ -526,6 +526,19 @@ async function fetchRainBatch(points, days) {
       JSON.stringify({ on: stamp, days, inches, from: cell.from, to: cell.to })).catch(() => {});
   }
   return out;
+}
+
+/*
+ * Every point in a batch is a call against Open-Meteo's budget — six hundred
+ * a minute, five thousand an hour — so a screenful of fresh ground is most of
+ * a minute's worth, and two screenfuls in quick succession is more than one.
+ * fetchRainBatch waits the minute out and tries again; when even that was not
+ * enough, the legend should say what happened rather than quote a status
+ * code.
+ */
+function rainFailure(err) {
+  if (err?.upstream === 429) return 'Open-Meteo is rate-limiting this much fresh ground; try again in a few minutes.';
+  return err?.message || 'unknown error';
 }
 
 /**
@@ -567,7 +580,7 @@ async function recentRainfall(box, days) {
   let reason = '';
   for (const outcome of settled) {
     if (outcome.status === 'fulfilled') cells.push(...outcome.value);
-    else { failed++; reason = outcome.reason?.message || 'unknown error'; }
+    else { failed++; reason = rainFailure(outcome.reason); }
   }
 
   // Said only when something is actually missing from the picture. A total

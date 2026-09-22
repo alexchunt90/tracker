@@ -54,3 +54,34 @@ test('fitting bounds: nothing, one point, and a spread', () => {
   // A continent-wide spread bottoms out rather than looping forever.
   assert.equal(MapView.fitBounds([{ lat: -80, lon: -179 }, { lat: 80, lon: 179 }], 10, 10).zoom, 0);
 });
+
+test('the main cluster is the largest group of finds within reach of each other', () => {
+  // A hunting range, joined up through its neighbours: no two finds at the
+  // ends are within two degrees of each other, but each is of the next.
+  const range = [
+    { lat: 46.86, lon: -121.75 }, { lat: 47.37, lon: -122.10 }, { lat: 47.72, lon: -122.30 },
+    { lat: 48.65, lon: -122.42 }, { lat: 49.90, lon: -123.10 },
+  ];
+  // A trip, with more finds in a day than the range has in a season would be
+  // rarer than the reverse, but two is enough to show it is not the count of
+  // any one spot that decides.
+  const trip = [{ lat: 44.30, lon: -71.30 }, { lat: 44.31, lon: -71.28 }];
+  const main = MapView.mainCluster([...trip, ...range, ...trip]);
+  assert.deepEqual(main, range);
+
+  // Nothing, and a single find, come back as they are; a tie keeps the earlier group.
+  assert.deepEqual(MapView.mainCluster([]), []);
+  assert.deepEqual(MapView.mainCluster([trip[0]]), [trip[0]]);
+  const tied = MapView.mainCluster([trip[0], range[0]]);
+  assert.deepEqual(tied, [trip[0]]);
+
+  // Two groups a point bridges become one, whichever order they arrived in.
+  const west = { lat: 47, lon: -123 }, east = { lat: 47, lon: -119.5 }, between = { lat: 47, lon: -121.2 };
+  assert.equal(MapView.mainCluster([west, east, between]).length, 3);
+  assert.equal(MapView.mainCluster([west, east]).length, 1);
+
+  // Fitting the main cluster is what keeps the opening view legible.
+  const fit = MapView.fitBounds(MapView.mainCluster([...range, ...trip]), 800, 600);
+  assert.ok(fit.zoom >= 6, `zoom ${fit.zoom} is a continent, not a range`);
+  assert.equal(MapView.fitBounds([...range, ...trip], 800, 600).zoom < fit.zoom, true);
+});

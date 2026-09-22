@@ -1859,7 +1859,10 @@ function renderMap(shown) {
       },
     });
     const start = config.default || { lat: 0, lon: 0, zoom: 2 };
-    const found = MapView.fitBounds(placed, $('map-canvas').clientWidth || 800, $('map-canvas').clientHeight || 420, { maxZoom: config.maxZoom ?? 19 });
+    // Opens on the usual hunting ground rather than on every find: one trip
+    // to another coast would otherwise zoom the map out until nothing on it
+    // could be read.
+    const found = MapView.fitBounds(MapView.mainCluster(placed), $('map-canvas').clientWidth || 800, $('map-canvas').clientHeight || 420, { maxZoom: config.maxZoom ?? 19 });
     mapView.setView(found || start, { silent: true });
     state.inat.box = mapView.bounds();
     state.rain.box = state.inat.box;
