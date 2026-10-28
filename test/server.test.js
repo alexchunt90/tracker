@@ -108,6 +108,19 @@ test('an empty state directory is seeded from example/', async () => {
   assert.equal(seeded.app.title, payload.config.app.title);
 });
 
+test('the healthcheck route answers without reading the store', async () => {
+  // Mode 000 on the state directory makes any read of the log fail, so a 200
+  // here can only come from a route that never asked.
+  await fsp.chmod(stateDir, 0o000);
+  try {
+    const { status, payload } = await call('GET', '/api/health');
+    assert.equal(status, 200);
+    assert.deepEqual(payload, { ok: true });
+  } finally {
+    await fsp.chmod(stateDir, 0o700);
+  }
+});
+
 test('the page and its assets are served; nothing outside public/ is', async () => {
   const page = await call('GET', '/');
   assert.equal(page.status, 200);

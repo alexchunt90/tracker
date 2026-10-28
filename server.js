@@ -1311,6 +1311,14 @@ const server = http.createServer(async (req, res) => {
   const { pathname } = url;
 
   try {
+    // Liveness, for the container's healthcheck. It answers without touching
+    // the store: a check every thirty seconds that read the log would pull
+    // the whole of species.json out of the bucket each time, which is what
+    // the egress bill was once made of.
+    if (pathname === '/api/health' && (req.method === 'GET' || req.method === 'HEAD')) {
+      return json(res, 200, { ok: true });
+    }
+
     // Everything the browser needs to render, in one round trip.
     if (pathname === '/api/state' && (req.method === 'GET' || req.method === 'HEAD')) {
       const [config, observations, species, glossary] = await Promise.all([

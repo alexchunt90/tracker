@@ -25,7 +25,10 @@ EXPOSE 4175
 RUN mkdir -p /state && chown node:node /state
 USER node
 
+# /api/health, not /api/state: the state route reads every document from the
+# bucket, and at one check every thirty seconds that was ~13 GB a day of S3
+# egress for a log nobody was looking at.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/state').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]
