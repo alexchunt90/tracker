@@ -170,6 +170,43 @@ describe('the S3 backend', () => {
     assert.equal(calls[2].headers['if-match'], undefined);
   });
 
+  test('a document already held is revalidated, and a 304 costs no body', async () => {
+    const store = createStore(ENV, '/tmp', '/tmp/photos');
+    answer = () => new Response(JSON.stringify([{ id: 'a' }]), { status: 200, headers: { etag: '"v1"' } });
+    await store.read('species');
+    assert.equal(calls[0].headers['if-none-match'], undefined);
+
+    answer = () => new Response(null, { status: 304, headers: { etag: '"v1"' } });
+    const again = await store.read('species');
+    assert.equal(calls[1].headers['if-none-match'], '"v1"');
+    assert.deepEqual(again, { value: [{ id: 'a' }], token: '"v1"' });
+
+    // Each read is a fresh parse, so editing what came back cannot edit the cache.
+    again.value.push({ id: 'b' });
+    assert.deepEqual((await store.read('species')).value, [{ id: 'a' }]);
+  });
+
+  test('another instance\'s write is seen, and a save of our own primes the next read', async () => {
+    const store = createStore(ENV, '/tmp', '/tmp/photos');
+    answer = () => new Response('{"version":1}', { status: 200, headers: { etag: '"v1"' } });
+    await store.read('config');
+    answer = () => new Response('{"version":2}', { status: 200, headers: { etag: '"v2"' } });
+    assert.deepEqual(await store.read('config'), { value: { version: 2 }, token: '"v2"' });
+    assert.equal(calls[1].headers['if-none-match'], '"v1"');
+
+    answer = () => new Response('', { status: 200, headers: { etag: '"v3"' } });
+    await store.write('config', { version: 3 }, '"v2"');
+    answer = () => new Response(null, { status: 304 });
+    assert.deepEqual(await store.read('config'), { value: { version: 3 }, token: '"v3"' });
+    assert.equal(calls[3].headers['if-none-match'], '"v3"');
+
+    // Gone from the bucket is gone from the cache: the next read asks plainly.
+    answer = () => new Response('', { status: 404 });
+    assert.deepEqual(await store.read('config'), { value: undefined, token: null });
+    await store.read('config');
+    assert.equal(calls[5].headers['if-none-match'], undefined);
+  });
+
   test('a failed condition is a conflict, whichever way S3 reports it', async () => {
     const store = createStore(ENV, '/tmp', '/tmp/photos');
     answer = () => new Response('', { status: 412 });

@@ -943,6 +943,14 @@ signing against reference signatures taken from botocore. It exists because a
 wrong signature and a wrong policy both come back as 403, and telling them
 apart afterwards is expensive.
 
+Bytes out of S3 are billed, and `species.json` is megabytes, so the S3 backend
+keeps the last copy of each document it saw along with its ETag. Every read
+still asks the bucket, so another instance's write is never missed, but it
+asks with `If-None-Match`, and an unchanged document comes back as a 304 with
+no body. The container's healthcheck asks `/api/health`, which touches the
+store not at all. It used to ask `/api/state`, and every thirty seconds that
+read the whole log out of the bucket: about 13 GB a day.
+
 Photographs go in the bucket too, under `<prefix>/photos/`, and the local
 `photos/` directory becomes a cache. The bucket is the truth; the cache is what
 keeps the app working in a forest. A cached copy can never be stale, because
